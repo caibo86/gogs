@@ -1,0 +1,11 @@
+/.idea
+src/apps/log/
+src/base/logger/log/
+src/vendor/
+bin/
+log/
+pkg/
+src/pb/
+
+.~*
+*.out
