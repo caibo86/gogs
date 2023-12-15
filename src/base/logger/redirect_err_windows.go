@@ -2,7 +2,7 @@
 // @file      : redirect_err_windows.go
 // @author    : 蔡波
 // @contact   : caibo923@gmail.com
-// @time      : 2023/12/14 下午1:41
+// @time      : 2023/12/16 下午1:41
 // -------------------------------------------
 
 //go:build !windows
@@ -49,6 +49,21 @@ func redirectStdErrLog() error {
 }
 
 func CheckStdErrLogFile() {
+	// dir, err := os.Stat("log")
+	// if err != nil {
+	// 	if os.IsNotExist(err) {
+	// 		err = os.Mkdir("log", 0755)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 	} else {
+	// 		return err
+	// 	}
+	// } else {
+	// 	if !dir.IsDir() {
+	// 		return fmt.Errorf("log is not dir")
+	// 	}
+	// }
 	panicFile := strings.Replace(global.fileName, ".log", ".panic", -1)
 	_, err := os.Stat(panicFile)
 	if !os.IsNotExist(err) {

@@ -2,7 +2,7 @@
 // @file      : ast.go
 // @author    : 蔡波
 // @contact   : caibo923@gmail.com
-// @time      : 2023/12/14 下午2:06
+// @time      : 2023/12/16 下午2:06
 // -------------------------------------------
 
 package ast
@@ -10,7 +10,7 @@ package ast
 import (
 	"bytes"
 	"fmt"
-	log "gogs/src/base/logger"
+	log "gogs/base/logger"
 	"reflect"
 )
 
@@ -180,7 +180,7 @@ func (node *BaseNode) Accept(visitor Visitor) Node {
 	return nil
 }
 
-// Expr 抽象语法树中的表达式
+// Expr 抽象语法树中的表达式 比Node多了一个归属的代码节点
 type Expr interface {
 	Node
 	Script() *Script
@@ -192,11 +192,22 @@ type BaseExpr struct {
 	script *Script
 }
 
+// Init 初始化
 func (expr *BaseExpr) Init(name string, script *Script) {
 	if script == nil {
 		log.Panic("the param script can not be nil")
 	}
-
+	expr.BaseNode.Init(name, nil)
+	expr.script = script
 }
 
-// Script 获取表达式所属的代码节点
+// Script 获取基本表达式所属的代码节点
+func (expr *BaseExpr) Script() *Script {
+	return expr.script
+}
+
+// Package 获取基本表达式所属的包
+func (expr *BaseExpr) Package() *Package {
+	// 基本表达式所属包是其所属代码节点所属的包
+	return expr.Script().Package()
+}

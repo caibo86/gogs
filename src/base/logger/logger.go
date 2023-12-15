@@ -2,7 +2,7 @@
 // @file      : logger.go
 // @author    : 蔡波
 // @contact   : caibo923@gmail.com
-// @time      : 2023/12/14 下午1:39
+// @time      : 2023/12/16 下午1:39
 // -------------------------------------------
 
 package logger
@@ -57,6 +57,8 @@ func Init(options ...Option) {
 	once.Do(func() {
 		global.Init(options...)
 	})
+	// 触发创建目录
+	Info("logger init success")
 	err := redirectStdErrLog()
 	if err != nil {
 		Errorf("redirect std err log err:%s", err)
