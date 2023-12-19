@@ -5,7 +5,7 @@
 // @time      : 2023/12/19 下午4:11
 // -------------------------------------------
 
-package gs2go
+package main
 
 var tpl4go = `
 {{/**************************************************************************/}}
@@ -26,18 +26,21 @@ const (
 )
 
 // Write{{$Enum}} 将枚举写到输出流
-func Write{{$Enum}}(writer yfnet.Writer, val {{$Enum}}) error{
+func Write{{$Enum}}(writer gsnet.Writer, val {{$Enum}}) error{
     return {{enumWrite .}}
 }
 
 // WriteTag{{$Enum}} 将枚举写到输出流带标签
-func WriteTag{{$Enum}}(writer yfnet.Writer, val {{$Enum}}) error{
-    yfnet.WriteTag(writer,yfnet.Enum)
+func WriteTag{{$Enum}}(writer gsnet.Writer, val {{$Enum}}) error{
+    err := gsnet.WriteTag(writer,gsnet.Enum)
+	if err != nil {
+		return err 
+	}
     return {{enumWrite .}}
 }
 
 // Read{{$Enum}} 从输入流读取枚举
-func Read{{$Enum}}(reader yfnet.Reader)({{$Enum}}, error){
+func Read{{$Enum}}(reader gsnet.Reader)({{$Enum}}, error){
     val, err := {{enumRead .}}
     return {{$Enum}}(val),err
 }
@@ -77,18 +80,21 @@ const (
 {{end}})
 
 // Write{{$Enum}} 将枚举写到输出流
-func Write{{$Enum}}(writer yfnet.Writer, val {{$Enum}}) error{
+func Write{{$Enum}}(writer gsnet.Writer, val {{$Enum}}) error{
     return {{enumWrite .}}
 }
 
 // WriteTag{{$Enum}} 将枚举写到输出流带标签
-func WriteTag{{$Enum}}(writer yfnet.Writer, val {{$Enum}}) error{
-    yfnet.WriteTag(writer,yfnet.Enum)
+func WriteTag{{$Enum}}(writer gsnet.Writer, val {{$Enum}}) error{
+    err := gsnet.WriteTag(writer,gsnet.Enum)
+	if err != nil {
+		return err
+	}
     return {{enumWrite .}}
 }
 
 // Read{{$Enum}} 从输入流读取枚举
-func Read{{$Enum}}(reader yfnet.Reader)({{$Enum}}, error){
+func Read{{$Enum}}(reader gsnet.Reader)({{$Enum}}, error){
     val, err := {{enumRead .}}
     return {{$Enum}}(val),err
 }
@@ -103,8 +109,8 @@ func (val {{$Enum}}) String() string {
 }
 {{end}}
 {{/**************************************************************************/}}
-{{define "readMap"}}func(reader yfnet.Reader)({{typeName .}},error) {
-    length, err1 := yfnet.ReadUint16(reader)
+{{define "readMap"}}func(reader gsnet.Reader)({{typeName .}},error) {
+    length, err1 := gsnet.ReadUint16(reader)
     if err1 != nil {
         return nil, err1
     }
@@ -123,8 +129,8 @@ func (val {{$Enum}}) String() string {
     return buff,nil
 }{{end}}
 
-{{define "readList"}}func(reader yfnet.Reader)({{typeName .}},error) {
-    length, err1 := yfnet.ReadUint16(reader)
+{{define "readList"}}func(reader gsnet.Reader)({{typeName .}},error) {
+    length, err1 := gsnet.ReadUint16(reader)
     if err1 != nil {
         return nil,err1
     }
@@ -138,17 +144,17 @@ func (val {{$Enum}}) String() string {
     return buff,nil
 }{{end}}
 
-{{define "readByteList"}}func(reader yfnet.Reader)({{typeName .}},error) {
-    length, err1 := yfnet.ReadUint16(reader)
+{{define "readByteList"}}func(reader gsnet.Reader)({{typeName .}},error) {
+    length, err1 := gsnet.ReadUint16(reader)
     if err1 != nil {
         return nil,err1
     }
     buff := make({{typeName .}},length)
-    err1 = yfnet.ReadBytes(reader,buff)
+    err1 = gsnet.ReadBytes(reader,buff)
     return buff,err1
 }{{end}}
 
-{{define "readArray"}}func(reader yfnet.Reader)({{typeName .}},error) {
+{{define "readArray"}}func(reader gsnet.Reader)({{typeName .}},error) {
     var buff {{typeName .}}
     if err != nil {
         return buff,err
@@ -162,17 +168,17 @@ func (val {{$Enum}}) String() string {
     return buff,nil
 }{{end}}
 
-{{define "readByteArray"}}func(reader yfnet.Reader)({{typeName .}},error) {
+{{define "readByteArray"}}func(reader gsnet.Reader)({{typeName .}},error) {
     var buff {{typeName .}}
     if err != nil {
         return buff,err
     }
-    err = yfnet.ReadBytes(reader,buff[:])
+    err = gsnet.ReadBytes(reader,buff[:])
     return buff,err
 }{{end}}
 
-{{define "writeMap"}}func(writer yfnet.Writer,val {{typeName .}})(error) {
-    yfnet.WriteUint16(writer,uint16(len(val)))
+{{define "writeMap"}}func(writer gsnet.Writer,val {{typeName .}})(error) {
+    gsnet.WriteUint16(writer,uint16(len(val)))
     for k, v := range val {
         err1 := {{writeType .Key}}(writer, k)
         if err1 != nil {
@@ -186,8 +192,8 @@ func (val {{$Enum}}) String() string {
     return nil
 }{{end}}
 
-{{define "writeList"}}func(writer yfnet.Writer,val {{typeName .}})(error) {
-    yfnet.WriteUint16(writer,uint16(len(val)))
+{{define "writeList"}}func(writer gsnet.Writer,val {{typeName .}})(error) {
+    gsnet.WriteUint16(writer,uint16(len(val)))
     for _, c := range val {
         err1 := {{writeType .Element}}(writer,c)
         if err1 != nil {
@@ -197,14 +203,14 @@ func (val {{$Enum}}) String() string {
     return nil
 }{{end}}
 
-{{define "writeByteList"}}func(writer yfnet.Writer,val {{typeName .}})(error) {
-    yfnet.WriteUint16(writer,uint16(len(val)))
-    err1 := yfnet.WriteBytes(writer,val)
+{{define "writeByteList"}}func(writer gsnet.Writer,val {{typeName .}})(error) {
+    gsnet.WriteUint16(writer,uint16(len(val)))
+    err1 := gsnet.WriteBytes(writer,val)
     return err1
 }{{end}}
 
 
-{{define "writeArray"}}func(writer yfnet.Writer,val {{typeName .}})(error) {
+{{define "writeArray"}}func(writer gsnet.Writer,val {{typeName .}})(error) {
     for _,c:= range val {
         err := {{writeType .Element}}(writer,c)
         if err != nil {
@@ -214,17 +220,17 @@ func (val {{$Enum}}) String() string {
     return nil
 }{{end}}
 
-{{define "writeByteArray"}}func(writer yfnet.Writer,val {{typeName .}})(error) {
-    return yfnet.WriteBytes(writer,val[:])
+{{define "writeByteArray"}}func(writer gsnet.Writer,val {{typeName .}})(error) {
+    return gsnet.WriteBytes(writer,val[:])
 }{{end}}
 
-{{define "writeTagList"}}func(writer yfnet.Writer,val {{typeName .}})(error) {
+{{define "writeTagList"}}func(writer gsnet.Writer,val {{typeName .}})(error) {
     if len(val) == 0 {
-        yfnet.WriteTag(writer,yfnet.None)
+        gsnet.WriteTag(writer,gsnet.None)
         return nil
     }
-    yfnet.WriteTag(writer,yfnet.List)
-    yfnet.WriteUint16(writer,uint16(len(val)))
+    gsnet.WriteTag(writer,gsnet.List)
+    gsnet.WriteUint16(writer,uint16(len(val)))
     for _,c:= range val {
         err := {{writeType .Element}}(writer,c)
         if err != nil {
@@ -234,25 +240,25 @@ func (val {{$Enum}}) String() string {
     return nil
 }{{end}}
 
-{{define "writeTagByteList"}}func(writer yfnet.Writer,val {{typeName .}})(error) {
+{{define "writeTagByteList"}}func(writer gsnet.Writer,val {{typeName .}})(error) {
     if len(val) == 0 {
-        yfnet.WriteTag(writer,yfnet.None)
+        gsnet.WriteTag(writer,gsnet.None)
         return nil
     }
-    err := yfnet.WriteTag(writer,yfnet.List)
+    err := gsnet.WriteTag(writer,gsnet.List)
     if err != nil {
         return err
     }
-    err = yfnet.WriteUint16(writer,uint16(len(val)))
+    err = gsnet.WriteUint16(writer,uint16(len(val)))
     if err != nil {
         return err
     }
-    return yfnet.WriteBytes(writer,val)
+    return gsnet.WriteBytes(writer,val)
 }{{end}}
 
 
-{{define "writeTagArray"}}func(writer yfnet.Writer,val {{typeName .}})(error) {
-    yfnet.WriteTag(writer,yfnet.Array)
+{{define "writeTagArray"}}func(writer gsnet.Writer,val {{typeName .}})(error) {
+    gsnet.WriteTag(writer,gsnet.Array)
     for _,c:= range val {
         err := {{writeType .Element}}(writer,c)
         if err != nil {
@@ -262,9 +268,9 @@ func (val {{$Enum}}) String() string {
     return nil
 }{{end}}
 
-{{define "writeTagByteArray"}}func(writer yfnet.Writer,val {{typeName .}})(error) {
-    yfnet.WriteTag(writer,yfnet.Array)
-    return yfnet.WriteBytes(writer,val[:])
+{{define "writeTagByteArray"}}func(writer gsnet.Writer,val {{typeName .}})(error) {
+    gsnet.WriteTag(writer,gsnet.Array)
+    return gsnet.WriteBytes(writer,val[:])
 }{{end}}
 
 {{define "arrayInit"}}func() {{typeName .}} {
@@ -291,7 +297,7 @@ func New{{$Struct}}() *{{$Struct}} {
 }
 
 // Read{{$Struct}} 从输入流读取一个 {{$Struct}}  gsc自动生成
-func Read{{$Struct}}(reader yfnet.Reader) (target *{{$Struct}},err error) {
+func Read{{$Struct}}(reader gsnet.Reader) (target *{{$Struct}},err error) {
     target = New{{$Struct}}()   {{range .Fields}}
     target.{{symbol .Name}}, err = {{readType .Type}}(reader)
     if err != nil {
@@ -301,7 +307,7 @@ func Read{{$Struct}}(reader yfnet.Reader) (target *{{$Struct}},err error) {
 }
 
 // Write{{$Struct}} 将 {{$Struct}} 写入到输出流 gsc自动生成
-func Write{{$Struct}}(writer yfnet.Writer,val *{{$Struct}}) (err error) { {{range .Fields}}
+func Write{{$Struct}}(writer gsnet.Writer,val *{{$Struct}}) (err error) { {{range .Fields}}
     {{writeType .Type}}(writer,val.{{symbol .Name}})
     if err != nil {
         return
@@ -310,12 +316,12 @@ func Write{{$Struct}}(writer yfnet.Writer,val *{{$Struct}}) (err error) { {{rang
 }
 
 // WriteTag{{$Struct}} 将 {{$Struct}} 写入到输出流带标签 gsc自动生成
-func WriteTag{{$Struct}}(writer yfnet.Writer,val *{{$Struct}}) (error) {
+func WriteTag{{$Struct}}(writer gsnet.Writer,val *{{$Struct}}) (error) {
     if val == nil {
-        yfnet.WriteTag(writer,yfnet.None)
+        gsnet.WriteTag(writer,gsnet.None)
         return nil
     }
-    yfnet.WriteTag(writer,yfnet.Struct)
+    gsnet.WriteTag(writer,gsnet.Struct)
     return Write{{$Struct}}(writer,val)
 }
 {{end}}
@@ -341,20 +347,20 @@ func New{{$Table}}() *{{$Table}} {
 }
 
 // Read{{$Table}} 从输入流读取一个 {{$Table}} gsc自动生成
-func Read{{$Table}}(reader yfnet.Reader) (target *{{$Table}},err error) {
+func Read{{$Table}}(reader gsnet.Reader) (target *{{$Table}},err error) {
 
     target = New{{$Table}}()
 
     {{range .Fields}}
-    var tag{{.ID}} yfnet.Tag
-    tag{{.ID}}, err = yfnet.ReadTag(reader)
+    var tag{{.ID}} gsnet.Tag
+    tag{{.ID}}, err = gsnet.ReadTag(reader)
     if err != nil {
         return
     }
 
-    if tag{{.ID}} != yfnet.None {
+    if tag{{.ID}} != gsnet.None {
         if tag{{.ID}} != {{tag .Type}} {
-            return target,yferrors.Newf(yfnet.ErrDecode,"unmatch tag(%d,%d) :{{pos .}}",tag{{.ID}},{{tag .Type}})
+            return target,yferrors.Newf(gsnet.ErrDecode,"unmatch tag(%d,%d) :{{pos .}}",tag{{.ID}},{{tag .Type}})
         }
         target.{{symbol .Name}},err = {{readType .Type}}(reader)
         if err != nil {
@@ -367,20 +373,20 @@ func Read{{$Table}}(reader yfnet.Reader) (target *{{$Table}},err error) {
 }
 
 // WriteTag{{$Table}} 将 {{$Table}} 写入到输出流带标签 gsc自动生成
-func WriteTag{{$Table}}(writer yfnet.Writer,val *{{$Table}}) (error) {
+func WriteTag{{$Table}}(writer gsnet.Writer,val *{{$Table}}) (error) {
 
     if val == nil {
-        yfnet.WriteTag(writer,yfnet.None)
+        gsnet.WriteTag(writer,gsnet.None)
         return nil
     }
 
-    yfnet.WriteTag(writer,yfnet.Table)
+    gsnet.WriteTag(writer,gsnet.Table)
 
     return Write{{$Table}}(writer,val)
 }
 
 // Write{{$Table}} 将 {{$Table}} 写入到输出流 gsc自动生成
-func Write{{$Table}}(writer yfnet.Writer,val *{{$Table}}) (err error) {
+func Write{{$Table}}(writer gsnet.Writer,val *{{$Table}}) (err error) {
 
     {{range .Fields}}
 
@@ -483,7 +489,7 @@ func (service *{{$Contract}}Service) Context() interface{} {
 }
 
 // Call gsc自动生成
-func (service *{{$Contract}}Service) Call(call *yfnet.Call) (callReturn *yfnet.Return, err error) {
+func (service *{{$Contract}}Service) Call(call *gsnet.Call) (callReturn *gsnet.Return, err error) {
     defer func(){
         if e := recover(); e != nil {
             err = yferrors.New(e.(error))
@@ -508,7 +514,7 @@ func (service *{{$Contract}}Service) Call(call *yfnet.Call) (callReturn *yfnet.R
             return
         }
         {{if .Return}}
-        callReturn = &yfnet.Return{
+        callReturn = &gsnet.Return{
             ID : call.ID,
             Service:call.Service,
         }
@@ -518,7 +524,7 @@ func (service *{{$Contract}}Service) Call(call *yfnet.Call) (callReturn *yfnet.R
         if err != nil {
             return
         }
-        callReturn.Params = append(callReturn.Params,&yfnet.Param{Content:buff{{.ID}}.Bytes()})
+        callReturn.Params = append(callReturn.Params,&gsnet.Param{Content:buff{{.ID}}.Bytes()})
         {{end}}{{end}}
         return{{end}}
     }
@@ -528,7 +534,7 @@ func (service *{{$Contract}}Service) Call(call *yfnet.Call) (callReturn *yfnet.R
 {{range .Methods}} {{$Name := symbol .Name}}
 // {{$Name}} gsc自动生成
 func (service *{{$Contract}}Service){{$Name}}{{params .Params}}{{returnParams .Return}}{
-    call := &yfnet.Call{
+    call := &gsnet.Call{
         Service:uint16(service.id),
         Method:{{.ID}},
     }
@@ -537,12 +543,12 @@ func (service *{{$Contract}}Service){{$Name}}{{params .Params}}{{returnParams .R
     if err != nil {
         return
     }
-    call.Params = append(call.Params,&yfnet.Param{Content:param{{.ID}}.Bytes()})
+    call.Params = append(call.Params,&gsnet.Param{Content:param{{.ID}}.Bytes()})
     {{end}}
     {{if .Return}}
-    future := make(chan *yfnet.Return,1)
+    future := make(chan *gsnet.Return,1)
     go func(){
-        var callReturn *yfnet.Return
+        var callReturn *gsnet.Return
         callReturn,err = service.Call(call)
         if err == nil {
             future <- callReturn
@@ -617,7 +623,7 @@ func (service *{{$Contract}}RemoteService) Context() interface{} {
 }
 
 // Call gsc自动生成
-func (service *{{$Contract}}RemoteService) Call(call *yfnet.Call) (callReturn *yfnet.Return, err error) {
+func (service *{{$Contract}}RemoteService) Call(call *gsnet.Call) (callReturn *gsnet.Return, err error) {
 
     defer func(){
         if e := recover(); e != nil {
@@ -672,7 +678,7 @@ func (service *{{$Contract}}RemoteService) Call(call *yfnet.Call) (callReturn *y
 
 // {{$Name}} gsc自动生成
 func (service *{{$Contract}}RemoteService){{$Name}}{{params .Params}}{{returnParams .Return}}{
-    call := &yfnet.Call{
+    call := &gsnet.Call{
         Service:uint16(service.rid),
         Method:{{.ID}},
     }
@@ -683,7 +689,7 @@ func (service *{{$Contract}}RemoteService){{$Name}}{{params .Params}}{{returnPar
     if err != nil {
         return
     }
-    call.Params = append(call.Params,&yfnet.Param{Content:param{{.ID}}.Bytes()})
+    call.Params = append(call.Params,&gsnet.Param{Content:param{{.ID}}.Bytes()})
     {{end}}
 
     {{if .Return}}

@@ -388,6 +388,7 @@ func (linker *attrLinker) VisitPackage(pkg *ast.Package) ast.Node {
 	if len(pkg.Scripts) == 0 {
 		return pkg
 	}
+	log.Debugf("我来看下包名:%s", pkg.Name())
 	// 设置属性连接器的 属性目标为 yflang编译器内置的 指定名字的枚举值 解析成的字典
 	if pkg.Name() == GSLangPackage {
 		if expr, ok := pkg.Types[GSLangAttrTarget]; ok {
@@ -443,8 +444,8 @@ func (linker *attrLinker) VisitScript(script *ast.Script) ast.Node {
 		target := linker.EvalAttrUsage(attr)
 		// 如果属性目标不是 AttrTarget.Script
 		if target&linker.attrTarget["Script"] == 0 {
-			// 如果属性()中是 AttrTarget.Package
-			if target&linker.attrTarget["Package"] != 0 {
+			// 如果属性()中是 AttrTarget.GSLangPackage
+			if target&linker.attrTarget["GSLangPackage"] != 0 {
 				// 将此属性从代码节点删除 并添加到代码节点所属的包节点下
 				script.RemoveAttr(attr)
 				script.Package().AddAttr(attr)
@@ -492,7 +493,7 @@ func (linker *attrLinker) VisitTable(table *ast.Struct) ast.Node {
 				table.Script().AddAttr(attr)
 				continue
 			}
-			if target&linker.attrTarget["Package"] != 0 {
+			if target&linker.attrTarget["GSLangPackage"] != 0 {
 				table.RemoveAttr(attr)
 				table.Package().AddAttr(attr)
 				continue
@@ -571,7 +572,7 @@ func (linker *attrLinker) VisitContract(contract *ast.Service) ast.Node {
 			contract.Script().AddAttr(attr)
 			continue
 		}
-		if target&linker.attrTarget["Package"] != 0 {
+		if target&linker.attrTarget["GSLangPackage"] != 0 {
 			contract.RemoveAttr(attr)
 			contract.Package().AddAttr(attr)
 			continue

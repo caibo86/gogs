@@ -8,7 +8,7 @@
 package gslang
 
 const (
-	GSLangPackage    = "gogs/base/gslang"
+	GSLangPackage    = "base/gslang"
 	GSLangAttrTarget = "AttrTarget"
 	GSLangAttrStruct = "Struct"
 	GSLangAttrError  = "Error"

@@ -103,7 +103,7 @@ func (compiler *Compiler) Accept(visitor ast.Visitor) (err error) {
 		}
 	}()
 	// 使用访问者对编译器已经加载的包进行遍历访问
-	for _, pkg := range compiler.loading {
+	for _, pkg := range compiler.Loaded {
 		log.Debugf("visit package:%s", pkg.Name())
 		pkg.Accept(visitor)
 	}
@@ -129,6 +129,7 @@ func (compiler *Compiler) Compile(pkgName string) (pkg *ast.Package, err error) 
 	compiler.circularRefCheck(pkgName)
 	// 在系统中查找对应的包路径
 	fullPath := compiler.searchPackage(pkgName)
+	log.Debugf("found package:%s in:%s", pkgName, fullPath)
 	// 生成一个包节点
 	pkg = ast.NewPackage(pkgName)
 	// 将包节点放入loading列表
@@ -148,6 +149,7 @@ func (compiler *Compiler) Compile(pkgName string) (pkg *ast.Package, err error) 
 			return nil
 		}
 		// 解析该gs文件,生成一个代码节点
+		log.Debugf("解析文件:%s", path)
 		script, err := compiler.parse(pkg, path)
 		if err == nil {
 			// 没有错误的话,把绝对路径保存为代码节点的额外信息

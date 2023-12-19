@@ -149,7 +149,8 @@ func (compiler *Compiler) parse(pkg *ast.Package, path string) (*ast.Script, err
 	}
 	// 分析器进行分析
 	err = parser.parse()
-	// 返回分析后的代码节点树
+	// 返回分析后的代码节点
+	log.Debug("解析完的代码", script.Name(), script.Types)
 	return script, err
 }
 
@@ -280,9 +281,9 @@ func (parser *Parser) parseImports() {
 			parser.errorf(token.Pos, "expect import body: TokenString or '('")
 		}
 	}
-	// 无论什么包都要默认引入gslang包 编译器自动引入 设置位置1,1
+	// 无论什么包都要默认引入base/gslang包 编译器自动引入 设置位置1,1
 	if parser.script.Package().Name() != GSLangPackage &&
-		parser.script.Imports["gslang"] == nil {
+		parser.script.Imports["base/gslang"] == nil {
 		pkg, err := parser.compiler.Compile(GSLangPackage)
 		if err != nil {
 			panic(err)
@@ -292,7 +293,7 @@ func (parser *Parser) parseImports() {
 			Line:     1,
 			Column:   1,
 		}
-		ref, ok := parser.script.NewPackageRef("gslang", pkg)
+		ref, ok := parser.script.NewPackageRef("base/gslang", pkg)
 		if pkg == nil {
 			log.Panicf("check CompileS and Compile implement")
 		}
