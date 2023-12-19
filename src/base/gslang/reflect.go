@@ -77,10 +77,10 @@ func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int64 {
 	if attr.Type.Ref == nil {
 		log.Panicf("attr(%s) must linked first:\n\t%s", attr, Pos(attr).String())
 	}
-	// 只有Struct才能被作为属性的类型引用
+	// 只有Table才能被作为属性的类型引用
 	s, ok := attr.Type.Ref.(*ast.Table)
 	if !ok {
-		log.Panicf("only struct can be used as attr type:\n\tattr def:%s\n\ttype def:%s",
+		log.Panicf("only table can be used as attr type:\n\tattr def:%s\n\ttype def:%s",
 			Pos(attr), Pos(attr.Type.Ref))
 	}
 	// 轮询属性的类型引用的属性列表
