@@ -28,7 +28,7 @@ type Method struct {
 
 // InputParams 函数输入参数个数
 func (method *Method) InputParams() uint16 {
-	return uint16(len(f.Params))
+	return uint16(len(method.Params))
 }
 
 // ReturnParams 函数返回参数个数
@@ -102,23 +102,23 @@ func (service *Service) NewBase(base *TypeRef) (*TypeRef, bool) {
 	return base, true
 }
 
-// NewFunction 在服务内新建一个函数
-func (service *Service) NewFunction(name string) (*Method, bool) {
+// NewMethod 在服务内新建一个方法
+func (service *Service) NewMethod(name string) (*Method, bool) {
 	// 检查是否已经存在此函数
-	function, ok := service.Methods[name]
+	method, ok := service.Methods[name]
 	if ok {
-		return function, false
+		return method, false
 	}
 	// 新建函数
-	function = &Method{
+	method = &Method{
 		// TODO 使用hash计算函数ID
 		ID: uint32(len(service.Methods)),
 	}
 	// 初始化函数
-	function.Init(name, service.Script())
+	method.Init(name, service.Script())
 	// 设置函数的父节点为此服务节点
-	function.SetParent(service)
+	method.SetParent(service)
 	// 将函数加入到服务的函数列表
-	service.Methods[name] = function
-	return function, true
+	service.Methods[name] = method
+	return method, true
 }

@@ -55,8 +55,8 @@ func IsStruct(s *ast.Struct) bool {
 	return ok
 }
 
-// maskAsStruct 将结构体标记为结构体
-func maskAsStruct(s *ast.Struct) {
+// markAsStruct 将结构体标记为结构体
+func markAsStruct(s *ast.Struct) {
 	s.NewExtra("isStruct", true)
 }
 
@@ -66,8 +66,8 @@ func IsError(enum *ast.Enum) bool {
 	return ok
 }
 
-// maskAsError 将枚举标记为错误枚举
-func maskAsError(enum *ast.Enum) {
+// markAsError 将枚举标记为错误枚举
+func markAsError(enum *ast.Enum) {
 	enum.NewExtra("isError", true)
 }
 
