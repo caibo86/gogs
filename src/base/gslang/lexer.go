@@ -44,7 +44,7 @@ const (
 	KeyString                          // KeyString string
 	KeyStruct                          // KeyStruct struct
 	KeyTable                           // KeyTable table
-	KeyService                         // KeyService service
+	KeyContract                        // KeyService service
 	KeyImport                          // KeyImport import
 	KeyMap                             // KeyMap map
 )
@@ -75,30 +75,30 @@ var tokenName = map[rune]string{
 	KeyString:       "string",
 	KeyStruct:       "struct",
 	KeyTable:        "table",
-	KeyService:      "service",
+	KeyContract:     "contract",
 	KeyImport:       "import",
 	KeyMap:          "map",
 }
 
 var keyMap = map[string]rune{
-	"byte":    KeyByte,
-	"sbyte":   KeySByte,
-	"int16":   KeyInt16,
-	"uint16":  KeyUInt16,
-	"int32":   KeyInt32,
-	"uint32":  KeyUInt32,
-	"int64":   KeyInt64,
-	"uint64":  KeyUInt64,
-	"float32": KeyFloat32,
-	"float64": KeyFloat64,
-	"string":  KeyString,
-	"bool":    KeyBool,
-	"enum":    KeyEnum,
-	"struct":  KeyStruct,
-	"table":   KeyTable,
-	"service": KeyService,
-	"import":  KeyImport,
-	"map":     KeyMap,
+	"byte":     KeyByte,
+	"sbyte":    KeySByte,
+	"int16":    KeyInt16,
+	"uint16":   KeyUInt16,
+	"int32":    KeyInt32,
+	"uint32":   KeyUInt32,
+	"int64":    KeyInt64,
+	"uint64":   KeyUInt64,
+	"float32":  KeyFloat32,
+	"float64":  KeyFloat64,
+	"string":   KeyString,
+	"bool":     KeyBool,
+	"enum":     KeyEnum,
+	"struct":   KeyStruct,
+	"table":    KeyTable,
+	"contract": KeyContract,
+	"import":   KeyImport,
+	"map":      KeyMap,
 }
 
 // TokenName 取Token类型rune对应的字符串表示 大于0的为字符本身 小于0的为内置类型

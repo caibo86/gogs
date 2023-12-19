@@ -21,7 +21,7 @@ func main() {
 	defer func() {
 		e := recover()
 		if e != nil {
-			log.Error("inner error\n\t%s", e)
+			log.Errorf("inner error\n\t%s", e)
 		}
 
 		if err := log.Close(); err != nil {
@@ -47,14 +47,14 @@ func main() {
 	// 访问者
 	gen, err := NewGen4Go()
 	if err != nil {
-		log.Error("inner error\n\t%s", err)
+		log.Errorf("inner error\n\t%s", err)
 		return
 	}
 	log.Debug("生成器")
 	err = compiler.Accept(gen)
 	log.Debug("完成")
 	if err != nil {
-		log.Error("inner error\n\t%s", err)
+		log.Errorf("inner error\n\t%s", err)
 		return
 	}
 }

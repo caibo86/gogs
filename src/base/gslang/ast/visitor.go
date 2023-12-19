@@ -9,26 +9,26 @@ package ast
 
 // Visitor 访问者接口
 type Visitor interface {
-	VisitPackage(p *Package) Node       // 访问包节点
-	VisitScript(s *Script) Node         // 访问代码节点
-	VisitEnum(*Enum) Node               // 访问枚举节点
-	VisitEnumVal(*EnumVal) Node         // 访问枚举值节点
-	VisitStruct(*Struct) Node           // 访问结构体节点
-	VisitField(*Field) Node             // 访问结构体字段节点
-	VisitService(service *Service) Node // 访问服务节点
-	VisitFunction(*Method) Node         // 访问函数节点
-	VisitTypeRef(*TypeRef) Node         // 访问类型引用节点
-	VisitAttr(*Attr) Node               // 访问属性节点
-	VisitArray(*Array) Node             // 访问数组节点
-	VisitList(*List) Node               // 访问链表节点
-	VisitArgs(*Args) Node               // 访问参数列表节点
-	VisitNamedArgs(*NamedArgs) Node     // 访问命名参数列表节点
-	VisitString(*String) Node           // 访问字符串节点
-	VisitFloat(*Float) Node             // 访问浮点数节点
-	VisitInt(*Int) Node                 // 访问整数节点
-	VisitBool(*Bool) Node               // 访问布尔值节点
-	VisitBinaryOp(*BinaryOp) Node       // 访问二元表达式节点
-	VisitMap(*Map) Node                 // 访问Map节点
+	VisitPackage(*Package) Node     // 访问包节点
+	VisitScript(*Script) Node       // 访问代码节点
+	VisitEnum(*Enum) Node           // 访问枚举节点
+	VisitEnumVal(*EnumVal) Node     // 访问枚举值节点
+	VisitTable(*Table) Node         // 访问结构体节点
+	VisitField(*Field) Node         // 访问结构体字段节点
+	VisitContract(*Contract) Node   // 访问服务节点
+	VisitMethod(*Method) Node       // 访问函数节点
+	VisitTypeRef(*TypeRef) Node     // 访问类型引用节点
+	VisitAttr(*Attr) Node           // 访问属性节点
+	VisitArray(*Array) Node         // 访问数组节点
+	VisitList(*List) Node           // 访问链表节点
+	VisitArgs(*Args) Node           // 访问参数列表节点
+	VisitNamedArgs(*NamedArgs) Node // 访问命名参数列表节点
+	VisitString(*String) Node       // 访问字符串节点
+	VisitFloat(*Float) Node         // 访问浮点数节点
+	VisitInt(*Int) Node             // 访问整数节点
+	VisitBool(*Bool) Node           // 访问布尔值节点
+	VisitBinaryOp(*BinaryOp) Node   // 访问二元表达式节点
+	VisitMap(*Map) Node             // 访问Map节点
 }
 
 // 访问者模式
@@ -56,8 +56,8 @@ func (enumVal *EnumVal) Accept(visitor Visitor) Node {
 }
 
 // Accept 为结构体节点实现Node接口
-func (s *Struct) Accept(visitor Visitor) Node {
-	return visitor.VisitStruct(s)
+func (table *Table) Accept(visitor Visitor) Node {
+	return visitor.VisitTable(table)
 }
 
 // Accept 为结构体字段节点实现Node接口
@@ -66,13 +66,13 @@ func (field *Field) Accept(visitor Visitor) Node {
 }
 
 // Accept 为服务节点实现Node接口
-func (service *Service) Accept(visitor Visitor) Node {
-	return visitor.VisitService(service)
+func (contract *Contract) Accept(visitor Visitor) Node {
+	return visitor.VisitContract(contract)
 }
 
 // Accept 为函数节点实现Node接口
 func (method *Method) Accept(visitor Visitor) Node {
-	return visitor.VisitFunction(method)
+	return visitor.VisitMethod(method)
 }
 
 // Accept 为类型引用节点实现Node接口
@@ -178,8 +178,8 @@ func (visitor *EmptyVisitor) VisitEnumVal(*EnumVal) Node {
 	return nil
 }
 
-// VisitStruct 实现访问者接口
-func (visitor *EmptyVisitor) VisitStruct(*Struct) Node {
+// VisitTable 实现访问者接口
+func (visitor *EmptyVisitor) VisitTable(*Table) Node {
 	return nil
 }
 
@@ -188,13 +188,13 @@ func (visitor *EmptyVisitor) VisitField(*Field) Node {
 	return nil
 }
 
-// VisitService 实现访问者接口
-func (visitor *EmptyVisitor) VisitService(service *Service) Node {
+// VisitContract 实现访问者接口
+func (visitor *EmptyVisitor) VisitContract(*Contract) Node {
 	return nil
 }
 
-// VisitFunction 实现访问者接口
-func (visitor *EmptyVisitor) VisitFunction(*Method) Node {
+// VisitMethod 实现访问者接口
+func (visitor *EmptyVisitor) VisitMethod(*Method) Node {
 	return nil
 }
 
@@ -205,7 +205,6 @@ func (visitor *EmptyVisitor) VisitTypeRef(*TypeRef) Node {
 
 // VisitAttr 实现访问者接口
 func (visitor *EmptyVisitor) VisitAttr(*Attr) Node {
-
 	return nil
 }
 

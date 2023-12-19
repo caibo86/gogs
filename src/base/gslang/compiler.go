@@ -92,7 +92,7 @@ func (compiler *Compiler) circularRefCheck(pkgName string) {
 
 // errorf 编译器报错
 func (compiler *Compiler) errorf(position Position, template string, args ...any) {
-	log.Panicf("parse:%s err:%s", position, fmt.Sprintf(template, args...))
+	log.Panicf(fmt.Sprintf("parse:%s err:%s", position.String(), fmt.Sprintf(template, args...)))
 }
 
 // Accept 实现访问者模式,编译器访问入口
@@ -115,11 +115,6 @@ func (compiler *Compiler) Compile(pkgName string) (pkg *ast.Package, err error) 
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
-		}
-	}()
-	defer func() {
-		if err == nil && pkg == nil {
-			log.Panicf("pkg should not be nil when err is nil")
 		}
 	}()
 	if loaded, ok := compiler.Loaded[pkgName]; ok {
@@ -161,6 +156,9 @@ func (compiler *Compiler) Compile(pkgName string) (pkg *ast.Package, err error) 
 	if err != nil {
 		compiler.loading = compiler.loading[:len(compiler.loading)-1]
 		return
+	}
+	if pkg == nil {
+		log.Panicf("pkg should not be nil when err is nil")
 	}
 	compiler.link(pkg)
 	// 加载完成后,将该包从loading列表中移除,并将其加入已加载列表

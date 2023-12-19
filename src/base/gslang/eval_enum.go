@@ -77,8 +77,8 @@ func (visitor *evalEnumVal) VisitEnum(node *ast.Enum) ast.Node {
 	return nil
 }
 
-// VisitStruct 仅为实现访问者接口
-func (visitor *evalEnumVal) VisitStruct(node *ast.Struct) ast.Node {
+// VisitTable 仅为实现访问者接口
+func (visitor *evalEnumVal) VisitTable(node *ast.Table) ast.Node {
 	log.Panicf("stmt is not enum expr :%s", Pos(node))
 	return nil
 }
@@ -89,14 +89,14 @@ func (visitor *evalEnumVal) VisitField(node *ast.Field) ast.Node {
 	return nil
 }
 
-// VisitService 仅为实现访问者接口
-func (visitor *evalEnumVal) VisitService(node *ast.Service) ast.Node {
+// VisitContract 仅为实现访问者接口
+func (visitor *evalEnumVal) VisitContract(node *ast.Contract) ast.Node {
 	log.Panicf("stmt is not enum expr :%s", Pos(node))
 	return nil
 }
 
-// VisitFunction 仅为实现访问者接口
-func (visitor *evalEnumVal) VisitFunction(node *ast.Method) ast.Node {
+// VisitMethod 仅为实现访问者接口
+func (visitor *evalEnumVal) VisitMethod(node *ast.Method) ast.Node {
 	log.Panicf("stmt is not enum expr :%s", Pos(node))
 	return nil
 }

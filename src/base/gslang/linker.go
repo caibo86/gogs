@@ -71,7 +71,7 @@ func (linker *Linker) VisitScript(script *ast.Script) ast.Node {
 }
 
 // VisitStruct 访问结构体
-func (linker *Linker) VisitStruct(s *ast.Struct) ast.Node {
+func (linker *Linker) VisitStruct(s *ast.Table) ast.Node {
 	// 轮询访问表或者结构体的属性
 	for _, attr := range s.Attrs() {
 		attr.Accept(linker)
@@ -117,7 +117,7 @@ func (linker *Linker) VisitEnumVal(val *ast.EnumVal) ast.Node {
 }
 
 // VisitService 访问服务
-func (linker *Linker) VisitService(service *ast.Service) ast.Node {
+func (linker *Linker) VisitService(service *ast.Contract) ast.Node {
 	// 轮询访问协议的属性
 	for _, attr := range service.Attrs() {
 		attr.Accept(linker)
@@ -221,6 +221,7 @@ func (linker *Linker) VisitTypeRef(ref *ast.TypeRef) ast.Node {
 		if nodes == 0 {
 			log.Panic("the NamePath,can not be nil")
 		}
+		log.Debug(ref.NamePath, ref.Ref, nodes)
 		switch nodes { // 根据类型路径长度判断
 		case 1: // 长度为1 则NamePath[0]就是类型名
 			// 在代码节点引用的代码包中查找指定名字目标包
@@ -242,7 +243,9 @@ func (linker *Linker) VisitTypeRef(ref *ast.TypeRef) ast.Node {
 			}
 		case 2: // 路径长度为2  eg: ast.Node
 			// 在代码应用的包列表中查找NamePath[0],即目标类型所属的包
+			log.Debug(ref.Script().Imports)
 			if pkg, ok := ref.Script().Imports[ref.NamePath[0]]; ok {
+
 				if pkg.Ref == nil {
 					log.Panicf("(%s)first parse phase must link import package:%s",
 						ref.Script(), pkg)
@@ -253,6 +256,7 @@ func (linker *Linker) VisitTypeRef(ref *ast.TypeRef) ast.Node {
 					return ref
 				}
 			} else { // 如果不是引用包中的类型 则判断是否是当前包中的枚举类型
+				log.Debug("下面")
 				if expr, ok := ref.Package().Types[ref.NamePath[0]]; ok {
 					if enum, ok := expr.(*ast.Enum); ok {
 						if val, ok := enum.Values[ref.NamePath[1]]; ok {
@@ -305,13 +309,13 @@ func (linker *contractLinker) VisitScript(script *ast.Script) ast.Node {
 }
 
 // VisitContract 访问协议
-func (linker *contractLinker) VisitContract(contract *ast.Service) ast.Node {
+func (linker *contractLinker) VisitContract(contract *ast.Contract) ast.Node {
 	linker.unwind(contract, nil)
 	return contract
 }
 
 // unwind 展开协议 协议展开后 每一个协议都持有所有父协议的函数 并重新分配 ID
-func (linker *contractLinker) unwind(expr *ast.Service, stack []*ast.Service) []*ast.Service {
+func (linker *contractLinker) unwind(expr *ast.Contract, stack []*ast.Contract) []*ast.Contract {
 	// 如果协议有已经展开的额外信息 则直接返回协议栈
 	if _, ok := expr.Extra("unwind"); ok {
 		return stack
@@ -332,7 +336,7 @@ func (linker *contractLinker) unwind(expr *ast.Service, stack []*ast.Service) []
 	modify := uint32(0)
 	// 检查协议的父协议 并展开
 	for _, base := range expr.Bases {
-		contract, ok := base.Ref.(*ast.Service)
+		contract, ok := base.Ref.(*ast.Contract)
 		if !ok { // 检查父协议的类型是否正确
 			linker.errorf(Pos(base),
 				"contract(%s) inheri type is not contract:\n\tsee: %s", expr,
@@ -350,7 +354,7 @@ func (linker *contractLinker) unwind(expr *ast.Service, stack []*ast.Service) []
 	// 将父协议的函数列表复制到当前协议
 	modify = uint32(0)
 	for _, base := range expr.Bases {
-		contract := base.Ref.(*ast.Service)
+		contract := base.Ref.(*ast.Contract)
 		for _, method := range contract.Methods {
 			clone := &ast.Method{}
 			*clone = *method
@@ -409,10 +413,11 @@ func (linker *attrLinker) VisitPackage(pkg *ast.Package) ast.Node {
 		log.Panicf("inner error: can't found yflang.AttrTarge enum")
 	}
 	// 设置结构和枚举两种内置类型
+	log.Debug(pkg.Name(), " ", GSLangPackage)
 	if pkg.Name() == GSLangPackage {
 		linker.attrStruct = pkg.Types[GSLangAttrStruct]
 		if linker.attrStruct == nil {
-			log.Panicf("inner error: can't found yflang.Struct attribute type")
+			log.Panicf("inner error: can't found yflang.Table attribute type")
 		}
 		linker.attrError = pkg.Types[GSLangAttrError]
 		if linker.attrError == nil {
@@ -421,7 +426,7 @@ func (linker *attrLinker) VisitPackage(pkg *ast.Package) ast.Node {
 	} else {
 		attrStruct, err := linker.Type(GSLangPackage, GSLangAttrStruct)
 		if err != nil {
-			log.Panicf("inner error: can't found yflang.Struct attribute type. err:%v", err)
+			log.Panicf("inner error: can't found yflang.Table attribute type. err:%v", err)
 		}
 		linker.attrStruct = attrStruct
 		attrError, err := linker.Type(GSLangPackage, GSLangAttrError)
@@ -464,7 +469,7 @@ func (linker *attrLinker) VisitScript(script *ast.Script) ast.Node {
 }
 
 // VisitTable 访问Table
-func (linker *attrLinker) VisitTable(table *ast.Struct) ast.Node {
+func (linker *attrLinker) VisitTable(table *ast.Table) ast.Node {
 	// 是否Struct
 	var isStruct bool
 	// 如果table的属性中有内置 标识符为Struct的Table类型
@@ -479,7 +484,7 @@ func (linker *attrLinker) VisitTable(table *ast.Struct) ast.Node {
 		target := linker.EvalAttrUsage(attr)
 		var toMove bool
 		if isStruct {
-			if target&linker.attrTarget["Struct"] == 0 {
+			if target&linker.attrTarget["Table"] == 0 {
 				toMove = true
 			}
 		} else {
@@ -564,7 +569,7 @@ func (linker *attrLinker) VisitEnumVal(val *ast.EnumVal) ast.Node {
 }
 
 // VisitContract 访问协议
-func (linker *attrLinker) VisitContract(contract *ast.Service) ast.Node {
+func (linker *attrLinker) VisitContract(contract *ast.Contract) ast.Node {
 	for _, attr := range contract.Attrs() {
 		target := linker.EvalAttrUsage(attr)
 		if target&linker.attrTarget["Script"] != 0 {

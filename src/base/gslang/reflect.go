@@ -42,7 +42,7 @@ func EvalEnumVal(expr ast.Expr) int64 {
 }
 
 // IsAttrUsage 判断是不是内置AttrUsage结构
-func IsAttrUsage(s *ast.Struct) bool {
+func IsAttrUsage(s *ast.Table) bool {
 	if s.Name() == "AttrUsage" && s.Package().Name() == GSLangPackage {
 		return true
 	}
@@ -50,13 +50,13 @@ func IsAttrUsage(s *ast.Struct) bool {
 }
 
 // IsStruct 判断是不是一个结构体
-func IsStruct(s *ast.Struct) bool {
+func IsStruct(s *ast.Table) bool {
 	_, ok := s.Extra("isStruct")
 	return ok
 }
 
 // markAsStruct 将结构体标记为结构体
-func markAsStruct(s *ast.Struct) {
+func markAsStruct(s *ast.Table) {
 	s.NewExtra("isStruct", true)
 }
 
@@ -75,10 +75,10 @@ func markAsError(enum *ast.Enum) {
 func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int64 {
 	// 属性的类型引用必须先连接到对应类型
 	if attr.Type.Ref == nil {
-		log.Panicf("attr(%s) must linked first:\n\t%s", attr, Pos(attr))
+		log.Panicf("attr(%s) must linked first:\n\t%s", attr, Pos(attr).String())
 	}
 	// 只有Struct才能被作为属性的类型引用
-	s, ok := attr.Type.Ref.(*ast.Struct)
+	s, ok := attr.Type.Ref.(*ast.Table)
 	if !ok {
 		log.Panicf("only struct can be used as attr type:\n\tattr def:%s\n\ttype def:%s",
 			Pos(attr), Pos(attr.Type.Ref))
@@ -86,7 +86,7 @@ func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int64 {
 	// 轮询属性的类型引用的属性列表
 	for _, metaAttr := range s.Attrs() {
 		// 属性的类型引用必须是Struct
-		usage, ok := metaAttr.Type.Ref.(*ast.Struct)
+		usage, ok := metaAttr.Type.Ref.(*ast.Table)
 		if !ok {
 			log.Panicf("attr(%s) must linked first:\n\t%s", metaAttr, Pos(metaAttr))
 		}

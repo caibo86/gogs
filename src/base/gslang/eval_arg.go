@@ -86,8 +86,8 @@ func (visitor *evalArg) VisitEnumVal(node *ast.EnumVal) ast.Node {
 	return nil
 }
 
-// VisitStruct 仅仅为实现访问者
-func (visitor *evalArg) VisitStruct(node *ast.Struct) ast.Node {
+// VisitTable 仅仅为实现访问者
+func (visitor *evalArg) VisitTable(node *ast.Table) ast.Node {
 	log.Panicf("inner error, stmt is not argument list :%s", Pos(node))
 	return nil
 }
@@ -98,14 +98,14 @@ func (visitor *evalArg) VisitField(node *ast.Field) ast.Node {
 	return nil
 }
 
-// VisitService 仅仅为实现访问者
-func (visitor *evalArg) VisitService(node *ast.Service) ast.Node {
+// VisitContract 仅仅为实现访问者
+func (visitor *evalArg) VisitContract(node *ast.Contract) ast.Node {
 	log.Panicf("inner error, stmt is not argument list :%s", Pos(node))
 	return nil
 }
 
-// VisitFunction 仅仅为实现访问者
-func (visitor *evalArg) VisitFunction(node *ast.Method) ast.Node {
+// VisitMethod 仅仅为实现访问者
+func (visitor *evalArg) VisitMethod(node *ast.Method) ast.Node {
 	log.Panicf("inner error, stmt is not argument list :%s", Pos(node))
 	return nil
 }

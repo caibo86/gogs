@@ -20,16 +20,16 @@ type Position struct {
 }
 
 // BaseName 返回基础文件名
-func (pos *Position) BaseName() string {
+func (pos Position) BaseName() string {
 	return filepath.Base(pos.Filename)
 }
 
 // String 返回代码位置字符串
-func (pos *Position) String() string {
+func (pos Position) String() string {
 	return fmt.Sprintf("%s(%d:%d)", pos.Filename, pos.Line, pos.Column)
 }
 
 // Valid 返回代码位置是否有效
-func (pos *Position) Valid() bool {
+func (pos Position) Valid() bool {
 	return pos.Line != 0
 }

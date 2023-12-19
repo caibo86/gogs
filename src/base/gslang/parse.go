@@ -178,7 +178,7 @@ func (parser *Parser) parse() (err error) {
 			parser.parseTable(false)
 		case KeyStruct: // struct 关键字
 			parser.parseTable(true)
-		case KeyService: // contract 关键字
+		case KeyContract: // contract 关键字
 			parser.parseContract()
 		default: // 其余则报错
 			parser.errorf(token.Pos, "expect EOF")
@@ -283,7 +283,7 @@ func (parser *Parser) parseImports() {
 	}
 	// 无论什么包都要默认引入base/gslang包 编译器自动引入 设置位置1,1
 	if parser.script.Package().Name() != GSLangPackage &&
-		parser.script.Imports["base/gslang"] == nil {
+		parser.script.Imports["gslang"] == nil {
 		pkg, err := parser.compiler.Compile(GSLangPackage)
 		if err != nil {
 			panic(err)
@@ -293,9 +293,9 @@ func (parser *Parser) parseImports() {
 			Line:     1,
 			Column:   1,
 		}
-		ref, ok := parser.script.NewPackageRef("base/gslang", pkg)
+		ref, ok := parser.script.NewPackageRef("gslang", pkg)
 		if pkg == nil {
-			log.Panicf("check CompileS and Compile implement")
+			log.Panicf("check Compiler and Compile implement")
 		}
 		if !ok {
 			log.Panicf("check if the script manual import gslang package")
@@ -725,7 +725,7 @@ func (parser *Parser) parseType() ast.Expr {
 // parseTable 分析表(isStruct=false) 结构体(isStruct=true)
 func (parser *Parser) parseTable(isStruct bool) {
 	name := parser.expect(TokenID)
-	table := parser.script.NewStruct(name.Value.(string))
+	table := parser.script.NewTable(name.Value.(string))
 	// 不能有重名类型
 	if old, ok := parser.script.NewType(table); !ok {
 		parser.errorf(name.Pos, "duplicate type name:\n\tsee: %s", Pos(old))
@@ -736,7 +736,7 @@ func (parser *Parser) parseTable(isStruct bool) {
 	parser.attachAttrs(table)
 	if isStruct {
 		// 如果是结构体 生成一个属性
-		attr := parser.newGSLangAttr("Struct")
+		attr := parser.newGSLangAttr("Table")
 		attachPos(attr, name.Pos)
 		// 将属性附加到这个表
 		table.AddAttr(attr)

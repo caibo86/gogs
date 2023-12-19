@@ -172,8 +172,8 @@ func (gen *Gen4Go) tag(expr ast.Expr) string {
 		if _, ok := ref.Ref.(*ast.Enum); ok {
 			return "gsnet.Enum"
 		}
-		if gslang.IsStruct(ref.Ref.(*ast.Struct)) {
-			return "gsnet.Struct"
+		if gslang.IsStruct(ref.Ref.(*ast.Table)) {
+			return "gsnet.Table"
 		}
 		return "gsnet.Table"
 	case *ast.Array:
@@ -611,7 +611,7 @@ func (gen *Gen4Go) VisitPackage(pkg *ast.Package) ast.Node {
 // VisitScript 访问代码
 func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 	gen.buff.Reset()
-	// 轮询访问代码中的所有类型 Enum Table Struct Contract
+	// 轮询访问代码中的所有类型 Enum Table Table Contract
 	for _, ctype := range script.Types {
 		log.Debugf("生成器 %v", ctype.Name())
 		ctype.Accept(gen)
@@ -682,7 +682,7 @@ func (gen *Gen4Go) VisitEnum(enum *ast.Enum) ast.Node {
 }
 
 // VisitTable 访问表
-func (gen *Gen4Go) VisitTable(table *ast.Struct) ast.Node {
+func (gen *Gen4Go) VisitTable(table *ast.Table) ast.Node {
 	if gslang.IsStruct(table) {
 		if err := gen.tpl.ExecuteTemplate(&gen.buff, "struct", table); err != nil {
 			panic(err)
@@ -696,7 +696,7 @@ func (gen *Gen4Go) VisitTable(table *ast.Struct) ast.Node {
 }
 
 // VisitContract 访问协议
-func (gen *Gen4Go) VisitContract(contract *ast.Service) ast.Node {
+func (gen *Gen4Go) VisitContract(contract *ast.Contract) ast.Node {
 	log.Debugf("%v", contract.Name())
 	log.Debugf("%v", contract.Path())
 	log.Debugf("%v", contract.Methods)
