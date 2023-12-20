@@ -23,3 +23,6 @@ GO_FLAGS=-ldflags=$(LD_FLAGS) -tags=$(GO_TAGS)
 gsc:
 	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/gsc/gs2go
 
+t:
+	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/gsc/gs2go
+	GOPATH=$(GOPATH) gs2go gs

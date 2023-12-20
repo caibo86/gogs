@@ -23,13 +23,13 @@ import (
 
 // 包名映射的引入包的go代码
 var packageMapping = map[string]string{
-	"gsnet.": `import "gogs/base/gsnet"`,
-	// "yfdocker.": `import "gsgo/base/docker"`,
-	// "yfconfig.": `import "gsgo/base/config"`,
-	// "yferrors.": `import "gsgo/base/errors"`,
-	"bytes.": `import "bytes"`,
-	"fmt.":   `import "fmt"`,
-	"time.":  `import "time"`,
+	"gsnet.":    `import "gogs/base/gsnet"`,
+	"gserrors.": `import "gogs/base/gserrors"`,
+	"bytes.":    `import "bytes"`,
+	"fmt.":      `import "fmt"`,
+	"time.":     `import "time"`,
+	// "yfdocker.": `import "gogs/base/docker"`,
+	// "yfconfig.": `import "gogs/base/config"`,
 }
 
 // gslang内置类型对应的golang表示
@@ -173,7 +173,7 @@ func (gen *Gen4Go) tag(expr ast.Expr) string {
 			return "gsnet.Enum"
 		}
 		if gslang.IsStruct(ref.Ref.(*ast.Table)) {
-			return "gsnet.Table"
+			return "gsnet.Struct"
 		}
 		return "gsnet.Table"
 	case *ast.Array:
@@ -247,7 +247,7 @@ func (gen *Gen4Go) writeTagType(expr ast.Expr) string {
 		// 数组
 		array := expr.(*ast.Array)
 		var buff bytes.Buffer
-		if array.Element.Name() == string(".yflang.Byte") {
+		if array.Element.Name() == ".gslang.Byte" {
 			if err := gen.tpl.ExecuteTemplate(&buff, "writeTagByteArray", array); err != nil {
 				panic(err)
 			}
@@ -261,7 +261,7 @@ func (gen *Gen4Go) writeTagType(expr ast.Expr) string {
 		// 切片
 		list := expr.(*ast.List)
 		var buff bytes.Buffer
-		if list.Element.Name() == string(".yflang.Byte") {
+		if list.Element.Name() == ".gslang.Byte" {
 			if err := gen.tpl.ExecuteTemplate(&buff, "writeTagByteList", list); err != nil {
 				panic(err)
 			}
@@ -301,7 +301,7 @@ func (gen *Gen4Go) readType(expr ast.Expr) string {
 		// 数组
 		array := expr.(*ast.Array)
 		var buff bytes.Buffer
-		if array.Element.Name() == string(".yflang.Byte") {
+		if array.Element.Name() == ".gslang.Byte" {
 			if err := gen.tpl.ExecuteTemplate(&buff, "readByteArray", array); err != nil {
 				panic(err)
 			}
@@ -315,7 +315,7 @@ func (gen *Gen4Go) readType(expr ast.Expr) string {
 		// 切片
 		list := expr.(*ast.List)
 		var buff bytes.Buffer
-		if list.Element.Name() == string(".yflang.Byte") {
+		if list.Element.Name() == ".gslang.Byte" {
 			if err := gen.tpl.ExecuteTemplate(&buff, "readByteList", list); err != nil {
 				panic(err)
 			}
@@ -360,7 +360,7 @@ func (gen *Gen4Go) writeType(expr ast.Expr) string {
 		// 数组
 		array := expr.(*ast.Array)
 		var buff bytes.Buffer
-		if array.Element.Name() == string(".yflang.Byte") {
+		if array.Element.Name() == ".gslang.Byte" {
 			if err := gen.tpl.ExecuteTemplate(&buff, "writeByteArray", array); err != nil {
 				panic(err)
 			}
@@ -374,7 +374,7 @@ func (gen *Gen4Go) writeType(expr ast.Expr) string {
 		// 切片
 		list := expr.(*ast.List)
 		var buff bytes.Buffer
-		if list.Element.Name() == string(".yflang.Byte") {
+		if list.Element.Name() == ".gslang.Byte" {
 			if err := gen.tpl.ExecuteTemplate(&buff, "writeByteList", list); err != nil {
 				panic(err)
 			}
@@ -611,7 +611,7 @@ func (gen *Gen4Go) VisitPackage(pkg *ast.Package) ast.Node {
 // VisitScript 访问代码
 func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 	gen.buff.Reset()
-	// 轮询访问代码中的所有类型 Enum Table Table Contract
+	// 轮询访问代码中的所有类型 Enum Struct Table Contract
 	for _, ctype := range script.Types {
 		log.Debugf("生成器 %v", ctype.Name())
 		ctype.Accept(gen)

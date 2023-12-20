@@ -70,17 +70,17 @@ func (linker *Linker) VisitScript(script *ast.Script) ast.Node {
 	return script
 }
 
-// VisitStruct 访问结构体
-func (linker *Linker) VisitStruct(s *ast.Table) ast.Node {
+// VisitTable 访问结构体或者表
+func (linker *Linker) VisitTable(table *ast.Table) ast.Node {
 	// 轮询访问表或者结构体的属性
-	for _, attr := range s.Attrs() {
+	for _, attr := range table.Attrs() {
 		attr.Accept(linker)
 	}
 	// 论访问表或者结构体的域
-	for _, field := range s.Fields {
+	for _, field := range table.Fields {
 		field.Accept(linker)
 	}
-	return s
+	return table
 }
 
 // VisitField 访问字段
@@ -116,21 +116,21 @@ func (linker *Linker) VisitEnumVal(val *ast.EnumVal) ast.Node {
 	return val
 }
 
-// VisitService 访问服务
-func (linker *Linker) VisitService(service *ast.Contract) ast.Node {
+// VisitContract 访问服务
+func (linker *Linker) VisitContract(contract *ast.Contract) ast.Node {
 	// 轮询访问协议的属性
-	for _, attr := range service.Attrs() {
+	for _, attr := range contract.Attrs() {
 		attr.Accept(linker)
 	}
 	// 轮询访问协议的父协议
-	for _, base := range service.Bases {
+	for _, base := range contract.Bases {
 		base.Accept(linker)
 	}
 	// 轮询访问协议的函数列表
-	for _, method := range service.Methods {
+	for _, method := range contract.Methods {
 		method.Accept(linker)
 	}
-	return service
+	return contract
 }
 
 // VisitMethod 访问方法
@@ -328,7 +328,7 @@ func (linker *contractLinker) unwind(expr *ast.Contract, stack []*ast.Contract) 
 		}
 	}
 	if buff.Len() != 0 {
-		linker.errorf(Pos(expr), "circular inheri:\n%s\t%s", buff.String(), expr)
+		linker.errorf(Pos(expr), "circular inherit:\n%s\t%s", buff.String(), expr)
 	}
 	// 将该协议添加到栈尾
 	stack = append(stack, expr)
@@ -339,7 +339,7 @@ func (linker *contractLinker) unwind(expr *ast.Contract, stack []*ast.Contract) 
 		contract, ok := base.Ref.(*ast.Contract)
 		if !ok { // 检查父协议的类型是否正确
 			linker.errorf(Pos(base),
-				"contract(%s) inheri type is not contract:\n\tsee: %s", expr,
+				"contract(%s) inherit type is not contract:\n\tsee: %s", expr,
 				Pos(base.Ref))
 		}
 		// 将所有父协议压栈
@@ -382,9 +382,9 @@ func (linker *contractLinker) unwind(expr *ast.Contract, stack []*ast.Contract) 
 type attrLinker struct {
 	*Compiler                         // 所属编译器
 	ast.EmptyVisitor                  // 内嵌空访问者
-	attrTarget       map[string]int64 // 指定为yflang包中的AttrStruct枚举类型解析后的字典
-	attrStruct       ast.Expr         // 指定为yflang包中的Struct类型
-	attrError        ast.Expr         // 指定为yflang包中的Error类型
+	attrTarget       map[string]int64 // 指定为gslang包中的AttrStruct枚举类型解析后的字典
+	attrStruct       ast.Expr         // 指定为gslang包中的Struct类型
+	attrError        ast.Expr         // 指定为gslang包中的Error类型
 }
 
 // VisitPackage	访问包
@@ -393,7 +393,7 @@ func (linker *attrLinker) VisitPackage(pkg *ast.Package) ast.Node {
 		return pkg
 	}
 	log.Debugf("我来看下包名:%s", pkg.Name())
-	// 设置属性连接器的 属性目标为 yflang编译器内置的 指定名字的枚举值 解析成的字典
+	// 设置属性连接器的 属性目标为 gslang编译器内置的 指定名字的枚举值 解析成的字典
 	if pkg.Name() == GSLangPackage {
 		if expr, ok := pkg.Types[GSLangAttrTarget]; ok {
 			if enum, ok := expr.(*ast.Enum); ok {
@@ -410,28 +410,28 @@ func (linker *attrLinker) VisitPackage(pkg *ast.Package) ast.Node {
 		}
 	}
 	if linker.attrTarget == nil {
-		log.Panicf("inner error: can't found yflang.AttrTarge enum")
+		log.Panicf("inner error: can't found gslang.AttrTarget enum")
 	}
 	// 设置结构和枚举两种内置类型
 	log.Debug(pkg.Name(), " ", GSLangPackage)
 	if pkg.Name() == GSLangPackage {
 		linker.attrStruct = pkg.Types[GSLangAttrStruct]
 		if linker.attrStruct == nil {
-			log.Panicf("inner error: can't found yflang.Table attribute type")
+			log.Panicf("inner error: can't found gslang.Table attribute type")
 		}
 		linker.attrError = pkg.Types[GSLangAttrError]
 		if linker.attrError == nil {
-			log.Panicf("inner error: can't found yflang.Error attribute type")
+			log.Panicf("inner error: can't found gslang.Error attribute type")
 		}
 	} else {
 		attrStruct, err := linker.Type(GSLangPackage, GSLangAttrStruct)
 		if err != nil {
-			log.Panicf("inner error: can't found yflang.Table attribute type. err:%v", err)
+			log.Panicf("inner error: can't found gslang.Table attribute type. err:%v", err)
 		}
 		linker.attrStruct = attrStruct
 		attrError, err := linker.Type(GSLangPackage, GSLangAttrError)
 		if err != nil {
-			log.Panicf("inner error: can't found yflang.Error attribute type. err:%v", err)
+			log.Panicf("inner error: can't found gslang.Error attribute type. err:%v", err)
 		}
 		linker.attrError = attrError
 	}
@@ -450,7 +450,7 @@ func (linker *attrLinker) VisitScript(script *ast.Script) ast.Node {
 		// 如果属性目标不是 AttrTarget.Script
 		if target&linker.attrTarget["Script"] == 0 {
 			// 如果属性()中是 AttrTarget.GSLangPackage
-			if target&linker.attrTarget["GSLangPackage"] != 0 {
+			if target&linker.attrTarget["Package"] != 0 {
 				// 将此属性从代码节点删除 并添加到代码节点所属的包节点下
 				script.RemoveAttr(attr)
 				script.Package().AddAttr(attr)
@@ -498,7 +498,7 @@ func (linker *attrLinker) VisitTable(table *ast.Table) ast.Node {
 				table.Script().AddAttr(attr)
 				continue
 			}
-			if target&linker.attrTarget["GSLangPackage"] != 0 {
+			if target&linker.attrTarget["Package"] != 0 {
 				table.RemoveAttr(attr)
 				table.Package().AddAttr(attr)
 				continue
@@ -532,7 +532,7 @@ func (linker *attrLinker) VisitField(field *ast.Field) ast.Node {
 
 // VisitEnum 访问枚举
 func (linker *attrLinker) VisitEnum(enum *ast.Enum) ast.Node {
-	// 如果enum的属性中有 类型引用为内置 yflang.Error类型  则认为此枚举是一个错误枚举 并标记
+	// 如果enum的属性中有 类型引用为内置 gslang.Error类型  则认为此枚举是一个错误枚举 并标记
 	if len(ast.GetAttrs(enum, linker.attrError)) > 0 {
 		markAsError(enum)
 	}
@@ -577,7 +577,7 @@ func (linker *attrLinker) VisitContract(contract *ast.Contract) ast.Node {
 			contract.Script().AddAttr(attr)
 			continue
 		}
-		if target&linker.attrTarget["GSLangPackage"] != 0 {
+		if target&linker.attrTarget["Package"] != 0 {
 			contract.RemoveAttr(attr)
 			contract.Package().AddAttr(attr)
 			continue

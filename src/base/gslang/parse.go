@@ -315,7 +315,7 @@ func (parser *Parser) parseImport() *ast.PackageRef {
 		path = token.Value.(string)
 		key = filepath.Base(path) // 设置key为原始包名
 		parser.Next()
-	} else if token.Type == TokenID { // 是 标识符 则是为引用包提供别名 同galang语法
+	} else if token.Type == TokenID { // 是 标识符 则是为引用包提供别名 同golang语法
 		parser.Next()
 		key = token.Value.(string) // 设置key为 别名
 		token = parser.expect(TokenSTRING)
@@ -527,7 +527,7 @@ func (parser *Parser) parseContract() {
 				parser.parseComments()
 				parser.attachComments(base)
 			} else { // 不能重复继承相同协议
-				parser.errorf(Pos(base), "duplicate inher from same contract:\n\tsee: %s", Pos(old))
+				parser.errorf(Pos(base), "duplicate inherit from same contract:\n\tsee: %s", Pos(old))
 			}
 			next := parser.Peek()
 			// ,分隔多个父协议
@@ -736,7 +736,7 @@ func (parser *Parser) parseTable(isStruct bool) {
 	parser.attachAttrs(table)
 	if isStruct {
 		// 如果是结构体 生成一个属性
-		attr := parser.newGSLangAttr("Table")
+		attr := parser.newGSLangAttr("Struct")
 		attachPos(attr, name.Pos)
 		// 将属性附加到这个表
 		table.AddAttr(attr)
