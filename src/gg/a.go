@@ -1,11 +1,4 @@
-// -------------------------------------------
-// @file      : a.go
-// @author    : 蔡波
-// @contact   : caibo923@gmail.com
-// @time      : 2023/12/20 下午9:07
-// -------------------------------------------
-
-package gs
+package gg
 
 // +k8s:deepcopy-gen=true
 type ACar struct {
