@@ -9,13 +9,16 @@ package main
 
 var tpl4go = `
 {{/**************************************************************************/}}
+
 {{define "imports"}}
 import(
     {{range $index, $element := .}} {{$index}} "{{$element.Name}}"
     {{end}}
 )
 {{end}}
+
 {{/**************************************************************************/}}
+
 {{define "error"}}{{$Enum := symbol .Name}}
 // {{$Enum}} 类型定义 gsc自动生成
 type {{$Enum}} {{enumType .}}
@@ -48,29 +51,25 @@ func Read{{$Enum}}(reader gsnet.Reader)({{$Enum}}, error){
 // String 实现 Stringer 接口
 func (val {{$Enum}}) String() string {
     switch val {
-        {{range .Values}}
-        case {{.Value}}:
-            return "{{$Enum}}{{symbol .Name}}"
-        {{end}}
-    }
+        {{range .Values}}case {{.Value}}:
+            return "{{$Enum}}{{symbol .Name}}" 
+		{{end}} }
     return fmt.Sprintf("Unknown(%d)",val)
 }
 
 // Error 实现 Error 接口
 func (val {{$Enum}}) Error() string {
     switch val {
-        {{range .Values}}
-        case {{.Value}}:
+        {{range .Values}}case {{.Value}}:
             return "{{$Enum}}{{symbol .Name}}"
-        {{end}}
-    }
+        {{end}} }
     return fmt.Sprintf("Unknown(%d)",val)
 }
 
 {{end}}
 
-
 {{/**************************************************************************/}}
+
 {{define "enum"}}{{$Enum := symbol .Name}}
 // {{$Enum}} 类型 gsc自动生成
 type {{$Enum}} {{enumType .}}
@@ -108,7 +107,9 @@ func (val {{$Enum}}) String() string {
     return fmt.Sprintf("Unknown(%d)",val)
 }
 {{end}}
+
 {{/**************************************************************************/}}
+
 {{define "readMap"}}func(reader gsnet.Reader)({{typeName .}},error) {
     length, err1 := gsnet.ReadUint16(reader)
     if err1 != nil {
@@ -178,9 +179,12 @@ func (val {{$Enum}}) String() string {
 }{{end}}
 
 {{define "writeMap"}}func(writer gsnet.Writer,val {{typeName .}})(error) {
-    gsnet.WriteUint16(writer,uint16(len(val)))
+    err1 := gsnet.WriteUint16(writer,uint16(len(val)))
+	if err1 != nil {
+		return err1
+	}
     for k, v := range val {
-        err1 := {{writeType .Key}}(writer, k)
+        err1 = {{writeType .Key}}(writer, k)
         if err1 != nil {
             return err1
         }
@@ -193,9 +197,12 @@ func (val {{$Enum}}) String() string {
 }{{end}}
 
 {{define "writeList"}}func(writer gsnet.Writer,val {{typeName .}})(error) {
-    gsnet.WriteUint16(writer,uint16(len(val)))
+    err1 := gsnet.WriteUint16(writer,uint16(len(val)))
+	if err1 != nil {
+		return err1	
+	}
     for _, c := range val {
-        err1 := {{writeType .Element}}(writer,c)
+        err1 = {{writeType .Element}}(writer,c)
         if err1 != nil {
             return err1
         }
@@ -204,8 +211,11 @@ func (val {{$Enum}}) String() string {
 }{{end}}
 
 {{define "writeByteList"}}func(writer gsnet.Writer,val {{typeName .}})(error) {
-    gsnet.WriteUint16(writer,uint16(len(val)))
-    err1 := gsnet.WriteBytes(writer,val)
+    err1 := gsnet.WriteUint16(writer,uint16(len(val)))
+	if err1 != nil {
+		return err1
+	}
+    err1 = gsnet.WriteBytes(writer,val)
     return err1
 }{{end}}
 
@@ -229,8 +239,14 @@ func (val {{$Enum}}) String() string {
         gsnet.WriteTag(writer,gsnet.None)
         return nil
     }
-    gsnet.WriteTag(writer,gsnet.List)
-    gsnet.WriteUint16(writer,uint16(len(val)))
+    err := gsnet.WriteTag(writer,gsnet.List)
+	if err != nil {
+		return err
+	}
+    err = gsnet.WriteUint16(writer,uint16(len(val)))
+	if err != nil {
+		return err
+	}
     for _,c:= range val {
         err := {{writeType .Element}}(writer,c)
         if err != nil {
@@ -283,7 +299,13 @@ func (val {{$Enum}}) String() string {
 }(){{end}}
 
 {{/**************************************************************************/}}
-{{define "struct"}} {{$Struct := symbol .Name}}
+
+{{define "struct"}}
+
+{{$Struct := symbol .Name}}
+
+{{$Receiver := lowerFirst $Struct}}
+
 // {{$Struct}} gsc自动生成
 type {{$Struct}} struct { {{range .Fields}}
     {{symbol .Name}} {{typeName .Type}} {{end}}
@@ -308,7 +330,7 @@ func Read{{$Struct}}(reader gsnet.Reader) (target *{{$Struct}},err error) {
 
 // Write{{$Struct}} 将 {{$Struct}} 写入到输出流 gsc自动生成
 func Write{{$Struct}}(writer gsnet.Writer,val *{{$Struct}}) (err error) { {{range .Fields}}
-    {{writeType .Type}}(writer,val.{{symbol .Name}})
+    err = {{writeType .Type}}(writer,val.{{symbol .Name}})
     if err != nil {
         return
     }{{end}}
@@ -318,21 +340,43 @@ func Write{{$Struct}}(writer gsnet.Writer,val *{{$Struct}}) (err error) { {{rang
 // WriteTag{{$Struct}} 将 {{$Struct}} 写入到输出流带标签 gsc自动生成
 func WriteTag{{$Struct}}(writer gsnet.Writer,val *{{$Struct}}) (error) {
     if val == nil {
-        gsnet.WriteTag(writer,gsnet.None)
-        return nil
+        return gsnet.WriteTag(writer,gsnet.None)
     }
-    gsnet.WriteTag(writer,gsnet.Struct)
+    err := gsnet.WriteTag(writer,gsnet.Struct)
+	if err != nil {
+		return err 
+	}
     return Write{{$Struct}}(writer,val)
 }
+
+// DeepCopy gsc自动生成
+func ({{$Receiver}} *{{$Struct}})DeepCopy() *{{$Struct}} {
+	if {{$Receiver}} == nil {
+		return nil
+	}
+	var buff bytes.Buffer
+	err := Write{{$Struct}}(&buff,{{$Receiver}})
+	if err != nil {
+		return nil
+	}
+	ret, err  := Read{{$Struct}}(&buff)
+	if err != nil {
+		return nil 
+	}
+	return ret
+}
+
+
 {{end}}
+
 {{/**************************************************************************/}}
+
 {{define "table"}}
 {{$Table := symbol .Name}}
 
 // {{$Table}} gsc自动生成
-type {{$Table}} struct {
-    {{range .Fields}}
-    {{symbol .Name}} {{typeName .Type}}
+type {{$Table}} struct { 
+    {{range .Fields}} {{symbol .Name}} {{typeName .Type}}
     {{end}}
 }
 
@@ -340,71 +384,57 @@ type {{$Table}} struct {
 // New{{$Table}} 用默认值生成一个结构 gsc自动生成
 func New{{$Table}}() *{{$Table}} {
     return &{{$Table}}{
-        {{range .Fields}}
-        {{symbol .Name}}: {{defaultVal .Type}},
-        {{end}}
-    }
+        {{range .Fields}} {{symbol .Name}}: {{defaultVal .Type}},
+        {{end}} }
 }
 
 // Read{{$Table}} 从输入流读取一个 {{$Table}} gsc自动生成
 func Read{{$Table}}(reader gsnet.Reader) (target *{{$Table}},err error) {
-
     target = New{{$Table}}()
-
-    {{range .Fields}}
-    var tag{{.ID}} gsnet.Tag
+    {{range .Fields}} var tag{{.ID}} gsnet.Tag
     tag{{.ID}}, err = gsnet.ReadTag(reader)
     if err != nil {
         return
     }
-
     if tag{{.ID}} != gsnet.None {
         if tag{{.ID}} != {{tag .Type}} {
-            return target,yferrors.Newf(gsnet.ErrDecode,"unmatch tag(%d,%d) :{{pos .}}",tag{{.ID}},{{tag .Type}})
+            return target,gserrors.Newf(gsnet.ErrDecode,"mismatch tag(%d,%d) :{{pos .}}",tag{{.ID}},{{tag .Type}})
         }
         target.{{symbol .Name}},err = {{readType .Type}}(reader)
         if err != nil {
             return
         }
     }
-    {{end}}
-
-    return
+    {{end}} return
 }
 
 // WriteTag{{$Table}} 将 {{$Table}} 写入到输出流带标签 gsc自动生成
 func WriteTag{{$Table}}(writer gsnet.Writer,val *{{$Table}}) (error) {
-
     if val == nil {
-        gsnet.WriteTag(writer,gsnet.None)
-        return nil
+        return gsnet.WriteTag(writer,gsnet.None)
     }
-
-    gsnet.WriteTag(writer,gsnet.Table)
-
+    err := gsnet.WriteTag(writer,gsnet.Table)
+	if err != nil {
+		return err 
+	}
     return Write{{$Table}}(writer,val)
 }
 
 // Write{{$Table}} 将 {{$Table}} 写入到输出流 gsc自动生成
-func Write{{$Table}}(writer gsnet.Writer,val *{{$Table}}) (err error) {
-
-    {{range .Fields}}
-
-    {{writeTagType .Type}}(writer,val.{{symbol .Name}})
-
+func Write{{$Table}}(writer gsnet.Writer,val *{{$Table}}) (err error) { 
+	{{range .Fields}} err = {{writeTagType .Type}}(writer,val.{{symbol .Name}})
     if err != nil {
-
         return err
     }
-    {{end}}
-
-    return nil
+    {{end}}return nil
 }
 
 {{end}}
 
 {{/**************************************************************************/}}
+
 {{define "contract"}}   {{$Contract := symbol .Name}}
+
 // 服务名
 var (
     {{$Contract}}TypeName = "{{.Path}}"
@@ -458,6 +488,7 @@ func (builder *{{$Contract}}Builder) NewRemoteService(remote yfdocker.Remote, na
     }
 }
 {{/**************************************************************************/}}
+
 // {{$Contract}}Service gsc自动生成
 type {{$Contract}}Service struct {
     I{{$Contract}}
@@ -579,6 +610,7 @@ func (service *{{$Contract}}Service){{$Name}}{{params .Params}}{{returnParams .R
 {{end}}
 
 {{/**************************************************************************/}}
+
 // {{$Contract}}RemoteService gsc自动生成
 type {{$Contract}}RemoteService struct {
     remote yfdocker.Remote
@@ -589,7 +621,6 @@ type {{$Contract}}RemoteService struct {
     context interface{}
     timeout time.Duration
 }
-
 
 // String gsc自动生成
 func (service *{{$Contract}}RemoteService) String() string {
@@ -624,13 +655,11 @@ func (service *{{$Contract}}RemoteService) Context() interface{} {
 
 // Call gsc自动生成
 func (service *{{$Contract}}RemoteService) Call(call *gsnet.Call) (callReturn *gsnet.Return, err error) {
-
     defer func(){
         if e := recover(); e != nil {
             err = yferrors.New(e.(error))
         }
     }()
-
     switch call.Method {
     {{range .Methods}}
     {{$Name := .Name}}

@@ -484,7 +484,7 @@ func (linker *attrLinker) VisitTable(table *ast.Table) ast.Node {
 		target := linker.EvalAttrUsage(attr)
 		var toMove bool
 		if isStruct {
-			if target&linker.attrTarget["Table"] == 0 {
+			if target&linker.attrTarget["Struct"] == 0 {
 				toMove = true
 			}
 		} else {

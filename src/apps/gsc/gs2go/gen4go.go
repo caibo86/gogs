@@ -156,9 +156,17 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"writeTagType": gen.writeTagType,
 		"pos":          gslang.Pos,
 		"tag":          gen.tag,
+		"lowerFirst":   gen.lowerFirst,
 	}
 	gen.tpl, err = template.New("golang").Funcs(funcs).Parse(tpl4go)
 	return
+}
+
+func (gen *Gen4Go) lowerFirst(name string) string {
+	if len(name) == 0 {
+		return name
+	}
+	return strings.ToLower(name[:1]) + name[1:]
 }
 
 // tag 取表达式类型的标签
@@ -435,7 +443,7 @@ func (gen *Gen4Go) defaultVal(expr ast.Expr) string {
 		return "nil"
 	case *ast.Map:
 		// 字典
-		return "nil"
+		return fmt.Sprintf("make(%s)", gen.typeName(expr))
 	}
 	log.Panic("not here")
 	return "unknown"

@@ -20,6 +20,6 @@ func (script *Script) NewAttr(attrType *TypeRef) *Attr {
 		Type: attrType,
 	}
 	attr.Init(attrType.Name(), script)
-	attr.Type.SetParent(attr)
+	attrType.SetParent(attr)
 	return attr
 }
