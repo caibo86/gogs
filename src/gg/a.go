@@ -1,3 +1,4 @@
+// +k8s:deepcopy-gen=package
 package gg
 
 // +k8s:deepcopy-gen=true

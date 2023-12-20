@@ -11,6 +11,8 @@ BUILD_VERSION?=undefined
 BUILD_REVISION?=$(shell ./src/scripts/gen_revision.sh)
 BUILD_TIME=$(shell TZ='Asia/Shanghai' date '+%FT%T')
 
+BOILERPLATE=$(PWD)/src/cmd/gengo/boilerplate/boilerplate.go.txt
+
 GO_TAGS=$(GO_BUILD_TAGS)
 
 LD_FLAGS="\
@@ -26,3 +28,6 @@ gsc:
 t:
 	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/gsc/gs2go
 	GOPATH=$(GOPATH) gs2go gs
+
+deepcopy:
+	cd src && deepcopy-gen -i gogs/gg -v=5 --trim-path-prefix $(PWD)/src/gogs/ --logtostderr -h $(BOILERPLATE)
