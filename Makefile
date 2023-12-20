@@ -33,4 +33,4 @@ getdeepcopy:
 	cd src/cmd/gengo/examples/deepcopy-gen && go build . && cp deepcopy-gen $(GOPATH)/bin
 
 deepcopy:
-	cd src && deepcopy-gen -i gogs/gg -v=5 --trim-path-prefix $(PWD)/src/gogs/ --logtostderr -h $(BOILERPLATE)
+	cd src && GOPATH=/home/cb/go/src/gogs deepcopy-gen -i gogs/gg -v=5 --trim-path-prefix /home/cb/go/src/gogs/src/gogs/ --logtostderr -h $(BOILERPLATE)
