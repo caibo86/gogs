@@ -29,5 +29,8 @@ t:
 	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/gsc/gs2go
 	GOPATH=$(GOPATH) gs2go gs
 
+getdeepcopy:
+	cd src/cmd/gengo/examples/deepcopy-gen && go build . && cp deepcopy-gen $(GOPATH)/bin
+
 deepcopy:
 	cd src && deepcopy-gen -i gogs/gg -v=5 --trim-path-prefix $(PWD)/src/gogs/ --logtostderr -h $(BOILERPLATE)
