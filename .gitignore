@@ -9,3 +9,4 @@ src/pb/
 
 .~*
 *.out
+*.gs.go
