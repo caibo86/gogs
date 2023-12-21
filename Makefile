@@ -33,4 +33,11 @@ getdeepcopy:
 	cd src/cmd/gengo/examples/deepcopy-gen && go build . && cp deepcopy-gen $(GOPATH)/bin
 
 deepcopy:
-	cd src && GOPATH=/home/cb/go/src/gogs deepcopy-gen -i gogs/gg -v=5 --trim-path-prefix /home/cb/go/src/gogs/src/gogs/ --logtostderr -h $(BOILERPLATE)
+	cd src && GOPATH=/home/cb/go/src/gogs deepcopy-gen -i gogs/gs -v=5 --trim-path-prefix /home/cb/go/src/gogs/src/gogs/ --logtostderr -h $(BOILERPLATE)
+
+dev:
+	cd ./src && GOPATH=$(GOPATH) $(GO) install -v github.com/golang/protobuf/protoc-gen-go@v1.5.2
+	cd ./src && GOPATH=$(GOPATH) $(GO) install -v github.com/gogo/protobuf/protoc-gen-gofast@v1.3.1
+
+g:
+	@protoc --proto_path=src/pb --gofast_out=./src/pb test.proto

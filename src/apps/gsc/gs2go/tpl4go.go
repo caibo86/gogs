@@ -349,13 +349,13 @@ func WriteTag{{$Struct}}(writer gsnet.Writer,val *{{$Struct}}) (error) {
     return Write{{$Struct}}(writer,val)
 }
 
-// DeepCopy gsc自动生成
-func ({{$Receiver}} *{{$Struct}})DeepCopy() *{{$Struct}} {
+// Dup gsc自动生成
+func ({{$Receiver}} *{{$Struct}})Dup() *{{$Struct}} {
 	if {{$Receiver}} == nil {
 		return nil
 	}
 	var buff bytes.Buffer
-	err := Write{{$Struct}}(&buff,{{$Receiver}})
+	err := Write{{$Struct}}(&buff, {{$Receiver}})
 	if err != nil {
 		return nil
 	}
@@ -364,6 +364,15 @@ func ({{$Receiver}} *{{$Struct}})DeepCopy() *{{$Struct}} {
 		return nil 
 	}
 	return ret
+}
+
+// Marshal gsc自动生成
+func ({{$Receiver}} *{{$Struct}})Marshal() []byte {
+	var buff bytes.Buffer
+	if err := Write{{$Struct}}(&buff, {{$Receiver}}); err != nil {
+		return nil
+	}
+	return buff.Bytes()
 }
 
 

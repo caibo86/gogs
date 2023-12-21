@@ -381,9 +381,9 @@ func isErrPackageNotFound(err error) bool {
 // needs to import a go package. 'path' is the import path.
 func (b *Builder) importPackage(dir string, userRequested bool) (*tc.Package, error) {
 	// 跳过不必要的包扫描
-	if !strings.Contains(dir, "server") {
-		return nil, nil
-	}
+	// if !strings.Contains(dir, "server") {
+	// 	return nil, nil
+	// }
 	klog.V(5).Infof("importPackage %s", dir)
 
 	var pkgPath = importPathString(dir)
