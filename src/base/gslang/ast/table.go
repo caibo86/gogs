@@ -10,7 +10,7 @@ package ast
 // Field 结构体的字段,表达式
 type Field struct {
 	BaseExpr        // 内嵌基本表达式实现
-	ID       uint16 // ID
+	ID       uint16 // ID 从0开始的
 	Type     Expr   // 类型表达式
 }
 

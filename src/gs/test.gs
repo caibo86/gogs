@@ -27,3 +27,16 @@ struct Car {
     Attrs map[string]string;
     Color Color;
 }
+
+@gslang.AttrUsage(gslang.AttrTarget.Struct)
+table IsFlower {
+    ID int64;
+    IsFlower bool;
+}
+
+@IsFlower(1,true)
+struct SunFlower {
+    ID int64;
+    Color Color;
+    Nation string;
+}

@@ -480,8 +480,11 @@ func (linker *attrLinker) VisitTable(table *ast.Table) ast.Node {
 		markAsStruct(table)
 	}
 	// 轮询判断table的属性的目标是不是table的类型 不是则移动到对应的类型节点  代码节点或者包节点
+	log.Debugf("现在看%s的attrs", table.Name())
 	for _, attr := range table.Attrs() {
+		log.Debug("参数:", attr.Name())
 		target := linker.EvalAttrUsage(attr)
+		log.Debug("target:", target)
 		var toMove bool
 		if isStruct {
 			if target&linker.attrTarget["Struct"] == 0 {

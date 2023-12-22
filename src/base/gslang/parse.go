@@ -420,11 +420,13 @@ func (parser *Parser) parseArgs() ast.Expr {
 		// 分析并附加注释到参数
 		parser.parseComments()
 		parser.attachComments(arg)
+		log.Debug("分析到一个参数:", arg.Name())
 		token = parser.Peek()
 		// 参数分隔符
 		if token.Type != ',' {
 			break
 		}
+		parser.Next()
 	}
 	return args
 }
@@ -438,6 +440,7 @@ func (parser *Parser) parseArg() ast.Expr {
 		var rhs ast.Expr // 表达式对象
 		switch token.Type {
 		case TokenINT: // 字面量整数值  100
+			log.Debug("这是字面量:", token.Value)
 			parser.Next()
 			rhs = parser.script.NewInt(token.Value.(int64))
 		case TokenFLOAT: // 字面量浮点值 3.14
@@ -473,7 +476,7 @@ func (parser *Parser) parseArg() ast.Expr {
 		case TokenID: // 标识符 节点对象
 			rhs = parser.parseTypeRef()
 		default:
-			parser.errorf(token.Pos, "unexpect token '%s', expect argument stmt	", TokenName(token.Type))
+			parser.errorf(token.Pos, "unexpect token '%s', expect argument stmt", TokenName(token.Type))
 		}
 		attachPos(rhs, token.Pos)
 		if lhs != nil { // 已经是第二个操作数的时候 保存为右操作数
