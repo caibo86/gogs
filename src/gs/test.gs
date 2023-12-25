@@ -1,9 +1,3 @@
-@gslang.Error
-enum Err(uint16) {
-    Success(0), // 成功
-    OOS(1)      // 服务不可用
-}
-
 struct Student {
     ID   int64;
     Name string;
@@ -17,26 +11,26 @@ enum Color(uint32) {
 }
 
 struct Car {
-    ID    int64;
-    Name  string;
-    Price float32;
-    Owner Student;
-    Code  Err;
-    Size[4] int32;
-    Drivers[] Student;
-    Attrs map[string]string;
-    Color Color;
+    VarEnum Color;
+    VarString string;
+    VarBool bool;
+    VarByte byte;
+    VarSByte sbyte;
+    VarInt16 int16;
+    VarUInt16 uint16;
+    VarInt32 int32;
+    VarUInt32 uint32;
+    VarInt64 int64;
+    VarUInt64 uint64;
+    VarFloat32 float32;
+    VarFloat64 float64;
+    VarStruct Student;
+    VarArray []int32;
+    VarStructs []Student;
+    VarBools []bool;
+    VarStrings []string;
+    VarFloat32s []float32;
+    VarFloat64s []float64;
+    VarEnums []Color;
 }
 
-@gslang.AttrUsage(gslang.AttrTarget.Struct)
-table IsFlower {
-    ID int64;
-    IsFlower bool;
-}
-
-@IsFlower(1,true)
-struct SunFlower {
-    ID int64;
-    Color Color;
-    Nation string;
-}

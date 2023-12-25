@@ -284,4 +284,5 @@ func TestCar_PBMarshal(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println("pb序列化后长", len(data))
+
 }

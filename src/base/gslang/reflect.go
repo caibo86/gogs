@@ -86,8 +86,10 @@ func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int64 {
 		log.Panicf("attr(%s) must linked first:\n\t%s", attr, Pos(attr).String())
 	}
 
+	// 对属性求值
 	ea := &evalAttr{}
 	attr.Accept(ea)
+	log.Debug("属性求值后的字典是:", ea.values)
 
 	// 只有Table才能被作为属性的类型引用
 	s, ok := attr.Type.Ref.(*ast.Table)

@@ -28,6 +28,7 @@ var packageMapping = map[string]string{
 	"bytes.":    `import "bytes"`,
 	"fmt.":      `import "fmt"`,
 	"time.":     `import "time"`,
+	"bits.":     `import "math/bits"`,
 	// "yfdocker.": `import "gogs/base/docker"`,
 	// "yfconfig.": `import "gogs/base/config"`,
 }
@@ -60,6 +61,22 @@ var defaultVal = map[string]string{
 	".gslang.Uint64":  "uint64(0)",
 	".gslang.Float32": "float32(0)",
 	".gslang.Float64": "float64(0)",
+	".gslang.Bool":    "false",
+	".gslang.String":  "\"\"",
+}
+
+// gslang内置类型的零值对应的golang表示
+var zeroVal = map[string]string{
+	".gslang.Byte":    "0",
+	".gslang.Sbyte":   "0",
+	".gslang.Int16":   "0",
+	".gslang.Uint16":  "0",
+	".gslang.Int32":   "0",
+	".gslang.Uint32":  "0",
+	".gslang.Int64":   "0",
+	".gslang.Uint64":  "0",
+	".gslang.Float32": "0",
+	".gslang.Float64": "0",
 	".gslang.Bool":    "false",
 	".gslang.String":  "\"\"",
 }
@@ -157,6 +174,8 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"pos":          gslang.Pos,
 		"tag":          gen.tag,
 		"lowerFirst":   gen.lowerFirst,
+		"sovFunc":      gen.sovFunc,
+		"calTypeSize":  gen.calTypeSize,
 	}
 	gen.tpl, err = template.New("golang").Funcs(funcs).Parse(tpl4go)
 	return
@@ -346,6 +365,171 @@ func (gen *Gen4Go) readType(expr ast.Expr) string {
 	return "unknown"
 }
 
+// calTypeSize 根据类型获取计算大小的函数
+func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
+	switch field.Type.(type) {
+	case *ast.TypeRef:
+		switch field.Type.Name() {
+		case ".gslang.Sbyte", ".gslang.Int16",
+			".gslang.Int32", ".gslang.Int64",
+			".gslang.Byte", ".gslang.Uint16",
+			".gslang.Uint32", ".gslang.Uint64":
+			return fmt.Sprintf(
+				`if m.%s != 0 {
+					n += 1 + %s(uint64(m.%s))
+				}`,
+				field.Name(), gen.sovFunc(field.Script()), field.Name())
+		case ".gslang.Bool":
+			return fmt.Sprintf(
+				`if m.%s {
+					n += 2
+				}`,
+				field.Name())
+		case ".gslang.String":
+			return fmt.Sprintf(
+				`l = len(m.%s)
+					if l > 0 {
+					n += 1 + l + %s(uint64(l))
+				}`,
+				field.Name(), gen.sovFunc(field.Script()))
+		case ".gslang.Float32":
+			return fmt.Sprintf(
+				`if m.%s != 0 {
+					n += 5
+				}`,
+				field.Name())
+		case ".gslang.Float64":
+			return fmt.Sprintf(
+				`if m.%s != 0 {
+					n += 9
+				}`,
+				field.Name())
+		default:
+			ref := field.Type.(*ast.TypeRef)
+			switch ref.Ref.(type) {
+			case *ast.Enum:
+				return fmt.Sprintf(
+					`if m.%s != 0 {
+						n += 1 + %s(uint64(m.%s))
+					}`,
+					field.Name(), gen.sovFunc(field.Script()), field.Name())
+			case *ast.Table:
+				return fmt.Sprintf(
+					`if m.%s != nil {
+						l = m.%s.Size()
+						n += 1 + l + %s(uint64(l))
+					}`,
+					field.Name(), field.Name(), gen.sovFunc(field.Script()))
+			default:
+				log.Panicf("not here %s", field.Type.Name())
+			}
+		}
+
+	case *ast.List:
+		// 数组
+		list := field.Type.(*ast.List)
+		ref := list.Element.(*ast.TypeRef)
+		log.Debug("看下切片元素类型名字:", ref.Ref.Name())
+		switch ref.Ref.Name() {
+		case "Sbyte", "Int16",
+			"Int32", "Int64",
+			"Byte", "Uint16",
+			"Uint32", "Uint64":
+			return fmt.Sprintf(
+				`if len(m.%s) > 0 {
+					l = 0
+					for _, e := range m.%s {
+						l += %s(uint64(e))
+					}
+					n += 1 + l + %s(uint64(l))
+				}`,
+				field.Name(),
+				field.Name(),
+				gen.sovFunc(field.Script()),
+				gen.sovFunc(field.Script()))
+		case "Bool":
+			return fmt.Sprintf(
+				`if len(m.%s) > 0 {
+					n += 1 +%s(uint64(len(m.%s))) + len(m.%s)*1
+				}`,
+				field.Name(),
+				gen.sovFunc(field.Script()),
+				field.Name(),
+				field.Name())
+		case "String":
+			return fmt.Sprintf(
+				`if len(m.%s) > 0 {
+					for _, s := range m.%s {
+						l = len(s)
+						n += 1 + l + %s(uint64(l))
+					}
+				}`,
+				field.Name(),
+				field.Name(),
+				gen.sovFunc(field.Script()))
+		case "Float32":
+			return fmt.Sprintf(
+				`if len(m.%s) > 0 {
+					n += 1 +%s(uint64(len(m.%s)*4)) + len(m.%s)*4
+				}`,
+				field.Name(),
+				gen.sovFunc(field.Script()),
+				field.Name(),
+				field.Name())
+		case "Float64":
+			return fmt.Sprintf(
+				`if len(m.%s) > 0 {
+					n += 1 +%s(uint64(len(m.%s)*8)) + len(m.%s)*8
+				}`,
+				field.Name(),
+				gen.sovFunc(field.Script()),
+				field.Name(),
+				field.Name())
+		default:
+			switch ref.Ref.(type) {
+			case *ast.Enum:
+				return fmt.Sprintf(
+					`if len(m.%s) > 0 {
+						l = 0
+						for _, e := range m.%s {
+							l += %s(uint64(e))
+						}
+						n += 1 + l + %s(uint64(l))
+					}`,
+					field.Name(),
+					field.Name(),
+					gen.sovFunc(field.Script()),
+					gen.sovFunc(field.Script()))
+			case *ast.Table:
+				return fmt.Sprintf(
+					`if len(m.%s) > 0 {
+						for _, e := range m.%s {
+							l = e.Size()
+							n += 1 + l + %s(uint64(l))
+						}
+					}`,
+					field.Name(),
+					field.Name(),
+					gen.sovFunc(field.Script()))
+			default:
+				log.Panicf("not here %s", field.Type.Name())
+			}
+		}
+		return ""
+	case *ast.Array:
+		// 切片
+		// list := field.Type.(*ast.List)
+
+		return ""
+	case *ast.Map:
+		// 字典
+		// hash := field.Type.(*ast.Map)
+		return ""
+	}
+	log.Panic("not here")
+	return "unknown"
+}
+
 // writeType 根据类型取写入函数
 func (gen *Gen4Go) writeType(expr ast.Expr) string {
 	switch expr.(type) {
@@ -411,6 +595,50 @@ func (gen *Gen4Go) defaultVal(expr ast.Expr) string {
 	case *ast.TypeRef:
 		// 内置类型
 		if val, ok := defaultVal[expr.Name()]; ok {
+			return val
+		}
+		ref := expr.(*ast.TypeRef)
+		// 枚举
+		if enum, ok := ref.Ref.(*ast.Enum); ok {
+			if _, ok := expr.Script().Imports[ref.NamePath[0]]; ok {
+				return fmt.Sprintf(
+					"%s.%s%s",
+					ref.NamePath[0],
+					enum,
+					enum.Default,
+				)
+			}
+			return fmt.Sprintf("%s%s", enum, enum.Default)
+		}
+		// 自定义类型
+		if _, ok := expr.Script().Imports[ref.NamePath[0]]; ok {
+			return fmt.Sprintf("%s.New%s()", ref.NamePath[0], strings.Title(ref.NamePath[1]))
+		}
+		return fmt.Sprintf("New%s()", strings.Title(ref.NamePath[0]))
+	case *ast.Array:
+		// 数组
+		array := expr.(*ast.Array)
+		var buff bytes.Buffer
+		if err := gen.tpl.ExecuteTemplate(&buff, "arrayInit", array); err != nil {
+			panic(err)
+		}
+		return buff.String()
+	case *ast.List:
+		return "nil"
+	case *ast.Map:
+		// 字典
+		return fmt.Sprintf("make(%s)", gen.typeName(expr))
+	}
+	log.Panic("not here")
+	return "unknown"
+}
+
+// zeroVal 根据类型取其零值
+func (gen *Gen4Go) zeroVal(expr ast.Expr) string {
+	switch expr.(type) {
+	case *ast.TypeRef:
+		// 内置类型
+		if val, ok := zeroVal[expr.Name()]; ok {
 			return val
 		}
 		ref := expr.(*ast.TypeRef)
@@ -577,6 +805,14 @@ func (gen *Gen4Go) enumType(enum *ast.Enum) string {
 	return ""
 }
 
+// sovFunc sov函数名字
+func (gen *Gen4Go) sovFunc(script *ast.Script) string {
+	name := script.Name()
+	ss := strings.Split(name, ".")
+	ret := fmt.Sprintf("sov%s", strings.Title(ss[0]))
+	return ret
+}
+
 // writeFile 将代码节点对应的golang代码写入到文件
 func (gen *Gen4Go) writeFile(script *ast.Script, bytes []byte) {
 	fullPath, ok := gslang.FilePath(script)
@@ -590,11 +826,7 @@ func (gen *Gen4Go) writeFile(script *ast.Script, bytes []byte) {
 		panic(err)
 	}
 	log.Debugf("write to file:%s success", fullPath)
-	// cmd := exec.Command("go", "fmt", fullPath)
-	// _, err = cmd.Output()
-	// if err != nil {
-	// 	log.Debugf("format err:%s, check go fmt", err)
-	// }
+
 	cmd := exec.Command("goimports", "-w", fullPath)
 	_, err = cmd.Output()
 	if err != nil {
@@ -619,6 +851,11 @@ func (gen *Gen4Go) VisitPackage(pkg *ast.Package) ast.Node {
 // VisitScript 访问代码
 func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 	gen.buff.Reset()
+	// 默认的一些代码
+	if err := gen.tpl.ExecuteTemplate(&gen.buff, "script", script); err != nil {
+		panic(err)
+	}
+
 	// 轮询访问代码中的所有类型 Enum Struct Table Contract
 	for _, ctype := range script.Types {
 		log.Debugf("生成器 %v", ctype.Name())

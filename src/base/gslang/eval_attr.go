@@ -72,15 +72,14 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 				}
 				log.Debug("这个属性名字是:", name)
 			}
-			visitor.values[field.Name()] = nil
 		}
-	} else if uargs, ok := args.(*ast.Args); ok {
-		log.Debug(uargs)
+	} else if uArgs, ok := args.(*ast.Args); ok {
+		log.Debug(uArgs)
 		for _, field := range table.Fields {
 			log.Infof("检查属性名字:%s", field.Name())
 			var item ast.Expr
-			if field.ID < uint16(len(uargs.Items)) {
-				item = uargs.Items[field.ID]
+			if field.ID < uint16(len(uArgs.Items)) {
+				item = uArgs.Items[field.ID]
 			}
 			switch field.Type.(type) {
 			case *ast.Array, *ast.List, *ast.Map:
@@ -98,22 +97,95 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 						visitor.values[field.Name()] = i.Value
 					}
 				case "Float32":
-					visitor.values[field.Name()] = float32(0)
+					if item == nil {
+						visitor.values[field.Name()] = float32(0)
+					} else {
+						i := item.(*ast.Float)
+						visitor.values[field.Name()] = float32(i.Value)
+					}
 				case "Float64":
-					visitor.values[field.Name()] = float64(0)
+					if item == nil {
+						visitor.values[field.Name()] = float64(0)
+					} else {
+						i := item.(*ast.Float)
+						visitor.values[field.Name()] = i.Value
+					}
 				case "String":
-					visitor.values[field.Name()] = ""
+					if item == nil {
+						visitor.values[field.Name()] = float64(0)
+					} else {
+						i := item.(*ast.String)
+						visitor.values[field.Name()] = i.Value
+					}
 				case "Bool":
-					visitor.values[field.Name()] = false
+					if item == nil {
+						visitor.values[field.Name()] = false
+					} else {
+						i := item.(*ast.Bool)
+						visitor.values[field.Name()] = i.Value
+					}
 				default:
-					visitor.values[field.Name()] = nil
+					// log.Panicf("不支持的类型:%s", name)
 				}
 				log.Debug("这个属性名字是:", name)
 			}
-			visitor.values[field.Name()] = nil
 		}
 	} else if nArgs, ok := args.(*ast.NamedArgs); ok {
 		log.Debug(nArgs)
+		for _, field := range table.Fields {
+			log.Infof("检查属性名字:%s", field.Name())
+			var item ast.Expr
+			fieldName := field.Name()
+			item = nArgs.Items[fieldName]
+			switch field.Type.(type) {
+			case *ast.Array, *ast.List, *ast.Map:
+				visitor.values[field.Name()] = nil
+			case *ast.TypeRef:
+				ref := field.Type.(*ast.TypeRef).Ref
+				name := ref.Name()
+				switch name {
+				case "Byte", "SByte", "Int16", "UInt16",
+					"Int32", "UInt32", "Int64", "UInt64":
+					if item == nil {
+						visitor.values[field.Name()] = int64(0)
+					} else {
+						i := item.(*ast.Int)
+						visitor.values[field.Name()] = i.Value
+					}
+				case "Float32":
+					if item == nil {
+						visitor.values[field.Name()] = float32(0)
+					} else {
+						i := item.(*ast.Float)
+						visitor.values[field.Name()] = float32(i.Value)
+					}
+				case "Float64":
+					if item == nil {
+						visitor.values[field.Name()] = float64(0)
+					} else {
+						i := item.(*ast.Float)
+						visitor.values[field.Name()] = i.Value
+					}
+				case "String":
+					if item == nil {
+						visitor.values[field.Name()] = float64(0)
+					} else {
+						i := item.(*ast.String)
+						visitor.values[field.Name()] = i.Value
+					}
+				case "Bool":
+					if item == nil {
+						visitor.values[field.Name()] = false
+					} else {
+						i := item.(*ast.Bool)
+						visitor.values[field.Name()] = i.Value
+					}
+				default:
+					// log.Panicf("不支持的类型:%s", name)
+				}
+				log.Debug("这个属性名字是:", name)
+			}
+		}
 	} else {
 		log.Panicf("attr args should be nil or ast.Args or ast.NamedArgs")
 	}
