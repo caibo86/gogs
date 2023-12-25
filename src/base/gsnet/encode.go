@@ -8,7 +8,6 @@
 package gsnet
 
 import (
-	"errors"
 	"io"
 	"math"
 )
@@ -55,15 +54,6 @@ const (
 	Bool
 )
 
-var (
-	// ErrEncode 编码错误
-	ErrEncode = errors.New("encode error")
-	// ErrDecode 解码错误
-	ErrDecode = errors.New("decode error")
-	// ErrWriteNone 写入内容空错误
-	ErrWriteNone = errors.New("write nothing")
-)
-
 // Reader 读取器
 type Reader interface {
 	io.ByteReader
@@ -76,373 +66,211 @@ type Writer interface {
 	io.Writer
 }
 
-// ReadTag 读取一个数据类型标签
-func ReadTag(reader Reader) (Tag, error) {
-	v, err := reader.ReadByte()
-	return Tag(v), err
-}
-
-// ReadByte 读取一个字节
-func ReadByte(reader Reader) (byte, error) {
-	return reader.ReadByte()
-}
-
-// ReadSbyte 读取一个字节 并转换为int8
-func ReadSbyte(reader Reader) (int8, error) {
-	v, err := reader.ReadByte()
-	return int8(v), err
-}
-
-// ReadUint16 读取一个无符号16位整数 每8位转成一个byte传送 小端先行
-func ReadUint16(reader Reader) (uint16, error) {
-	buf := make([]byte, 2)
-	_, err := reader.Read(buf)
-	if err != nil {
-		return 0, err
-	}
-	return uint16(buf[0]) | uint16(buf[1])<<8, nil
-}
-
-// ReadInt16 读取一个有符号16位整数
-func ReadInt16(reader Reader) (int16, error) {
-	v, err := ReadUint16(reader)
-	return int16(v), err
-}
-
-// ReadUint32 读取一个无符号32位整数
-func ReadUint32(reader Reader) (uint32, error) {
-	buf := make([]byte, 4)
-	_, err := reader.Read(buf)
-	if err != nil {
-		return 0, err
-	}
-	return uint32(buf[3])<<24 | uint32(buf[2])<<16 | uint32(buf[1])<<8 | uint32(buf[0]), nil
-}
-
-// ReadInt32 读取一个有符号32位整数
-func ReadInt32(reader Reader) (int32, error) {
-	v, err := ReadUint32(reader)
-	return int32(v), err
-}
-
-// ReadUint64 读取一个无符号64位整数
-func ReadUint64(reader Reader) (uint64, error) {
-	buf := make([]byte, 8)
-	_, err := reader.Read(buf)
-	if err != nil {
-		return 0, err
-	}
-	var ret uint64
-	for i, v := range buf {
-		ret |= uint64(v) << uint(i*8)
-	}
-	return ret, nil
-}
-
-// ReadInt64 读取一个有符号64位整数
-func ReadInt64(reader Reader) (int64, error) {
-	v, err := ReadUint64(reader)
-	return int64(v), err
-}
-
-// ReadFloat32 读取一个32位浮点数
-func ReadFloat32(reader Reader) (float32, error) {
-	v, err := ReadUint32(reader)
-	if err != nil {
-		return 0, err
-	}
-	return math.Float32frombits(v), nil
-}
-
-// ReadFloat64 读取一个64位浮点数
-func ReadFloat64(reader Reader) (float64, error) {
-	v, err := ReadUint64(reader)
-	if err != nil {
-		return 0, err
-	}
-	return math.Float64frombits(v), nil
-}
-
-// ReadString 读取一个字符串 前2个字节uint16表示字符串长度
-func ReadString(reader Reader) (string, error) {
-	length, err := ReadUint16(reader)
-	if err != nil {
-		return "", err
-	}
-	buf := make([]byte, length)
-	_, err = reader.Read(buf)
-	if err != nil {
-		return "", err
-	}
-	return string(buf), nil
-}
-
-// ReadBytes 读取一个字节流到指定的buf
-func ReadBytes(reader Reader, buf []byte) error {
-	_, err := reader.Read(buf)
-	return err
-}
-
-// ReadBool 读取一个布尔值
-func ReadBool(reader Reader) (bool, error) {
-	v, err := ReadByte(reader)
-	if v == 1 {
-		return true, err
-	}
-	return false, err
-}
-
-// WriteByte 写入一个字节
-func WriteByte(writer Writer, v byte) error {
-	return writer.WriteByte(v)
-}
-
-// WriteTag 写入一个数据类型标签
-func WriteTag(writer Writer, v Tag) error {
-	return writer.WriteByte(byte(v))
+// WriteFieldNum 写入字段编号
+func WriteFieldNum(data []byte, i int, fieldNum uint8) int {
+	data[i] = fieldNum
+	return i + 1
 }
 
 // WriteBool 写入一个布尔值
-func WriteBool(writer Writer, v bool) error {
+func WriteBool(data []byte, i int, v bool) int {
 	if v == true {
-		return writer.WriteByte(1)
+		data[i] = 1
+	} else {
+		data[i] = 0
 	}
-	return writer.WriteByte(0)
+	return i + 1
 }
 
-// WriteSbyte 写入一个有符号单字节
-func WriteSbyte(writer Writer, v int8) error {
-	return writer.WriteByte(byte(v))
+// WriteByte 写入一个字节
+func WriteByte(data []byte, i int, v byte) int {
+	data[i] = v
+	return i + 1
+}
+
+// WriteSbyte 写入一个有符号字节
+func WriteSbyte(data []byte, i int, v int8) int {
+	data[i] = byte(v)
+	return i + 1
 }
 
 // WriteUint16 写入一个无符号16位整数
-func WriteUint16(writer Writer, v uint16) error {
-	if err := WriteByte(writer, byte(v)); err != nil {
-		return err
-	}
-	if err := WriteByte(writer, byte(v>>8)); err != nil {
-		return err
-	}
-	return nil
+func WriteUint16(data []byte, i int, v uint16) int {
+	data[i] = byte(v)
+	data[i+1] = byte(v >> 8)
+	return i + 2
 }
 
 // WriteInt16 写入一个有符号16位整数
-func WriteInt16(writer Writer, v int16) error {
-	for i := uint(0); i < 2; i++ {
-		if err := WriteByte(writer, byte(v>>(i*8))); err != nil {
-			return err
-		}
-	}
-	return nil
+func WriteInt16(data []byte, i int, v int16) int {
+	data[i] = byte(v)
+	data[i+1] = byte(v >> 8)
+	return i + 2
 }
 
 // WriteUint32 写入一个无符号32位整数
-func WriteUint32(writer Writer, v uint32) error {
-	for i := uint(0); i < 4; i++ {
-		if err := WriteByte(writer, byte(v>>(i*8))); err != nil {
-			return err
-		}
-	}
-	return nil
+func WriteUint32(data []byte, i int, v uint32) int {
+	data[i] = byte(v)
+	data[i+1] = byte(v >> 8)
+	data[i+2] = byte(v >> 16)
+	data[i+3] = byte(v >> 24)
+	return i + 4
 }
 
 // WriteInt32 写入一个有符号32位整数
-func WriteInt32(writer Writer, v int32) error {
-	for i := uint(0); i < 4; i++ {
-		if err := WriteByte(writer, byte(v>>(i*8))); err != nil {
-			return err
-		}
-	}
-	return nil
+func WriteInt32(data []byte, i int, v int32) int {
+	data[i] = byte(v)
+	data[i+1] = byte(v >> 8)
+	data[i+2] = byte(v >> 16)
+	data[i+3] = byte(v >> 24)
+	return i + 4
 }
 
 // WriteUint64 写入一个无符号64位整数
-func WriteUint64(writer Writer, v uint64) error {
-	for i := uint(0); i < 8; i++ {
-		if err := WriteByte(writer, byte(v>>(i*8))); err != nil {
-			return err
-		}
-	}
-	return nil
+func WriteUint64(data []byte, i int, v uint64) int {
+	data[i] = byte(v)
+	data[i+1] = byte(v >> 8)
+	data[i+2] = byte(v >> 16)
+	data[i+3] = byte(v >> 24)
+	data[i+4] = byte(v >> 32)
+	data[i+5] = byte(v >> 40)
+	data[i+6] = byte(v >> 48)
+	data[i+7] = byte(v >> 56)
+	return i + 8
 }
 
 // WriteInt64 写入一个有符号64位整数
-func WriteInt64(writer Writer, v int64) error {
-	for i := uint(0); i < 8; i++ {
-		if err := WriteByte(writer, byte(v>>(i*8))); err != nil {
-			return err
-		}
-	}
-	return nil
+func WriteInt64(data []byte, i int, v int64) int {
+	data[i] = byte(v)
+	data[i+1] = byte(v >> 8)
+	data[i+2] = byte(v >> 16)
+	data[i+3] = byte(v >> 24)
+	data[i+4] = byte(v >> 32)
+	data[i+5] = byte(v >> 40)
+	data[i+6] = byte(v >> 48)
+	data[i+7] = byte(v >> 56)
+	return i + 8
 }
 
 // WriteFloat32 写入一个32位浮点数
-func WriteFloat32(writer Writer, v float32) error {
-	return WriteUint32(writer, math.Float32bits(v))
+func WriteFloat32(data []byte, i int, v float32) int {
+	return WriteUint32(data, i, math.Float32bits(v))
 }
 
 // WriteFloat64 写入一个64位浮点数
-func WriteFloat64(writer Writer, v float64) error {
-	return WriteUint64(writer, math.Float64bits(v))
+func WriteFloat64(data []byte, i int, v float64) int {
+	return WriteUint64(data, i, math.Float64bits(v))
 }
 
 // WriteString 写入一个字符串
-func WriteString(writer Writer, v string) error {
-	if err := WriteUint16(writer, uint16(len(v))); err != nil {
-		return err
-	}
-	_, err := writer.Write([]byte(v))
-	return err
+func WriteString(data []byte, i int, v string) int {
+	i = WriteUint32(data, i, uint32(len(v)))
+	copy(data[i:], v)
+	return i + len(v)
 }
 
 // WriteBytes 写入一个字节流
-func WriteBytes(writer Writer, bytes []byte) error {
-	_, err := writer.Write(bytes)
-	return err
+func WriteBytes(data []byte, i int, bytes []byte) int {
+	l := len(bytes)
+	i = WriteUint32(data, i, uint32(l))
+	copy(data[i:], bytes)
+	return i + len(bytes)
 }
 
-// WriteTagByte 写入一个字节+前置标签
-func WriteTagByte(writer Writer, v byte) error {
-	err := WriteTag(writer, Byte)
-	if err != nil {
-		return err
-	}
-	return writer.WriteByte(v)
+// WriteEnum 写入一个枚举
+func WriteEnum(data []byte, i int, v int32) int {
+	return WriteInt32(data, i, v)
 }
 
-// WriteTagBool 写入一个布尔值+前置标签
-func WriteTagBool(writer Writer, v bool) error {
-	err := WriteTag(writer, Bool)
-	if err != nil {
-		return err
-	}
-	if v == true {
-		return writer.WriteByte(1)
-	}
-	return writer.WriteByte(0)
+// ReadFieldNum 读取字段编号
+func ReadFieldNum(data []byte, i int) (int, uint8) {
+	return i + 1, data[i]
 }
 
-// WriteTagSByte 写入一个有符号单字节+前置标签
-func WriteTagSByte(writer Writer, v int8) error {
-	err := WriteTag(writer, SByte)
-	if err != nil {
-		return err
+// ReadBool 读取一个布尔值
+func ReadBool(data []byte, i int) (int, bool) {
+	if data[i] == 0 {
+		return i + 1, false
 	}
-	return writer.WriteByte(byte(v))
+	return i + 1, true
 }
 
-// WriteTagUint16 写入一个无符号16位整数+前置标签
-func WriteTagUint16(writer Writer, v uint16) error {
-	err := WriteTag(writer, Uint16)
-	if err != nil {
-		return err
-	}
-	if err = WriteByte(writer, byte(v)); err != nil {
-		return err
-	}
-	if err = WriteByte(writer, byte(v>>8)); err != nil {
-		return err
-	}
-	return nil
+// ReadByte 读取一个字节
+func ReadByte(data []byte, i int) (int, byte) {
+	return i + 1, data[i]
 }
 
-// WriteTagInt16 写入一个有符号16位整数+前置标签
-func WriteTagInt16(writer Writer, v int16) error {
-	err := WriteTag(writer, Int16)
-	if err != nil {
-		return err
-	}
-	for i := uint(0); i < 2; i++ {
-		if err = WriteByte(writer, byte(v>>i*8)); err != nil {
-			return err
-		}
-	}
-	return nil
+// ReadSbyte 读取一个有符号字节
+func ReadSbyte(data []byte, i int) (int, int8) {
+	return i + 1, int8(data[i])
 }
 
-// WriteTagUint32 写入一个无符号32位整数+前置标签
-func WriteTagUint32(writer Writer, v uint32) error {
-	err := WriteTag(writer, Uint32)
-	if err != nil {
-		return err
-	}
-	for i := uint(0); i < 4; i++ {
-		if err = WriteByte(writer, byte(v>>i*8)); err != nil {
-			return err
-		}
-	}
-	return nil
+// ReadUint16 读取一个无符号16位整数
+func ReadUint16(data []byte, i int) (int, uint16) {
+	return i + 2, uint16(data[i]) | uint16(data[i+1])<<8
 }
 
-// WriteTagInt32 写入一个有符号32位整数+前置标签
-func WriteTagInt32(writer Writer, v int32) error {
-	err := WriteTag(writer, Int32)
-	if err != nil {
-		return err
-	}
-	for i := uint(0); i < 4; i++ {
-		if err = WriteByte(writer, byte(v>>i*8)); err != nil {
-			return err
-		}
-	}
-	return nil
+// ReadInt16 读取一个有符号16位整数
+func ReadInt16(data []byte, i int) (int, int16) {
+	return i + 2, int16(data[i]) | int16(data[i+1])<<8
 }
 
-// WriteTagUint64 写入一个无符号64位整数+前置标签
-func WriteTagUint64(writer Writer, v uint64) error {
-	err := WriteTag(writer, Uint64)
-	if err != nil {
-		return err
-	}
-	for i := uint(0); i < 4; i++ {
-		if err = WriteByte(writer, byte(v>>i*8)); err != nil {
-			return err
-		}
-	}
-	return nil
+// ReadUint32 读取一个无符号32位整数
+func ReadUint32(data []byte, i int) (int, uint32) {
+	return i + 4, uint32(data[i]) | uint32(data[i+1])<<8 |
+		uint32(data[i+2])<<16 | uint32(data[i+3])<<24
 }
 
-// WriteTagInt64 写入一个有符号64位整数+前置标签
-func WriteTagInt64(writer Writer, v int64) error {
-	err := WriteTag(writer, Int64)
-	if err != nil {
-		return err
-	}
-	for i := uint(0); i < 8; i++ {
-		if err := WriteByte(writer, byte(v>>i*8)); err != nil {
-			return err
-		}
-	}
-	return nil
+// ReadInt32 读取一个有符号32位整数
+func ReadInt32(data []byte, i int) (int, int32) {
+	return i + 4, int32(data[i]) | int32(data[i+1])<<8 |
+		int32(data[i+2])<<16 | int32(data[i+3])<<24
 }
 
-// WriteTagFloat32 写入一个32位浮点数+前置标签
-func WriteTagFloat32(writer Writer, v float32) error {
-	err := WriteTag(writer, Float32)
-	if err != nil {
-		return err
-	}
-	return WriteUint32(writer, math.Float32bits(v))
+// ReadUint64 读取一个无符号64位整数
+func ReadUint64(data []byte, i int) (int, uint64) {
+	return i + 8, uint64(data[i]) | uint64(data[i+1])<<8 |
+		uint64(data[i+2])<<16 | uint64(data[i+3])<<24 |
+		uint64(data[i+4])<<32 | uint64(data[i+5])<<40 |
+		uint64(data[i+6])<<48 | uint64(data[i+7])<<56
 }
 
-// WriteTagFloat64 写入一个64位浮点数+前置标签
-func WriteTagFloat64(writer Writer, v float64) error {
-	err := WriteTag(writer, Float64)
-	if err != nil {
-		return err
-	}
-	return WriteUint64(writer, math.Float64bits(v))
+// ReadInt64 读取一个有符号64位整数
+func ReadInt64(data []byte, i int) (int, int64) {
+	return i + 8, int64(data[i]) | int64(data[i+1])<<8 |
+		int64(data[i+2])<<16 | int64(data[i+3])<<24 |
+		int64(data[i+4])<<32 | int64(data[i+5])<<40 |
+		int64(data[i+6])<<48 | int64(data[i+7])<<56
 }
 
-// WriteTagString 写入一个字符串+前置标签
-func WriteTagString(writer Writer, v string) error {
-	err := WriteTag(writer, String)
-	if err != nil {
-		return err
-	}
-	if err = WriteUint16(writer, uint16(len(v))); err != nil {
-		return err
-	}
-	_, err = writer.Write([]byte(v))
-	return err
+// ReadFloat32 读取一个32位浮点数
+func ReadFloat32(data []byte, i int) (int, float32) {
+	i, v := ReadUint32(data, i)
+	return i, math.Float32frombits(v)
+}
+
+// ReadFloat64 读取一个64位浮点数
+func ReadFloat64(data []byte, i int) (int, float64) {
+	i, v := ReadUint64(data, i)
+	return i, math.Float64frombits(v)
+}
+
+// ReadString 读取一个字符串
+func ReadString(data []byte, i int) (int, string) {
+	i, length := ReadUint32(data, i)
+	return i + int(length), string(data[i : i+int(length)])
+}
+
+// ReadBytes 读取一个字节流
+func ReadBytes(data []byte, i int) (int, []byte) {
+	var l uint32
+	i, l = ReadUint32(data, i)
+	bytes := make([]byte, int(l))
+	copy(bytes, data[i:])
+	return i + int(l), bytes
+}
+
+// ReadEnum 读取一个枚举
+func ReadEnum(data []byte, i int) (int, int32) {
+	return ReadInt32(data, i)
 }

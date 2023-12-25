@@ -370,38 +370,35 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 	switch field.Type.(type) {
 	case *ast.TypeRef:
 		switch field.Type.Name() {
-		case ".gslang.Sbyte", ".gslang.Int16",
-			".gslang.Int32", ".gslang.Int64",
-			".gslang.Byte", ".gslang.Uint16",
-			".gslang.Uint32", ".gslang.Uint64":
-			return fmt.Sprintf(
-				`if m.%s != 0 {
-					n += 1 + %s(uint64(m.%s))
-				}`,
-				field.Name(), gen.sovFunc(field.Script()), field.Name())
-		case ".gslang.Bool":
+		case ".gslang.Byte", ".gslang.Sbyte", ".gslang.Bool":
 			return fmt.Sprintf(
 				`if m.%s {
 					n += 2
+				}`,
+				field.Name())
+		case ".gslang.Int16", ".gslang.Uint16":
+			return fmt.Sprintf(
+				`if m.%s != 0 {
+					n += 3
+				}`,
+				field.Name())
+		case ".gslang.Int32", ".gslang.Uint32", ".gslang.Float32":
+			return fmt.Sprintf(
+				`if m.%s != 0 {
+					n += 5
+				}`,
+				field.Name())
+		case ".gslang.Int64", ".gslang.Uint64", ".gslang.Float64":
+			return fmt.Sprintf(
+				`if m.%s != 0 {
+					n += 9
 				}`,
 				field.Name())
 		case ".gslang.String":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 					if l > 0 {
-					n += 1 + l + %s(uint64(l))
-				}`,
-				field.Name(), gen.sovFunc(field.Script()))
-		case ".gslang.Float32":
-			return fmt.Sprintf(
-				`if m.%s != 0 {
-					n += 5
-				}`,
-				field.Name())
-		case ".gslang.Float64":
-			return fmt.Sprintf(
-				`if m.%s != 0 {
-					n += 9
+					n += 5 + l 
 				}`,
 				field.Name())
 		default:
@@ -410,16 +407,16 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 			case *ast.Enum:
 				return fmt.Sprintf(
 					`if m.%s != 0 {
-						n += 1 + %s(uint64(m.%s))
+						n += 5
 					}`,
-					field.Name(), gen.sovFunc(field.Script()), field.Name())
+					field.Name())
 			case *ast.Table:
 				return fmt.Sprintf(
 					`if m.%s != nil {
 						l = m.%s.Size()
-						n += 1 + l + %s(uint64(l))
+						n += 1 + l
 					}`,
-					field.Name(), field.Name(), gen.sovFunc(field.Script()))
+					field.Name(), field.Name())
 			default:
 				log.Panicf("not here %s", field.Type.Name())
 			}
@@ -431,86 +428,64 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 		ref := list.Element.(*ast.TypeRef)
 		log.Debug("看下切片元素类型名字:", ref.Ref.Name())
 		switch ref.Ref.Name() {
-		case "Sbyte", "Int16",
-			"Int32", "Int64",
-			"Byte", "Uint16",
-			"Uint32", "Uint64":
+		case "Byte", "Sbyte", "Bool":
 			return fmt.Sprintf(
-				`if len(m.%s) > 0 {
-					l = 0
-					for _, e := range m.%s {
-						l += %s(uint64(e))
-					}
-					n += 1 + l + %s(uint64(l))
+				`l = len(m.%s)
+				if l > 0 {
+					n += 5 + l
 				}`,
-				field.Name(),
-				field.Name(),
-				gen.sovFunc(field.Script()),
-				gen.sovFunc(field.Script()))
-		case "Bool":
+				field.Name())
+		case "Uint16", "Int16":
 			return fmt.Sprintf(
-				`if len(m.%s) > 0 {
-					n += 1 +%s(uint64(len(m.%s))) + len(m.%s)*1
+				`l = len(m.%s)
+				if l > 0 {
+					n += 5 + l * 2
 				}`,
-				field.Name(),
-				gen.sovFunc(field.Script()),
-				field.Name(),
+				field.Name())
+		case "Uint32", "Int32", "Float32":
+			return fmt.Sprintf(
+				`l = len(m.%s)
+				if l > 0 {
+					n += 5 + l * 4
+				}`,
+				field.Name())
+		case "Uint64", "Int64", "Float64":
+			return fmt.Sprintf(
+				`l = len(m.%s)
+				if l > 0 {
+					n += 5 + l * 8
+				}`,
 				field.Name())
 		case "String":
 			return fmt.Sprintf(
 				`if len(m.%s) > 0 {
+					n += 5
 					for _, s := range m.%s {
 						l = len(s)
-						n += 1 + l + %s(uint64(l))
+						n += 4 + l
 					}
 				}`,
-				field.Name(),
-				field.Name(),
-				gen.sovFunc(field.Script()))
-		case "Float32":
-			return fmt.Sprintf(
-				`if len(m.%s) > 0 {
-					n += 1 +%s(uint64(len(m.%s)*4)) + len(m.%s)*4
-				}`,
-				field.Name(),
-				gen.sovFunc(field.Script()),
-				field.Name(),
-				field.Name())
-		case "Float64":
-			return fmt.Sprintf(
-				`if len(m.%s) > 0 {
-					n += 1 +%s(uint64(len(m.%s)*8)) + len(m.%s)*8
-				}`,
-				field.Name(),
-				gen.sovFunc(field.Script()),
 				field.Name(),
 				field.Name())
 		default:
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				return fmt.Sprintf(
-					`if len(m.%s) > 0 {
-						l = 0
-						for _, e := range m.%s {
-							l += %s(uint64(e))
-						}
-						n += 1 + l + %s(uint64(l))
+					`l = len(m.%s)
+					if l > 0 {
+						n += 5 + l * 4
 					}`,
-					field.Name(),
-					field.Name(),
-					gen.sovFunc(field.Script()),
-					gen.sovFunc(field.Script()))
+					field.Name())
 			case *ast.Table:
 				return fmt.Sprintf(
 					`if len(m.%s) > 0 {
+						n += 5
 						for _, e := range m.%s {
-							l = e.Size()
-							n += 1 + l + %s(uint64(l))
+							n += 4 + e.Size()
 						}
 					}`,
 					field.Name(),
-					field.Name(),
-					gen.sovFunc(field.Script()))
+					field.Name())
 			default:
 				log.Panicf("not here %s", field.Type.Name())
 			}
