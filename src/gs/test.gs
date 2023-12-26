@@ -32,5 +32,6 @@ struct Car {
     VarFloat32s []float32;
     VarFloat64s []float64;
     VarEnums []Color;
+    VarMap map[string]string;
 }
 

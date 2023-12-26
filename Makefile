@@ -26,6 +26,7 @@ gsc:
 	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/gsc/gs2go
 
 t:
+	rm -f src/base/gslang/*.gs.go
 	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/gsc/gs2go
 	GOPATH=$(GOPATH) gs2go gs
 

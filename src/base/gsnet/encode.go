@@ -66,10 +66,11 @@ type Writer interface {
 	io.Writer
 }
 
-// WriteFieldNum 写入字段编号
-func WriteFieldNum(data []byte, i int, fieldNum uint8) int {
-	data[i] = fieldNum
-	return i + 1
+// WriteFieldID 写入字段编号
+func WriteFieldID(data []byte, i int, v uint16) int {
+	data[i] = byte(v)
+	data[i+1] = byte(v >> 8)
+	return i + 2
 }
 
 // WriteBool 写入一个布尔值
@@ -179,12 +180,16 @@ func WriteBytes(data []byte, i int, bytes []byte) int {
 
 // WriteEnum 写入一个枚举
 func WriteEnum(data []byte, i int, v int32) int {
-	return WriteInt32(data, i, v)
+	data[i] = byte(v)
+	data[i+1] = byte(v >> 8)
+	data[i+2] = byte(v >> 16)
+	data[i+3] = byte(v >> 24)
+	return i + 4
 }
 
-// ReadFieldNum 读取字段编号
-func ReadFieldNum(data []byte, i int) (int, uint8) {
-	return i + 1, data[i]
+// ReadFieldID 读取字段编号
+func ReadFieldID(data []byte, i int) (int, uint16) {
+	return i + 2, uint16(data[i]) | uint16(data[i+1])<<8
 }
 
 // ReadBool 读取一个布尔值
@@ -272,5 +277,6 @@ func ReadBytes(data []byte, i int) (int, []byte) {
 
 // ReadEnum 读取一个枚举
 func ReadEnum(data []byte, i int) (int, int32) {
-	return ReadInt32(data, i)
+	return i + 4, int32(data[i]) | int32(data[i+1])<<8 |
+		int32(data[i+2])<<16 | int32(data[i+3])<<24
 }

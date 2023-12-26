@@ -184,6 +184,15 @@ func (linker *Linker) VisitArray(array *ast.Array) ast.Node {
 	return array
 }
 
+// VisitMap 访问字典
+func (linker *Linker) VisitMap(m *ast.Map) ast.Node {
+	// 访问字典的键类型
+	m.Key.Accept(linker)
+	// 访问字典的值类型
+	m.Value.Accept(linker)
+	return m
+}
+
 // VisitAttr 访问属性
 func (linker *Linker) VisitAttr(attr *ast.Attr) ast.Node {
 	// 访问属性 的类型应用
