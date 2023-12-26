@@ -1,0 +1,48 @@
+syntax = "proto3";
+package pb;
+
+enum Err{
+  Success = 0;
+  OOS = 1;
+}
+
+enum Color{
+  White = 0;
+  Red = 1;
+  Green = 2;
+  Blue = 3;
+}
+
+message Car {
+  Color VarEnum = 1;
+  string VarString = 2;
+  bool VarBool = 3;
+  int32 VarInt32 = 4;
+  uint32 VarUInt32 = 5;
+  int64 VarInt64 = 6;
+  uint64 VarUInt64 = 7;
+  sint32 VarSInt32 = 8;
+  sint64 VarSInt64 = 9;
+  fixed32 VarFixed32 = 10;
+  fixed64 VarFixed64 = 11;
+  sfixed32 VarSFixed32 = 12;
+  sfixed64 VarSFixed64 = 13;
+  float VarFloat32 = 14;
+  double VarFloat64 = 15;
+  bytes VarBytes = 16;
+  Student VarStruct = 17;
+  repeated Student VarStructs = 18;
+  map<bool, Student> VarMap = 19;
+  repeated int32 VarInt32s = 20;
+  repeated bool VarBools = 21;
+  repeated string VarStrings = 22;
+  repeated float VarFloat32s = 23;
+  repeated double VarFloat64s = 24;
+  repeated Color VarEnums = 25;
+}
+
+message Student {
+  int64 ID = 1;
+  string Name = 2;
+  int32 Age = 3;
+}

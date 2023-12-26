@@ -5,7 +5,6 @@ src/vendor/
 bin/
 log/
 pkg/
-src/pb/
 
 .~*
 *.out
