@@ -38,6 +38,16 @@ func (table *Table) Field(name string) (*Field, bool) {
 	return nil, false
 }
 
+// FieldByID 在结构体内查找给定ID的字段,返回该字段和是否找到
+func (table *Table) FieldByID(id uint16) (*Field, bool) {
+	for _, field := range table.Fields {
+		if field.ID == id {
+			return field, true
+		}
+	}
+	return nil, false
+}
+
 // NewField 在结构体内新建字段
 func (table *Table) NewField(name string) (*Field, bool) {
 	// 如果已存在同名字段则直接返回

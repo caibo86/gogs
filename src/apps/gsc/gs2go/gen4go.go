@@ -168,8 +168,6 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"readType":     gen.readType,
 		"writeType":    gen.writeType,
 		"defaultVal":   gen.defaultVal,
-		"enumWrite":    gen.enumWrite,
-		"enumRead":     gen.enumRead,
 		"writeTagType": gen.writeTagType,
 		"pos":          gslang.Pos,
 		"tag":          gen.tag,
@@ -207,46 +205,6 @@ func (gen *Gen4Go) tag(expr ast.Expr) string {
 		return "gsnet.Array"
 	case *ast.List:
 		return "gsnet.List"
-	}
-	log.Panic("not here")
-	return "unknown"
-}
-
-// enumWrite 根据枚举的值类型取写入语句
-func (gen *Gen4Go) enumWrite(enum *ast.Enum) string {
-	switch {
-	case enum.Length == 1 && enum.Signed == true:
-		return "gsnet.WriteSByte(writer,int8(val))"
-	case enum.Length == 1 && enum.Signed == false:
-		return "gsnet.WriteByte(writer,byte(val))"
-	case enum.Length == 2 && enum.Signed == true:
-		return "gsnet.WriteInt16(writer,int16(val))"
-	case enum.Length == 2 && enum.Signed == false:
-		return "gsnet.WriteUint16(writer,uint16(val))"
-	case enum.Length == 4 && enum.Signed == true:
-		return "gsnet.WriteInt32(writer,int32(val))"
-	case enum.Length == 4 && enum.Signed == false:
-		return "gsnet.WriteUint32(writer,uint32(val))"
-	}
-	log.Panic("not here")
-	return "unknown"
-}
-
-// enumRead 根据枚举的值类型取读入语句
-func (gen *Gen4Go) enumRead(enum *ast.Enum) string {
-	switch {
-	case enum.Length == 1 && enum.Signed == true:
-		return "gsnet.ReadSByte(reader)"
-	case enum.Length == 1 && enum.Signed == false:
-		return "gsnet.ReadByte(reader)"
-	case enum.Length == 2 && enum.Signed == true:
-		return "gsnet.ReadInt16(reader)"
-	case enum.Length == 2 && enum.Signed == false:
-		return "gsnet.ReadUint16(reader)"
-	case enum.Length == 4 && enum.Signed == true:
-		return "gsnet.ReadInt32(reader)"
-	case enum.Length == 4 && enum.Signed == false:
-		return "gsnet.ReadUint32(reader)"
 	}
 	log.Panic("not here")
 	return "unknown"
@@ -303,68 +261,6 @@ func (gen *Gen4Go) writeTagType(expr ast.Expr) string {
 	return "unknown"
 }
 
-// readType 根据类型取读入函数
-func (gen *Gen4Go) readType(expr ast.Expr) string {
-	switch expr.(type) {
-	case *ast.TypeRef:
-		// 内置类型
-		if f, ok := readMapping[expr.Name()]; ok {
-			return f
-		}
-		// 自定义类型
-		ref := expr.(*ast.TypeRef)
-		if _, ok := expr.Script().Imports[ref.NamePath[0]]; ok {
-			return fmt.Sprintf(
-				"%s.Read%s",
-				ref.NamePath[0],
-				strings.Title(ref.NamePath[1]),
-			)
-		}
-		return fmt.Sprintf(
-			"Read%s",
-			strings.Title(ref.NamePath[0]),
-		)
-	case *ast.Array:
-		// 数组
-		array := expr.(*ast.Array)
-		var buff bytes.Buffer
-		if array.Element.Name() == ".gslang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "readByteArray", array); err != nil {
-				panic(err)
-			}
-		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "readArray", array); err != nil {
-				panic(err)
-			}
-		}
-		return buff.String()
-	case *ast.List:
-		// 切片
-		list := expr.(*ast.List)
-		var buff bytes.Buffer
-		if list.Element.Name() == ".gslang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "readByteList", list); err != nil {
-				panic(err)
-			}
-		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "readList", list); err != nil {
-				panic(err)
-			}
-		}
-		return buff.String()
-	case *ast.Map:
-		// 字典
-		hash := expr.(*ast.Map)
-		var buff bytes.Buffer
-		if err := gen.tpl.ExecuteTemplate(&buff, "readMap", hash); err != nil {
-			panic(err)
-		}
-		return buff.String()
-	}
-	log.Panic("not here")
-	return "unknown"
-}
-
 // calTypeSize 根据类型获取计算大小的函数
 func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 	switch field.Type.(type) {
@@ -374,38 +270,38 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 		case "Bool":
 			return fmt.Sprintf(
 				`if m.%s {
-					n += 2
+					n += 3
 				}`,
 				field.Name())
 		case "Byte", "Sbyte":
 			return fmt.Sprintf(
 				`if m.%s != 0 {
-					n += 2
+					n += 3
 				}`,
 				field.Name())
 		case "Int16", "Uint16":
 			return fmt.Sprintf(
 				`if m.%s != 0 {
-					n += 3
+					n += 4
 				}`,
 				field.Name())
 		case "Int32", "Uint32", "Float32":
 			return fmt.Sprintf(
 				`if m.%s != 0 {
-					n += 5
+					n += 6
 				}`,
 				field.Name())
 		case "Int64", "Uint64", "Float64":
 			return fmt.Sprintf(
 				`if m.%s != 0 {
-					n += 9
+					n += 10
 				}`,
 				field.Name())
 		case "String":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 					if l > 0 {
-					n += 5 + l 
+					n += 6 + l 
 				}`,
 				field.Name())
 		default:
@@ -413,153 +309,86 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 			case *ast.Enum:
 				return fmt.Sprintf(
 					`if m.%s != 0 {
-						n += 5
+						n += 6
 					}`,
 					field.Name())
 			case *ast.Table:
 				return fmt.Sprintf(
 					`if m.%s != nil {
 						l = m.%s.Size()
-						n += 5 + l
+						n += 6 + l
 					}`,
 					field.Name(), field.Name())
 			default:
 				log.Panicf("not here %s", field.Type.Name())
 			}
 		}
-	case *ast.List:
+	case *ast.List, *ast.Array:
 		// 数组 切片
 		var ref *ast.TypeRef
-		list := field.Type.(*ast.List)
-		ref := list.Element.(*ast.TypeRef)
+		if list, ok := field.Type.(*ast.List); ok {
+			ref = list.Element.(*ast.TypeRef)
+		} else {
+			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
+		}
 		log.Debug("看下切片元素类型名字:", ref.Ref.Name())
 		switch ref.Ref.Name() {
 		case "Byte", "Sbyte", "Bool":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 				if l > 0 {
-					n += 5 + l
+					n += 6 + l
 				}`,
 				field.Name())
 		case "Uint16", "Int16":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 				if l > 0 {
-					n += 5 + l * 2
+					n += 6 + l * 2
 				}`,
 				field.Name())
 		case "Uint32", "Int32", "Float32":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 				if l > 0 {
-					n += 5 + l * 4
+					n += 6 + l * 4
 				}`,
 				field.Name())
 		case "Uint64", "Int64", "Float64":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 				if l > 0 {
-					n += 5 + l * 8
+					n += 6 + l * 8
 				}`,
 				field.Name())
 		case "String":
 			return fmt.Sprintf(
 				`if len(m.%s) > 0 {
-					n += 5
+					n += 6
 					for _, s := range m.%s {
 						l = len(s)
 						n += 4 + l
 					}
 				}`,
-				field.Name(),
-				field.Name())
+				field.Name(), field.Name())
 		default:
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				return fmt.Sprintf(
 					`l = len(m.%s)
 					if l > 0 {
-						n += 5 + l * 4
+						n += 6 + l * 4
 					}`,
 					field.Name())
 			case *ast.Table:
 				return fmt.Sprintf(
 					`if len(m.%s) > 0 {
-						n += 5
+						n += 6
 						for _, e := range m.%s {
 							n += 4 + e.Size()
 						}
 					}`,
-					field.Name(),
-					field.Name())
-			default:
-				log.Panicf("not here %s", field.Type.Name())
-			}
-		}
-	case *ast.Array:
-		// 切片
-		list := field.Type.(*ast.List)
-		ref := list.Element.(*ast.TypeRef)
-		log.Debug("看下数组元素类型名字:", ref.Ref.Name())
-		switch ref.Ref.Name() {
-		case "Byte", "Sbyte", "Bool":
-			return fmt.Sprintf(
-				`l = len(m.%s)
-				if l > 0 {
-					n += 5 + l
-				}`,
-				field.Name())
-		case "Uint16", "Int16":
-			return fmt.Sprintf(
-				`l = len(m.%s)
-				if l > 0 {
-					n += 5 + l * 2
-				}`,
-				field.Name())
-		case "Uint32", "Int32", "Float32":
-			return fmt.Sprintf(
-				`l = len(m.%s)
-				if l > 0 {
-					n += 5 + l * 4
-				}`,
-				field.Name())
-		case "Uint64", "Int64", "Float64":
-			return fmt.Sprintf(
-				`l = len(m.%s)
-				if l > 0 {
-					n += 5 + l * 8
-				}`,
-				field.Name())
-		case "String":
-			return fmt.Sprintf(
-				`if len(m.%s) > 0 {
-					n += 5
-					for _, s := range m.%s {
-						l = len(s)
-						n += 4 + l
-					}
-				}`,
-				field.Name(),
-				field.Name())
-		default:
-			switch ref.Ref.(type) {
-			case *ast.Enum:
-				return fmt.Sprintf(
-					`l = len(m.%s)
-					if l > 0 {
-						n += 5 + l * 4
-					}`,
-					field.Name())
-			case *ast.Table:
-				return fmt.Sprintf(
-					`if len(m.%s) > 0 {
-						n += 5
-						for _, e := range m.%s {
-							n += 4 + e.Size()
-						}
-					}`,
-					field.Name(),
-					field.Name())
+					field.Name(), field.Name())
 			default:
 				log.Panicf("not here %s", field.Type.Name())
 			}
@@ -607,7 +436,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 		case "String":
 			valStr = "4 + len(v)"
 		default:
-			switch hash.Key.(type) {
+			switch ref.Ref.(type) {
 			case *ast.Enum:
 				valStr = "4"
 			case *ast.Table:
@@ -616,11 +445,9 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 				log.Panicf("map value %s not supported", hash.Value.Name())
 			}
 		}
-
 		return fmt.Sprintf(
-			`l = len(m.%s)
-					if l > 0 {
-						n += 5
+			`if len(m.%s) > 0 {
+						n += 6
 						for k, v := range m.%s {
  							_ = k
 							_ = v
@@ -733,157 +560,84 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 				return fmt.Sprintf(
 					`if m.%s != 0 {
 						i = gsnet.WriteFieldID(data, i, %d)
-						i = gsnet.WriteEnum(data, i, m.%s)
+						i = gsnet.WriteEnum(data, i, int32(m.%s))
 					}`,
 					field.Name(), field.ID, field.Name())
 			case *ast.Table:
 				return fmt.Sprintf(
 					`if m.%s != nil {
 						i = gsnet.WriteFieldID(data, i, %d)
-						size := m.%s.MarshalToSizedBuffer(data[i:])
+						size := m.%s.Size()
+						i = gsnet.WriteUint32(data, i, uint32(size))
+						m.%s.MarshalToSizedBuffer(data[i:])
 						i += size
 					}`,
-					field.Name(), field.ID, field.Name())
+					field.Name(), field.ID, field.Name(), field.Name())
 			default:
 				log.Panicf("not here %s", field.Type.Name())
 			}
 		}
-	case *ast.List:
+	case *ast.List, *ast.Array:
 		// 数组
-		list := field.Type.(*ast.List)
-		ref := list.Element.(*ast.TypeRef)
-		log.Debug("看下切片元素类型名字:", ref.Ref.Name())
+		var ref *ast.TypeRef
+		if list, ok := field.Type.(*ast.List); ok {
+			ref = list.Element.(*ast.TypeRef)
+		} else {
+			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
+		}
+		var str string
 		switch ref.Ref.Name() {
-		case "Byte", "Sbyte", "Bool":
-			return fmt.Sprintf(
-				`l = len(m.%s)
-				if l > 0 {
-					n += 5 + l
-				}`,
-				field.Name())
-		case "Uint16", "Int16":
-			return fmt.Sprintf(
-				`l = len(m.%s)
-				if l > 0 {
-					n += 5 + l * 2
-				}`,
-				field.Name())
-		case "Uint32", "Int32", "Float32":
-			return fmt.Sprintf(
-				`l = len(m.%s)
-				if l > 0 {
-					n += 5 + l * 4
-				}`,
-				field.Name())
-		case "Uint64", "Int64", "Float64":
-			return fmt.Sprintf(
-				`l = len(m.%s)
-				if l > 0 {
-					n += 5 + l * 8
-				}`,
-				field.Name())
+		case "Bool":
+			str = `i = gsnet.WriteBool(data, i, e)`
+		case "Byte":
+			str = `i = gsnet.WriteByte(data, i, e)`
+		case "Sbyte":
+			str = `i = gsnet.WriteSbyte(data, i, e)`
+		case "Int16":
+			str = `i = gsnet.WriteInt16(data, i, e)`
+		case "Uint16":
+			str = `i = gsnet.WriteUint16(data, i, e)`
+		case "Int32":
+			str = `i = gsnet.WriteInt32(data, i, e)`
+		case "Uint32":
+			str = `i = gsnet.WriteUint32(data, i, e)`
+		case "Float32":
+			str = `i = gsnet.WriteFloat32(data, i, e)`
+		case "Int64":
+			str = `i = gsnet.WriteInt64(data, i, e)`
+		case "Uint64":
+			str = `i = gsnet.WriteUint64(data, i, e)`
+		case "Float64":
+			str = `i = gsnet.WriteFloat64(data, i, e)`
 		case "String":
-			return fmt.Sprintf(
-				`if len(m.%s) > 0 {
-					n += 5
-					for _, s := range m.%s {
-						l = len(s)
-						n += 4 + l
-					}
-				}`,
-				field.Name(),
-				field.Name())
+			str = `i = gsnet.WriteString(data, i, e)`
 		default:
 			switch ref.Ref.(type) {
 			case *ast.Enum:
-				return fmt.Sprintf(
-					`l = len(m.%s)
-					if l > 0 {
-						n += 5 + l * 4
-					}`,
-					field.Name())
+				str = `i = gsnet.WriteEnum(data, i, int32(e))`
 			case *ast.Table:
-				return fmt.Sprintf(
-					`if len(m.%s) > 0 {
-						n += 5
-						for _, e := range m.%s {
-							n += 4 + e.Size()
-						}
-					}`,
-					field.Name(),
-					field.Name())
+				str = `size := e.Size()
+						i = gsnet.WriteUint32(data, i, uint32(size))
+						e.MarshalToSizedBuffer(data[i:])
+						i += size`
 			default:
 				log.Panicf("not here %s", field.Type.Name())
 			}
 		}
-	case *ast.Array:
-		// 切片
-		list := field.Type.(*ast.List)
-		ref := list.Element.(*ast.TypeRef)
-		log.Debug("看下数组元素类型名字:", ref.Ref.Name())
-		switch ref.Ref.Name() {
-		case "Byte", "Sbyte", "Bool":
-			return fmt.Sprintf(
-				`l = len(m.%s)
-				if l > 0 {
-					n += 5 + l
-				}`,
-				field.Name())
-		case "Uint16", "Int16":
-			return fmt.Sprintf(
-				`l = len(m.%s)
-				if l > 0 {
-					n += 5 + l * 2
-				}`,
-				field.Name())
-		case "Uint32", "Int32", "Float32":
-			return fmt.Sprintf(
-				`l = len(m.%s)
-				if l > 0 {
-					n += 5 + l * 4
-				}`,
-				field.Name())
-		case "Uint64", "Int64", "Float64":
-			return fmt.Sprintf(
-				`l = len(m.%s)
-				if l > 0 {
-					n += 5 + l * 8
-				}`,
-				field.Name())
-		case "String":
-			return fmt.Sprintf(
-				`if len(m.%s) > 0 {
-					n += 5
-					for _, s := range m.%s {
-						l = len(s)
-						n += 4 + l
+		return fmt.Sprintf(
+			`if len(m.%s) > 0 {
+					i = gsnet.WriteFieldID(data, i , %d)
+					i = gsnet.WriteUint32(data, i, uint32(len(m.%s)))
+					for _, e := range m.%s {
+						_ = e
+						%s
 					}
 				}`,
-				field.Name(),
-				field.Name())
-		default:
-			switch ref.Ref.(type) {
-			case *ast.Enum:
-				return fmt.Sprintf(
-					`l = len(m.%s)
-					if l > 0 {
-						n += 5 + l * 4
-					}`,
-					field.Name())
-			case *ast.Table:
-				return fmt.Sprintf(
-					`if len(m.%s) > 0 {
-						n += 5
-						for _, e := range m.%s {
-							n += 4 + e.Size()
-						}
-					}`,
-					field.Name(),
-					field.Name())
-			default:
-				log.Panicf("not here %s", field.Type.Name())
-			}
-		}
+			field.Name(),
+			field.ID,
+			field.Name(),
+			field.Name(),
+			str)
 	case *ast.Map:
 		// 字典
 		hash := field.Type.(*ast.Map)
@@ -896,62 +650,414 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 		log.Debugf("看下字典类型名字: %s %s",
 			hash.Key.(*ast.TypeRef).Ref.Name(), hash.Value.(*ast.TypeRef).Ref.Name())
 		switch ref.Ref.Name() {
-		case "Byte", "Sbyte", "Bool":
-			keyStr = "1"
-		case "Uint16", "Int16":
-			keyStr = "2"
-		case "Uint32", "Int32":
-			keyStr = "4"
-		case "Uint64", "Int64":
-			keyStr = "8"
+		case "Bool":
+			keyStr = "i = gsnet.WriteBool(data, i, k)"
+		case "Byte":
+			keyStr = "i = gsnet.WriteByte(data, i, k)"
+		case "Sbyte":
+			keyStr = "i = gsnet.WriteSbyte(data, i, k)"
+		case "Int16":
+			keyStr = "i = gsnet.WriteInt16(data, i, k)"
+		case "Uint16":
+			keyStr = "i = gsnet.WriteUint16(data, i, k)"
+		case "Int32":
+			keyStr = "i = gsnet.WriteInt32(data, i, k)"
+		case "Uint32":
+			keyStr = "i = gsnet.WriteUint32(data, i, k)"
+		case "Int64":
+			keyStr = "i = gsnet.WriteInt64(data, i, k)"
+		case "Uint64":
+			keyStr = "i = gsnet.WriteInt64(data, i, k)"
 		case "String":
-			keyStr = "4 + len(k)"
+			keyStr = "i = gsnet.WriteString(data, i, k)"
 		default:
-			switch hash.Key.(type) {
+			switch ref.Ref.(type) {
 			case *ast.Enum:
-				keyStr = "4"
+				keyStr = "i = gsnet.WriteEnum(data, i, int32(k))"
 			default:
 				log.Panicf("map key can only be int or string, %s not supported", hash.Key.Name())
 			}
 		}
 		ref = hash.Value.(*ast.TypeRef)
 		switch ref.Ref.Name() {
-		case "Byte", "Sbyte", "Bool":
-			valStr = "1"
-		case "Uint16", "Int16":
-			valStr = "2"
-		case "Uint32", "Int32", "float32":
-			valStr = "4"
-		case "Uint64", "Int64", "float64":
-			valStr = "8"
+		case "Bool":
+			valStr = "i = gsnet.WriteBool(data, i, v)"
+		case "Byte":
+			valStr = "i = gsnet.WriteByte(data, i, v)"
+		case "Sbyte":
+			valStr = "i = gsnet.WriteSbyte(data, i, v)"
+		case "Int16":
+			valStr = "i = gsnet.WriteInt16(data, i, v)"
+		case "Uint16":
+			valStr = "i = gsnet.WriteUint16(data, i, v)"
+		case "Int32":
+			valStr = "i = gsnet.WriteInt32(data, i, v)"
+		case "Uint32":
+			valStr = "i = gsnet.WriteUint32(data, i, v)"
+		case "Float32":
+			valStr = "i = gsnet.WriteFloat32(data, i, v)"
+		case "Int64":
+			valStr = "i = gsnet.WriteInt64(data, i, v)"
+		case "Uint64":
+			valStr = "i = gsnet.WriteInt64(data, i, v)"
+		case "Float64":
+			valStr = "i = gsnet.WriteFloat64(data, i, v)"
 		case "String":
-			valStr = "4 + len(v)"
+			valStr = "i = gsnet.WriteString(data, i, v)"
 		default:
-			switch hash.Key.(type) {
+			switch ref.Ref.(type) {
 			case *ast.Enum:
-				valStr = "4"
+				valStr = "i = gsnet.WriteEnum(data, i, int32(v))"
 			case *ast.Table:
-				valStr = "4 + v.Size()"
+				valStr = `size := v.Size()
+						i = gsnet.WriteUint32(data, i, uint32(size))
+						v.MarshalToSizedBuffer(data[i:])
+						i += size`
 			default:
-				log.Panicf("map value %s not supported", hash.Value.Name())
+				log.Panicf("map key can only be int or string, %s not supported", hash.Key.Name())
 			}
 		}
 
 		return fmt.Sprintf(
-			`l = len(m.%s)
-					if l > 0 {
-						n += 5
+			`if len(m.%s) > 0 {
+						i = gsnet.WriteFieldID(data, i, %d)
+						i = gsnet.WriteUint32(data, i, uint32(len(m.%s)))
 						for k, v := range m.%s {
  							_ = k
 							_ = v
-							n += %s
-							n += %s
+							%s
+							%s
 						}
 					}`,
+			field.Name(),
+			field.ID,
 			field.Name(),
 			field.Name(),
 			keyStr,
 			valStr)
+	}
+	log.Panic("not here")
+	return "unknown"
+}
+
+// readType 根据字段类型生成读取函数
+func (gen *Gen4Go) readType(field *ast.Field) string {
+	switch field.Type.(type) {
+	case *ast.TypeRef:
+		ref := field.Type.(*ast.TypeRef)
+		switch ref.Ref.Name() {
+		case "Bool":
+			return fmt.Sprintf(
+				`i, m.%s = gsnet.ReadBool(data, i)`,
+				field.Name())
+		case "Byte":
+			return fmt.Sprintf(
+				`i, m.%s = gsnet.ReadByte(data, i)`,
+				field.Name())
+		case "Sbyte":
+			return fmt.Sprintf(
+				`i, m.%s = gsnet.ReadSbyte(data, i)`,
+				field.Name())
+		case "Int16":
+			return fmt.Sprintf(
+				`i, m.%s = gsnet.ReadInt16(data, i)`,
+				field.Name())
+		case "Uint16":
+			return fmt.Sprintf(
+				`i, m.%s = gsnet.ReadUint16(data, i)`,
+				field.Name())
+		case "Int32":
+			return fmt.Sprintf(
+				`i, m.%s = gsnet.ReadInt32(data, i)`,
+				field.Name())
+		case "Uint32":
+			return fmt.Sprintf(
+				`i, m.%s = gsnet.ReadUint32(data, i)`,
+				field.Name())
+		case "Float32":
+			return fmt.Sprintf(
+				`i, m.%s = gsnet.ReadFloat32(data, i)`,
+				field.Name())
+		case "Int64":
+			return fmt.Sprintf(
+				`i, m.%s = gsnet.ReadInt64(data, i)`,
+				field.Name())
+		case "Uint64":
+			return fmt.Sprintf(
+				`i, m.%s = gsnet.ReadUint64(data, i)`,
+				field.Name())
+		case "Float64":
+			return fmt.Sprintf(
+				`i, m.%s = gsnet.ReadFloat64(data, i)`,
+				field.Name())
+		case "String":
+			return fmt.Sprintf(
+				`i, m.%s = gsnet.ReadString(data, i)`,
+				field.Name())
+		default:
+			switch ref.Ref.(type) {
+			case *ast.Enum:
+				return fmt.Sprintf(
+					`var v int32
+						i, v = gsnet.ReadEnum(data, i)
+						m.%s = %s(v)`,
+					field.Name(), ref.Ref.Name())
+			case *ast.Table:
+				return fmt.Sprintf(
+					`var size uint32
+						i, size = gsnet.ReadUint32(data, i)
+						if m.%s == nil {
+							m.%s = &%s{}
+						}
+						if err = m.%s.Unmarshal(data[i:i+int(size)]); err != nil {
+							return
+						} 
+						i += int(size)`,
+					field.Name(), field.Name(), ref.Ref.Name(), field.Name())
+			default:
+				log.Panicf("not here %s", field.Type.Name())
+			}
+		}
+	case *ast.List, *ast.Array:
+		// 数组
+		var ref *ast.TypeRef
+		var isList bool
+		if list, ok := field.Type.(*ast.List); ok {
+			isList = true
+			ref = list.Element.(*ast.TypeRef)
+		} else {
+			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
+		}
+		var str string
+		var typeStr string
+		switch ref.Ref.Name() {
+		case "Bool":
+			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadBool(data, i)`, field.Name())
+			typeStr = "bool"
+		case "Byte":
+			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadByte(data, i)`, field.Name())
+			typeStr = "byte"
+		case "Sbyte":
+			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadSbyte(data, i)`, field.Name())
+			typeStr = "int8"
+		case "Int16":
+			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadInt16(data, i)`, field.Name())
+			typeStr = "int16"
+		case "Uint16":
+			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadUint16(data, i)`, field.Name())
+			typeStr = "uint16"
+		case "Int32":
+			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadInt32(data, i)`, field.Name())
+			typeStr = "int32"
+		case "Uint32":
+			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadUint32(data, i)`, field.Name())
+			typeStr = "uint32"
+		case "Float32":
+			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadFloat32(data, i)`, field.Name())
+			typeStr = "float32"
+		case "Int64":
+			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadInt64(data, i)`, field.Name())
+			typeStr = "int64"
+		case "Uint64":
+			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadUint64(data, i)`, field.Name())
+			typeStr = "uint64"
+		case "Float64":
+			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadFloat64(data, i)`, field.Name())
+			typeStr = "float64"
+		case "String":
+			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadString(data, i)`, field.Name())
+			typeStr = "string"
+		default:
+			switch ref.Ref.(type) {
+			case *ast.Enum:
+				str = fmt.Sprintf(`var v int32
+				i, v = gsnet.ReadEnum(data, i)
+				m.%s[j] = %s(v)`,
+					field.Name(), ref.Ref.Name())
+				typeStr = ref.Ref.Name()
+			case *ast.Table:
+				str = fmt.Sprintf(
+					`var size uint32
+						i, size = gsnet.ReadUint32(data, i)
+						m.%s[j] = &%s{}
+						if err = m.%s[j].Unmarshal(data[i:i+int(size)]); err != nil {
+							return
+						}
+						i += int(size)`, field.Name(), ref.Ref.Name(), field.Name())
+				typeStr = "*" + ref.Ref.Name()
+			default:
+				log.Panicf("not here %s", field.Type.Name())
+			}
+		}
+		if isList {
+			return fmt.Sprintf(
+				`var length uint32
+				i, length = gsnet.ReadUint32(data, i)
+				m.%s = make([]%s, length)
+				for j := uint32(0); j < length; j++ {
+					%s
+				}`,
+				field.Name(), typeStr, str)
+		} else {
+			return fmt.Sprintf(
+				`var length uint32
+				i, length = gsnet.ReadUint32(data, i)
+				for j := uint32(0); j < length; j++ {
+					%s
+				}`,
+				str)
+		}
+
+	case *ast.Map:
+		// 字典
+		hash := field.Type.(*ast.Map)
+		var keyStr string
+		var valStr string
+		var keyType string
+		var valType string
+		ref, ok := hash.Key.(*ast.TypeRef)
+		if !ok {
+			log.Debug("这个不是引用类型?")
+		}
+		log.Debugf("看下字典类型名字: %s %s",
+			hash.Key.(*ast.TypeRef).Ref.Name(), hash.Value.(*ast.TypeRef).Ref.Name())
+		switch ref.Ref.Name() {
+		case "Bool":
+			keyStr = `var k bool
+					i, k = gsnet.ReadBool(data, i)`
+			keyType = "bool"
+		case "Byte":
+			keyStr = `var k byte
+					i, k = gsnet.ReadByte(data, i)`
+			keyType = "byte"
+		case "Sbyte":
+			keyStr = `var k int8
+					i, k = gsnet.ReadSbyte(data, i)`
+			keyType = "int8"
+		case "Int16":
+			keyStr = `var k int16
+					i, k = gsnet.ReadInt16(data, i)`
+			keyType = "int16"
+		case "Uint16":
+			keyStr = `var k uint16
+					i, k = gsnet.ReadUint16(data, i)`
+			keyType = "uint16"
+		case "Int32":
+			keyStr = `var k int32
+					i, k = gsnet.ReadInt32(data, i)`
+			keyType = "int32"
+		case "Uint32":
+			keyStr = `var k uint32
+					i, k = gsnet.ReadUint32(data, i)`
+			keyType = "uint32"
+		case "Int64":
+			keyStr = `var k int64
+					i, k = gsnet.ReadInt64(data, i)`
+			keyType = "int64"
+		case "Uint64":
+			keyStr = `var k uint64
+					i, k = gsnet.ReadUint64(data, i)`
+			keyType = "uint64"
+		case "String":
+			keyStr = `var k string
+					i, k = gsnet.ReadString(data, i)`
+			keyType = "string"
+		default:
+			switch ref.Ref.(type) {
+			case *ast.Enum:
+				keyStr = fmt.Sprintf(`var k1 int32
+					i, k1 = gsnet.ReadInt32(data, i)
+					k := %s(k1)`, hash.Key.Name())
+				keyType = hash.Key.Name()
+			default:
+				log.Panicf("map key can only be int or string, %s not supported", hash.Key.Name())
+			}
+		}
+		ref = hash.Value.(*ast.TypeRef)
+		switch ref.Ref.Name() {
+		case "Bool":
+			valStr = `var v bool
+					i, v = gsnet.ReadBool(data, i)`
+			valType = "bool"
+		case "Byte":
+			valStr = `var v byte
+					i, v = gsnet.ReadByte(data, i)`
+			valType = "byte"
+		case "Sbyte":
+			valStr = `var v int8
+					i, v = gsnet.ReadSbyte(data, i)`
+			valType = "int8"
+		case "Int16":
+			valStr = `var v int16
+					i, v = gsnet.ReadInt16(data, i)`
+			valType = "int16"
+		case "Uint16":
+			valStr = `var v uint16
+					i, v = gsnet.ReadUint16(data, i)`
+			valType = "uint16"
+		case "Int32":
+			valStr = `var v int32
+					i, v = gsnet.ReadInt32(data, i)`
+			valType = "int32"
+		case "Uint32":
+			valStr = `var v uint32
+					i, v = gsnet.ReadUint32(data, i)`
+			valType = "uint32"
+		case "Float32":
+			valStr = `var v float32
+					i, v = gsnet.ReadFloat32(data, i)`
+			valType = "float32"
+		case "Int64":
+			valStr = `var v int64
+					i, v = gsnet.ReadInt64(data, i)`
+			valType = "int64"
+		case "Uint64":
+			valStr = `var v uint64
+					i, v = gsnet.ReadUint64(data, i)`
+			valType = "uint64"
+		case "Float64":
+			valStr = `var v float64
+					i, v = gsnet.ReadFloat64(data, i)`
+			valType = "float64"
+		case "String":
+			valStr = `var v string
+					i, v = gsnet.ReadString(data, i)`
+			valType = "string"
+		default:
+			switch ref.Ref.(type) {
+			case *ast.Enum:
+				valStr = fmt.Sprintf(`var v1 int32
+					i, v1 = gsnet.ReadInt32(data, i)
+					v := %s(v1)`, hash.Key.Name())
+				valType = ref.Ref.Name()
+			case *ast.Table:
+				valStr = fmt.Sprintf(`var size uint32
+						v := &%s{}
+						i, size = gsnet.ReadUint32(data, i)
+						if err := v.Unmarshal(data[i:i+int(size)]); err != nil {
+							return err
+						}
+						i += int(size)`, ref.Ref.Name())
+				valType = "*" + ref.Ref.Name()
+			default:
+				log.Panicf("map key can only be int or string, %s not supported", hash.Key.Name())
+			}
+		}
+
+		return fmt.Sprintf(
+			`var length uint32
+					if m.%s == nil{
+						m.%s = make(map[%s]%s)
+					}
+					for j := uint32(0); j < length; j++ {
+						%s
+						%s
+						m.%s[k] = v
+					}`,
+			field.Name(), field.Name(),
+			keyType,
+			valType,
+			keyStr, valStr, field.Name())
 	}
 	log.Panic("not here")
 	return "unknown"
