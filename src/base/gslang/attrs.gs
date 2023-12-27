@@ -1,16 +1,16 @@
 // 属性的目标枚举
 enum AttrTarget {
-    Package(1),
-    Script(2),
-    Table(4),
-    Struct(8),
-    Enum(16),
-    EnumVal(32),
-    Field(64),
-    Contract(128),
-    Method(256),
-    Return(512),
-    Param(1024)
+    Package(1);
+    Script(2);
+    Table(4);
+    Struct(8);
+    Enum(16);
+    EnumVal(32);
+    Field(64);
+    Contract(128);
+    Method(256);
+    Return(512);
+    Param(1024);
 }
 
 // 用于标注属性目标类型的内置Table

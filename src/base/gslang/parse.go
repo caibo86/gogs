@@ -785,7 +785,12 @@ func (parser *Parser) parseEnum() {
 	for { // 循环分析枚举的每个枚举值,其中枚举值可以为负值
 		// 分析属性
 		parser.parseAttrs()
-		token := parser.expectf(TokenID, "expect enum value field")
+		token := parser.Peek()
+		if token.Type == '}' {
+			break
+		}
+
+		token = parser.expectf(TokenID, "expect enum value field")
 		parser.expect('(')
 		next := parser.Peek()
 		negative := false
@@ -811,13 +816,14 @@ func (parser *Parser) parseEnum() {
 		}
 		attachPos(enumVal, token.Pos)
 		parser.attachAttrs(enumVal)
-		next = parser.Peek()
-		if next.Type != ',' { // 枚举值之间用逗号分隔
-			parser.parseComments()
-			parser.attachComments(enumVal)
-			break
-		}
-		parser.Next()
+		// next = parser.Peek()
+		// if next.Type != ';' { // 枚举值之间用逗号分隔
+		// 	parser.parseComments()
+		// 	parser.attachComments(enumVal)
+		// 	break
+		// }
+		parser.expect(';')
+		// parser.Next()
 		parser.parseComments()
 		parser.attachComments(enumVal)
 	}
