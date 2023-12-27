@@ -9,3 +9,4 @@ pkg/
 .~*
 *.out
 *.gs.go
+src/apps/gsc/gs2go/gen4go
