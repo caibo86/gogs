@@ -16,8 +16,10 @@ type Field struct {
 
 // Table 表或者结构体,表达式
 type Table struct {
-	BaseExpr          // 内嵌基本表达式实现
-	Fields   []*Field // 结构体的字段列表
+	BaseExpr                    // 内嵌基本表达式实现
+	Fields             []*Field // 结构体的字段列表
+	MaxFieldNameLength int      // 最长的字段名字长度
+	MaxFieldTypeLength int      // 最长的字段类型名字长度
 }
 
 // NewTable 在代码节点内新建结构体
@@ -60,6 +62,13 @@ func (table *Table) NewField(name string, id uint16, t Expr) (*Field, bool) {
 			return field, false
 		}
 	}
+	if len(name) > table.MaxFieldNameLength {
+		table.MaxFieldNameLength = len(name)
+	}
+	if len(t.OriginName()) > table.MaxFieldTypeLength {
+		table.MaxFieldTypeLength = len(t.OriginName())
+	}
+
 	// 新建字段 ID为结构体的当前字段列表长度
 	field := &Field{
 		ID:   id,

@@ -17,15 +17,21 @@ type TypeRef struct {
 	BaseExpr
 	Ref      Expr
 	NamePath []string
+	Origin   string // 原始代码
+}
+
+func (ref *TypeRef) OriginName() string {
+	return ref.Origin
 }
 
 // NewTypeRef 在代码节点内新建类型引用
-func (script *Script) NewTypeRef(namePath []string) *TypeRef {
+func (script *Script) NewTypeRef(namePath []string, origin string) *TypeRef {
 	if len(namePath) == 0 {
 		log.Panic("namePath can not be nil")
 	}
 	typeRef := &TypeRef{
 		NamePath: namePath,
+		Origin:   origin,
 	}
 	var buff bytes.Buffer
 	for _, nodeName := range namePath {

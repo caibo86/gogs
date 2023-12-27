@@ -1,8 +1,13 @@
 ---
 BasedOnStyle:    LLVM
 
+IndentWidth: 4
 AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
-
+AllowShortBlocksOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortEnumsOnASingleLine: false
+CommentPragmas: map[string]string
+SpacesInSquareBrackets: false
 TabWidth:        4
 ColumnLimit:     180

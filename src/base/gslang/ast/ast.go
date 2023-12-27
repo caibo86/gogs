@@ -184,6 +184,7 @@ func (node *BaseNode) Accept(visitor Visitor) Node {
 type Expr interface {
 	Node
 	Script() *Script
+	OriginName() string
 }
 
 // BaseExpr 基本表达式
@@ -210,4 +211,8 @@ func (expr *BaseExpr) Script() *Script {
 func (expr *BaseExpr) Package() *Package {
 	// 基本表达式所属包是其所属代码节点所属的包
 	return expr.Script().Package()
+}
+
+func (expr *BaseExpr) OriginName() string {
+	return expr.Name()
 }

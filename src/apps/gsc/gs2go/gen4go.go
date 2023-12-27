@@ -1118,7 +1118,6 @@ func (gen *Gen4Go) typeName(expr ast.Expr) string {
 		hash := expr.(*ast.Map)
 		return fmt.Sprintf("map[%s]%s", gen.typeName(hash.Key), gen.typeName(hash.Value))
 	}
-
 	log.Panicf("inner error: unknown golang typeName: %s\n\t%s",
 		expr,
 		gslang.Pos(expr))
@@ -1152,6 +1151,21 @@ func (gen *Gen4Go) writeFile(script *ast.Script, bytes []byte) {
 	if err != nil {
 		log.Errorf("goimports format err:%s, check if goimports installed:\n\tgo install golang.org/x/tools/cmd/goimports@latest", err)
 	}
+}
+
+// writeFormatFile 格式化后的gs文件
+func (gen *Gen4Go) writeFormatFile(script *ast.Script, bytes []byte) {
+	fullPath, ok := gslang.FilePath(script)
+	if !ok {
+		log.Panic("inner error: compile must bind file path to script")
+	}
+	// 写入文件名为 源文件名+.go
+	fullPath += ".gss"
+	err := os.WriteFile(fullPath, bytes, 0644)
+	if err != nil {
+		panic(err)
+	}
+	log.Infof("Format file successfully: %s success", fullPath)
 }
 
 // VisitPackage 访问包
@@ -1242,6 +1256,69 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 		// 将buff写到文件
 		gen.writeFile(script, buff.Bytes())
 	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	// format gs file
+	var buff bytes.Buffer
+	for _, ref := range script.Imports {
+		buff.WriteString(fmt.Sprintf("import \"%s\"\n", ref.Ref))
+	}
+	if len(script.Imports) > 0 {
+		buff.WriteString("\n")
+	}
+	// format enum
+	for _, t := range script.Types {
+		if enum, ok := t.(*ast.Enum); ok {
+			buff.WriteString(fmt.Sprintf("enum %s {\n", enum.Name()))
+			maxLen := enum.MaxKeyLength
+			sortedValues := enum.SortedValues()
+			for _, field := range sortedValues {
+				buff.WriteString(fmt.Sprintf("\t%"+fmt.Sprintf("-%d", maxLen)+"s = %d;", field.Name(), field.Value))
+				comments := gslang.Comments(field)
+				if len(comments) > 0 {
+					buff.WriteString(" //")
+					for _, comment := range comments {
+						value := comment.Value.(string)
+						value = strings.TrimLeft(value, " ")
+						buff.WriteString(fmt.Sprintf("%s", comment.Value))
+					}
+				}
+				buff.WriteString("\n")
+			}
+			buff.WriteString(fmt.Sprintf("}\n\n"))
+		}
+	}
+	// format struct
+	for _, t := range script.Types {
+		if table, ok := t.(*ast.Table); ok {
+			comments := gslang.Comments(table)
+			if len(comments) > 0 {
+				fmt.Println("有几条注释", len(comments))
+				for _, comment := range comments {
+					value := comment.Value.(string)
+					value = strings.TrimLeft(value, " ")
+					fmt.Println(value)
+					buff.WriteString(fmt.Sprintf("//%s\n", comment.Value))
+				}
+			}
+			if gslang.IsStruct(table) {
+				buff.WriteString(fmt.Sprintf("table %s {\n", table.Name()))
+			} else {
+				buff.WriteString(fmt.Sprintf("struct %s {\n", table.Name()))
+			}
+			maxNameLen := table.MaxFieldNameLength
+			maxTypeLen := table.MaxFieldTypeLength
+			for _, field := range table.Fields {
+				t := "\t%" +
+					fmt.Sprintf("-%d", maxNameLen) +
+					"s %" +
+					fmt.Sprintf("-%d", maxTypeLen) + "s = %d;\n"
+				buff.WriteString(fmt.Sprintf(t, field.Name(), field.Type.OriginName(), field.ID))
+			}
+			buff.WriteString(fmt.Sprintf("}\n\n"))
+		}
+	}
+	gen.writeFormatFile(script, buff.Bytes())
 	return script
 }
 

@@ -123,7 +123,7 @@ func (parser *Parser) parseTypeRef() *ast.TypeRef {
 		nodes = append(nodes, token.Value.(string))
 	}
 	// 用标识符列表在代码节点内新建类型引用
-	ref := parser.script.NewTypeRef(nodes)
+	ref := parser.script.NewTypeRef(nodes, strings.Join(nodes, "."))
 	// 给节点附加位置信息
 	attachPos(ref, start.Pos)
 	return ref
@@ -196,11 +196,16 @@ func (parser *Parser) parseComments() {
 	for { // 循环判断TokenCOMMENT
 		token := parser.Peek()
 		if token.Type != TokenCOMMENT {
-			return
+			break
 		}
 		parser.Next()
 		parser.comments = append(parser.comments, token)
 	}
+	fmt.Println("当前的注释列表为:", len(parser.comments))
+	for _, comment := range parser.comments {
+		fmt.Println("当前的注释:", comment.Value)
+	}
+
 }
 
 // attachComments 将分析器保存的注释列表中符合条件的注释附加给对应节点
@@ -226,13 +231,19 @@ func (parser *Parser) attachComments(node ast.Node) {
 
 		// 如果注释节点的行号与 目标节点行号相同 或者 小1 则认为该注释属于目标节点  递归往上找行号连续的注释
 		if comment.Pos.Line == pos.Line || (comment.Pos.Line+1) == pos.Line {
+			fmt.Println("注释", comment.Value, "属于", node.Name())
 			selected = append(selected, comment)
 			pos = comment.Pos
 		} else {
+			fmt.Println("注释", comment.Value, "不属于", node.Name())
 			rest = append(rest, comment)
 		}
 	}
 	// 分析器保存未被选中的注释
+	// 未被选中的需要恢复原有顺序
+	for i, j := 0, len(rest)-1; i < j; i, j = i+1, j-1 {
+		rest[i], rest[j] = rest[j], rest[i]
+	}
 	parser.comments = rest
 	// 将被选中的注释列表反序 以此得到按行号递增的注释列表
 	var revert []*Token
@@ -631,19 +642,18 @@ func (parser *Parser) parseContract() {
 // newGSLangAttr 在代码节点内生成指定名字的类型引用 如果不是gslang包下的 还需加入gslang.前缀,并用此类型引用节点生成一个属性
 func (parser *Parser) newGSLangAttr(name string) *ast.Attr {
 	if parser.script.Package().Name() != GSLangPackage {
-		return parser.script.NewAttr(parser.script.NewTypeRef([]string{
-			"gslang", name,
-		}))
+		return parser.script.NewAttr(parser.script.NewTypeRef(
+			[]string{"gslang", name}, name))
 	}
-	return parser.script.NewAttr(parser.script.NewTypeRef([]string{name}))
+	return parser.script.NewAttr(parser.script.NewTypeRef([]string{name}, name))
 }
 
 // newGSLangTypeRef 在代码节点内生成指定名字的类型引用 如果不是gslang包下的 还需加入gslang.前缀
-func (parser *Parser) newGSLangTypeRef(name string) *ast.TypeRef {
+func (parser *Parser) newGSLangTypeRef(name, origin string) *ast.TypeRef {
 	if parser.script.Package().Name() != GSLangPackage {
-		return parser.script.NewTypeRef([]string{"gslang", name})
+		return parser.script.NewTypeRef([]string{"gslang", name}, origin)
 	}
-	return parser.script.NewTypeRef([]string{name})
+	return parser.script.NewTypeRef([]string{name}, origin)
 }
 
 // parseType 分析类型 返回一个表达式接口
@@ -707,7 +717,7 @@ func (parser *Parser) parseType() ast.Expr {
 		// gslang内置数据类型
 		parser.Next()
 		// 生成类型引用并返回
-		expr := parser.newGSLangTypeRef(strings.Title(TokenName(token.Type)))
+		expr := parser.newGSLangTypeRef(strings.Title(TokenName(token.Type)), TokenName(token.Type))
 		attachPos(expr, token.Pos)
 		return expr
 	case TokenID:

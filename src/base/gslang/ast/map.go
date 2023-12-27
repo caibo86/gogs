@@ -18,6 +18,10 @@ type Map struct {
 	Value    Expr // 字典value类型
 }
 
+func (m *Map) OriginName() string {
+	return fmt.Sprintf("map[%s]%s", m.Key.OriginName(), m.Value.OriginName())
+}
+
 // NewMap 在代码节点内新建字典表达式
 func (script *Script) NewMap(key, value Expr) *Map {
 	m := &Map{
