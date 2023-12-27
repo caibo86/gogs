@@ -160,7 +160,6 @@ type Gen4Go struct {
 func NewGen4Go() (gen *Gen4Go, err error) {
 	gen = &Gen4Go{}
 	funcs := template.FuncMap{
-		"enumType":     gen.enumType,
 		"symbol":       strings.Title,
 		"typeName":     gen.typeName,
 		"params":       gen.params,
@@ -1124,28 +1123,6 @@ func (gen *Gen4Go) typeName(expr ast.Expr) string {
 		expr,
 		gslang.Pos(expr))
 	return "unknown"
-}
-
-// enumType 根据枚举类型长度和符号 取对应的golang类型
-func (gen *Gen4Go) enumType(enum *ast.Enum) string {
-	switch {
-	case enum.Length == 1 && enum.Signed == true:
-		return "int8"
-	case enum.Length == 1 && enum.Signed == false:
-		return "byte"
-	case enum.Length == 2 && enum.Signed == true:
-		return "int16"
-	case enum.Length == 2 && enum.Signed == false:
-		return "uint16"
-	case enum.Length == 4 && enum.Signed == true:
-		return "int32"
-	case enum.Length == 4 && enum.Signed == false:
-		return "uint32"
-	}
-	log.Panicf("inner error: check enum ABI: %s\n\t%d",
-		enum, enum.Length,
-	)
-	return ""
 }
 
 // sovFunc sov函数名字

@@ -1,5 +1,5 @@
 // 属性的目标枚举
-enum AttrTarget(uint16) {
+enum AttrTarget {
     Package(1),
     Script(2),
     Table(4),

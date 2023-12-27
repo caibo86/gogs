@@ -1,4 +1,4 @@
-enum Subject(int32) {
+enum Subject {
     Math(1),
     English(2),
     Chinese(3),

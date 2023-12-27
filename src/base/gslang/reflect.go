@@ -14,8 +14,8 @@ import (
 
 // Enum 将Enum表达式内的EnumVal字典解析为map
 // key为EnumVal的名称，value为EnumVal的值
-func Enum(enum *ast.Enum) map[string]int64 {
-	ret := make(map[string]int64)
+func Enum(enum *ast.Enum) map[string]int32 {
+	ret := make(map[string]int32)
 	for _, val := range enum.Values {
 		ret[val.Name()] = val.Value
 	}
@@ -35,7 +35,7 @@ func EvalFieldInitArg(field *ast.Field, expr ast.Expr) (ast.Expr, bool) {
 }
 
 // EvalEnumVal 访问枚举值节点的val值
-func EvalEnumVal(expr ast.Expr) int64 {
+func EvalEnumVal(expr ast.Expr) int32 {
 	visitor := &evalEnumVal{}
 	expr.Accept(visitor)
 	return visitor.val
@@ -76,7 +76,7 @@ func markAsFlower(enum *ast.Enum) {
 }
 
 // EvalAttrUsage 评价属性是否是AttrUsage
-func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int64 {
+func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int32 {
 	// 属性的类型引用必须先连接到对应类型
 	if attr.Type.Ref == nil {
 		log.Panicf("attr(%s) must linked first:\n\t%s", attr, Pos(attr).String())

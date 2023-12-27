@@ -767,49 +767,12 @@ func (parser *Parser) parseTable(isStruct bool) {
 	parser.expect('}')
 }
 
-// parseEnumBase 根据枚举标识符后面括号内的数值类型标识符确定枚举值的长度和有无符号
-// 括号内枚举类型仅支持内置几种类型
-func (parser *Parser) parseEnumBase() (length uint, signed bool) {
-	parser.expect('(')
-	token := parser.Next()
-	switch token.Type {
-	case KeyByte:
-		length = 1
-	case KeySByte:
-		length = 1
-		signed = true
-	case KeyInt16:
-		length = 2
-		signed = true
-	case KeyUInt16:
-		length = 2
-		signed = false
-	case KeyInt32:
-		length = 4
-		signed = true
-	case KeyUInt32:
-		length = 4
-		signed = false
-	default:
-		parser.errorf(token.Pos, "enum must inherit from integer types, got: %s", TokenName(token.Type))
-	}
-	parser.expect(')')
-	return
-}
-
 // parseEnum 分析枚举
 func (parser *Parser) parseEnum() {
 	// 枚举名字
 	name := parser.expect(TokenID)
-	token := parser.Peek()
-	length := uint(1)
-	signed := false
-	// 如果带括号 则根据括号内的类型标识符关键字 确定 枚举值的长度和符号
-	if token.Type == '(' {
-		length, signed = parser.parseEnumBase()
-	}
 	// 新建枚举
-	enum := parser.script.NewEnum(name.Value.(string), length, signed)
+	enum := parser.script.NewEnum(name.Value.(string))
 	// 枚举作为一中类型添加包及代码节点 且不能有重名类型
 	if old, ok := parser.script.NewType(enum); !ok {
 		parser.errorf(name.Pos, "duplicate type name:\n\tsee: %s", Pos(old))
@@ -835,35 +798,12 @@ func (parser *Parser) parseEnum() {
 		if negative {
 			val = -val
 		}
-		switch { // 判断值是否越界
-		case enum.Length == 1 && enum.Signed:
-			if val > math.MaxInt8 || val < math.MinInt8 {
-				parser.errorf(valToken.Pos, "out of enum[%s] type's range", enum)
-			}
-		case enum.Length == 1 && !enum.Signed:
-			if val > math.MaxUint8 || val < 0 {
-				parser.errorf(valToken.Pos, "out of enum[%s] type's range", enum)
-			}
-		case enum.Length == 2 && enum.Signed:
-			if val > math.MaxInt16 || val < math.MinInt16 {
-				parser.errorf(valToken.Pos, "out of enum[%s] type's range", enum)
-			}
-		case enum.Length == 2 && !enum.Signed:
-			if val > math.MaxUint16 || val < 0 {
-				parser.errorf(valToken.Pos, "out of enum[%s] type's range", enum)
-			}
-		case enum.Length == 4 && enum.Signed:
-			if val > math.MaxInt32 || val < math.MinInt32 {
-				parser.errorf(valToken.Pos, "out of enum[%s] type's range", enum)
-			}
-		case enum.Length == 4 && !enum.Signed:
-			if val > math.MaxUint32 || val < 0 {
-				parser.errorf(valToken.Pos, "out of enum[%s] type's range", enum)
-			}
+		if val > math.MaxInt32 || val < math.MinInt32 {
+			parser.errorf(valToken.Pos, "out of enum[%s] type's range", enum)
 		}
 		parser.expect(')')
 		// 在枚举内新建单挑枚举值
-		enumVal, ok := enum.NewEnumVal(token.Value.(string), val)
+		enumVal, ok := enum.NewEnumVal(token.Value.(string), int32(val))
 		if !ok { // 不能有重名枚举值
 			parser.errorf(token.Pos,
 				"duplicate enum val name(%s):\n\tsee: %s",

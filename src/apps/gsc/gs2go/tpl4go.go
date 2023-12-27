@@ -30,7 +30,7 @@ import(
 
 {{define "error"}}{{$Enum := symbol .Name}}
 // {{$Enum}} 类型定义 gsc自动生成
-type {{$Enum}} {{enumType .}}
+type {{$Enum}} int32
 // 枚举 {{$Enum}} 常量 gsc自动生成
 const (
 {{range .Values}}    {{$Enum}}{{symbol .Name}} {{$Enum}} = {{.Value}}
@@ -61,7 +61,7 @@ func (val {{$Enum}}) Error() string {
 
 {{define "enum"}}{{$Enum := symbol .Name}}
 // {{$Enum}} 类型 gsc自动生成
-type {{$Enum}} {{enumType .}}
+type {{$Enum}} int32
 // 枚举 {{$Enum}} 常量 gsc自动生成
 const (
 {{range .Values}}    {{$Enum}}{{symbol .Name}} {{$Enum}} = {{.Value}}

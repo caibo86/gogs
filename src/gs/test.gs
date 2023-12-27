@@ -6,7 +6,7 @@ struct Student {
     Age  int32;
 }
 
-enum Color(uint32) {
+enum Color {
     Red(1),
     Green(2),
     Blue(3)

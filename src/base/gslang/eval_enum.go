@@ -14,7 +14,7 @@ import (
 
 // evalEnumVal 访问枚举值
 type evalEnumVal struct {
-	val int64
+	val int32
 }
 
 // VisitBinaryOp 访问二元运算

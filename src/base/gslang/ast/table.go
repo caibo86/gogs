@@ -7,10 +7,6 @@
 
 package ast
 
-import (
-	"strings"
-)
-
 // Field 结构体的字段,表达式
 type Field struct {
 	BaseExpr        // 内嵌基本表达式实现
@@ -72,14 +68,4 @@ func (table *Table) NewField(name string) (*Field, bool) {
 	// 将字段添加到结构体的字段列表
 	table.Fields = append(table.Fields, field)
 	return field, true
-}
-
-// PointerName 返回结构体的指针类型名字
-func (table *Table) PointerName() string {
-	return "*" + strings.TrimLeft(table.Name(), ".")
-}
-
-// TypeName 返回结构体的指针类型名字
-func (table *Table) TypeName() string {
-	return strings.TrimLeft(table.Name(), ".")
 }

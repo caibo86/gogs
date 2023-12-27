@@ -388,7 +388,7 @@ func (linker *contractLinker) unwind(expr *ast.Contract, stack []*ast.Contract) 
 type attrLinker struct {
 	*Compiler                         // 所属编译器
 	ast.EmptyVisitor                  // 内嵌空访问者
-	attrTarget       map[string]int64 // 指定为gslang包中的AttrStruct枚举类型解析后的字典
+	attrTarget       map[string]int32 // 指定为gslang包中的AttrStruct枚举类型解析后的字典
 	attrStruct       ast.Expr         // 指定为gslang包中的Struct类型
 	attrError        ast.Expr         // 指定为gslang包中的Error类型
 }
