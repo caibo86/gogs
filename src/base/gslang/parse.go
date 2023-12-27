@@ -801,7 +801,7 @@ func (parser *Parser) parseEnum() {
 		}
 
 		token = parser.expectf(TokenID, "expect enum value field")
-		parser.expect('(')
+		parser.expect('=')
 		next := parser.Peek()
 		negative := false
 		if next.Type == '-' {
@@ -816,7 +816,6 @@ func (parser *Parser) parseEnum() {
 		if val > math.MaxInt32 || val < math.MinInt32 {
 			parser.errorf(valToken.Pos, "out of enum[%s] type's range", enum)
 		}
-		parser.expect(')')
 		// 在枚举内新建单挑枚举值
 		enumVal, ok := enum.NewEnumVal(token.Value.(string), int32(val))
 		if !ok { // 不能有重名枚举值

@@ -1,4 +1,4 @@
-import "gss"
+import "gss";
 
 struct Student {
     ID   int64 = 1;
@@ -7,9 +7,9 @@ struct Student {
 }
 
 enum Color {
-    Red(1);
-    Green(2);
-    Blue(3);
+    Red = 1;
+    Green = 2;
+    Blue = 3;
 }
 
 struct Car {

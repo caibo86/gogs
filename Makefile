@@ -42,3 +42,6 @@ dev:
 
 g:
 	@protoc --proto_path=src/pb --gofast_out=./src/pb test.proto
+
+f:
+	clang-format -i src/gs/test.gs
