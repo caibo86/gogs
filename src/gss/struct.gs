@@ -11,7 +11,7 @@ enum Subject {
 }
 
 struct Teacher {
-    ID   int64;
-    Name string;
-    Age  int32;
+    ID   int64 = 1;
+    Name string = 2;
+    Age  int32 = 3;
 }

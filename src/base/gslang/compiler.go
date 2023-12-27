@@ -124,7 +124,7 @@ func (compiler *Compiler) Compile(pkgName string) (pkg *ast.Package, err error) 
 	compiler.circularRefCheck(pkgName)
 	// 在系统中查找对应的包路径
 	fullPath := compiler.searchPackage(pkgName)
-	log.Debugf("Found package: %s in: %s", pkgName, fullPath)
+	log.Infof("Found package: %s in: %s", pkgName, fullPath)
 	// 生成一个包节点
 	pkg = ast.NewPackage(pkgName)
 	// 将包节点放入loading列表
@@ -146,6 +146,7 @@ func (compiler *Compiler) Compile(pkgName string) (pkg *ast.Package, err error) 
 		// 解析该gs文件,生成一个代码节点
 		log.Info("Parsing file: ", path)
 		script, err := compiler.parse(pkg, path)
+		log.Info("Parsed file: ", path, " err:", err)
 		if err == nil {
 			// 没有错误的话,把绝对路径保存为代码节点的额外信息
 			setFilePath(script, path)

@@ -49,17 +49,21 @@ func (table *Table) FieldByID(id uint16) (*Field, bool) {
 }
 
 // NewField 在结构体内新建字段
-func (table *Table) NewField(name string) (*Field, bool) {
-	// 如果已存在同名字段则直接返回
+func (table *Table) NewField(name string, id uint16, t Expr) (*Field, bool) {
 	for _, field := range table.Fields {
+		// 字段重名
 		if field.Name() == name {
+			return field, false
+		}
+		// ID重复
+		if field.ID == id {
 			return field, false
 		}
 	}
 	// 新建字段 ID为结构体的当前字段列表长度
-	// TODO 改成idl指定id,不再按顺序自增
 	field := &Field{
-		ID: uint16(len(table.Fields)),
+		ID:   id,
+		Type: t,
 	}
 	// 设置名字 设置所属代码为 所属结构体的所属代码节点
 	field.Init(name, table.Script())

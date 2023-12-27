@@ -124,7 +124,6 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 			}
 		}
 	} else if nArgs, ok := args.(*ast.NamedArgs); ok {
-		log.Debug(nArgs)
 		for _, field := range table.Fields {
 			var item ast.Expr
 			fieldName := field.Name()

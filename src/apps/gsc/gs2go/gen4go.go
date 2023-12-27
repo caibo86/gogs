@@ -1273,6 +1273,5 @@ func (gen *Gen4Go) VisitContract(contract *ast.Contract) ast.Node {
 	if err := gen.tpl.ExecuteTemplate(&gen.buff, "contract", contract); err != nil {
 		panic(err)
 	}
-	log.Debugf("生成器")
 	return contract
 }

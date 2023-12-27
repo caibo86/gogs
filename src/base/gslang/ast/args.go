@@ -37,7 +37,9 @@ type NamedArgs struct {
 
 // NewNamedArgs 在代码节点内新建命名参数列表 此命名参数列表名字args 所属代码节点为此代码节点
 func (script *Script) NewNamedArgs() *NamedArgs {
-	args := &NamedArgs{}
+	args := &NamedArgs{
+		Items: make(map[string]Expr),
+	}
 	args.Init("args", script)
 	return args
 }

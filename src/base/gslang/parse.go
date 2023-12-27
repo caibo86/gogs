@@ -741,22 +741,32 @@ func (parser *Parser) parseTable(isStruct bool) {
 		table.AddAttr(attr)
 	}
 	parser.expect('{')
-	for { // 分析表或者结构体的域
+	for {
+		// 分析表或者结构体的字段
 		parser.parseAttrs()
 		token := parser.Peek()
 		if token.Type != TokenID {
 			break
 		}
+		// 字段名
 		fieldName := parser.expect(TokenID)
+		// 字段类型
+		fieldType := parser.parseType()
+		// 分析字段ID
+		parser.expect('=')
+		fieldID := parser.expect(TokenINT)
+		val := fieldID.Value.(int64)
+		if val <= 0 || val > math.MaxUint16 {
+			parser.errorf(fieldID.Pos, "field id out of range: %d", val)
+		}
 		// 表或结构体中新建一个域
-		field, ok := table.NewField(fieldName.Value.(string))
+		field, ok := table.NewField(fieldName.Value.(string), uint16(val), fieldType)
 		if !ok { // 不能有重名域
 			parser.errorf(fieldName.Pos, "duplicate field name:\n\tsee: %s", Pos(field))
 		}
 		// 附加位置
 		attachPos(field, fieldName.Pos)
-		// 分析域的类型
-		field.Type = parser.parseType()
+
 		// 域间用分号分隔
 		parser.expect(';')
 		// 分析注释 附加注释 附加属性

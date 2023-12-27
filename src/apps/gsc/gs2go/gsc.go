@@ -17,7 +17,8 @@ const ignoreErr = "sync /dev/stdout: invalid argument"
 
 func main() {
 	log.Init(
-		log.SetIsOpenFile(false),
+		log.SetFilename("log/gsc.log"),
+		log.SetIsOpenFile(true),
 		log.SetIsAsync(true),
 	)
 	// 程序完成后关闭全局日志服务
@@ -44,7 +45,7 @@ func main() {
 		log.Info("Compiling package: ", name)
 		_, err := compiler.Compile(name)
 		if err != nil {
-			log.Errorf("compile package %s failed\n\t%s", name, err)
+			log.Errorf("compile package %s failed\n\t%s", name, err.Error())
 			return
 		}
 	}
