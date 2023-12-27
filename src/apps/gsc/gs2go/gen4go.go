@@ -1176,8 +1176,21 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 	}
 
 	// 轮询访问代码中的所有类型 Enum Struct Table Contract
+	// 按顺序生成
 	for _, t := range script.Types {
-		t.Accept(gen)
+		if _, ok := t.(*ast.Enum); ok {
+			t.Accept(gen)
+		}
+	}
+	for _, t := range script.Types {
+		if _, ok := t.(*ast.Table); ok {
+			t.Accept(gen)
+		}
+	}
+	for _, t := range script.Types {
+		if _, ok := t.(*ast.Contract); ok {
+			t.Accept(gen)
+		}
 	}
 	// 代码中有类型
 	if gen.buff.Len() > 0 {

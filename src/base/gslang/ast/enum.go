@@ -7,6 +7,10 @@
 
 package ast
 
+import (
+	"sort"
+)
+
 // EnumVal 枚举值 指一个枚举括号中的单个枚举值
 type EnumVal struct {
 	BaseExpr       // 内嵌基本表达式实现
@@ -52,4 +56,17 @@ func (enum *Enum) NewEnumVal(name string, val int32) (*EnumVal, bool) {
 		enum.Default = enumVal
 	}
 	return enumVal, true
+}
+
+// SortedValues 将枚举值字典按照枚举值的值排序后返回
+func (enum *Enum) SortedValues() []*EnumVal {
+	ret := make([]*EnumVal, 0, len(enum.Values))
+	for _, val := range enum.Values {
+		ret = append(ret, val)
+	}
+	// 排序
+	sort.Slice(ret, func(i, j int) bool {
+		return ret[i].Value < ret[j].Value
+	})
+	return ret
 }
