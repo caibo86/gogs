@@ -78,10 +78,6 @@ func markAsFlower(enum *ast.Enum) {
 // EvalAttrUsage 评价属性是否是AttrUsage
 func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int64 {
 	// 属性的类型引用必须先连接到对应类型
-	if attr.Args != nil {
-		log.Debug("看下attr的参数", attr.Args.(*ast.Args).Items)
-	}
-
 	if attr.Type.Ref == nil {
 		log.Panicf("attr(%s) must linked first:\n\t%s", attr, Pos(attr).String())
 	}
@@ -89,7 +85,6 @@ func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int64 {
 	// 对属性求值
 	ea := &evalAttr{}
 	attr.Accept(ea)
-	log.Debug("属性求值后的字典是:", ea.values)
 
 	// 只有Table才能被作为属性的类型引用
 	s, ok := attr.Type.Ref.(*ast.Table)
@@ -104,9 +99,7 @@ func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int64 {
 		if !ok {
 			log.Panicf("attr(%s) must linked first:\n\t%s", metaAttr, Pos(metaAttr))
 		}
-		log.Debug("看下这个属性是不是AttrUsage")
 		if IsAttrUsage(usage) {
-			log.Debug("确实是AttrUsage")
 			field, ok := usage.Field("Target")
 			if !ok {
 				log.Panicf("inner gslang AttrUsage must declare field Target:\n\t%s", Pos(usage))

@@ -331,9 +331,6 @@ func (m *{{$Struct}})Unmarshal(data []byte) (err error) {
 			err = e.(error)
 		}
 	}()
-	if m == nil {
-		m = New{{$Struct}}()
-	}
 	l := len(data)
 	i := 0
 	for i < l {

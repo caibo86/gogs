@@ -42,7 +42,7 @@ func redirectStdErrLog() error {
 	if err != nil {
 		return err
 	}
-	Debug("redirect str err log success")
+	Info("Redirect panic log successfully")
 	// 保活文件 避免删除
 	go func() {
 		keepaliveFile := func() {

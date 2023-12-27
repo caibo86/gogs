@@ -25,7 +25,6 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 	if visitor.values == nil {
 		visitor.values = make(map[string]any)
 	}
-	log.Info("自己的eval attr:", node.Name())
 	expr := node.Type.Ref
 	table, ok := expr.(*ast.Table)
 	if !ok {
@@ -33,9 +32,7 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 	}
 	args := node.Args
 	if args == nil {
-		log.Info("自己的eval attr:", node.Name(), ",参数空的")
 		for _, field := range table.Fields {
-			log.Infof("检查属性名字:%s", field.Name())
 			switch field.Type.(type) {
 			case *ast.Array, *ast.List, *ast.Map:
 				visitor.values[field.Name()] = nil
@@ -70,13 +67,10 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 				default:
 					visitor.values[field.Name()] = nil
 				}
-				log.Debug("这个属性名字是:", name)
 			}
 		}
 	} else if uArgs, ok := args.(*ast.Args); ok {
-		log.Debug(uArgs)
 		for _, field := range table.Fields {
-			log.Infof("检查属性名字:%s", field.Name())
 			var item ast.Expr
 			if field.ID < uint16(len(uArgs.Items)) {
 				item = uArgs.Items[field.ID]
@@ -127,13 +121,11 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 				default:
 					// log.Panicf("不支持的类型:%s", name)
 				}
-				log.Debug("这个属性名字是:", name)
 			}
 		}
 	} else if nArgs, ok := args.(*ast.NamedArgs); ok {
 		log.Debug(nArgs)
 		for _, field := range table.Fields {
-			log.Infof("检查属性名字:%s", field.Name())
 			var item ast.Expr
 			fieldName := field.Name()
 			item = nArgs.Items[fieldName]
@@ -183,7 +175,6 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 				default:
 					// log.Panicf("不支持的类型:%s", name)
 				}
-				log.Debug("这个属性名字是:", name)
 			}
 		}
 	} else {

@@ -58,10 +58,10 @@ func Init(options ...Option) {
 		global.Init(options...)
 	})
 	// 触发创建目录
-	Info("logger init success")
+	Info("Init logger successfully")
 	err := redirectStdErrLog()
 	if err != nil {
-		Errorf("redirect std err log err:%s", err)
+		Errorf("Redirect panic log err: %s", err)
 	}
 }
 

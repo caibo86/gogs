@@ -21,14 +21,17 @@ import (
 	"time"
 )
 
+var moduleName string
+
 // 包名映射的引入包的go代码
 var packageMapping = map[string]string{
 	"gsnet.":    `import "gogs/base/gsnet"`,
 	"gserrors.": `import "gogs/base/gserrors"`,
-	"bytes.":    `import "bytes"`,
-	"fmt.":      `import "fmt"`,
-	"time.":     `import "time"`,
-	"bits.":     `import "math/bits"`,
+	// "gss.":      `import "gogs/gss"`,
+	"bytes.": `import "bytes"`,
+	"fmt.":   `import "fmt"`,
+	"time.":  `import "time"`,
+	"bits.":  `import "math/bits"`,
 	// "yfdocker.": `import "gogs/base/docker"`,
 	// "yfconfig.": `import "gogs/base/config"`,
 }
@@ -168,9 +171,7 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"readType":     gen.readType,
 		"writeType":    gen.writeType,
 		"defaultVal":   gen.defaultVal,
-		"writeTagType": gen.writeTagType,
 		"pos":          gslang.Pos,
-		"tag":          gen.tag,
 		"lowerFirst":   gen.lowerFirst,
 		"sovFunc":      gen.sovFunc,
 		"calTypeSize":  gen.calTypeSize,
@@ -179,86 +180,12 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 	return
 }
 
+// lowerFirst 首字母小写
 func (gen *Gen4Go) lowerFirst(name string) string {
 	if len(name) == 0 {
 		return name
 	}
 	return strings.ToLower(name[:1]) + name[1:]
-}
-
-// tag 取表达式类型的标签
-func (gen *Gen4Go) tag(expr ast.Expr) string {
-	switch expr.(type) {
-	case *ast.TypeRef:
-		if tag, ok := tagMapping[expr.Name()]; ok {
-			return tag
-		}
-		ref := expr.(*ast.TypeRef)
-		if _, ok := ref.Ref.(*ast.Enum); ok {
-			return "gsnet.Enum"
-		}
-		if gslang.IsStruct(ref.Ref.(*ast.Table)) {
-			return "gsnet.Struct"
-		}
-		return "gsnet.Table"
-	case *ast.Array:
-		return "gsnet.Array"
-	case *ast.List:
-		return "gsnet.List"
-	}
-	log.Panic("not here")
-	return "unknown"
-}
-
-// writeTagType 根据类型取 带标签的写入函数
-func (gen *Gen4Go) writeTagType(expr ast.Expr) string {
-	switch expr.(type) {
-	case *ast.TypeRef:
-		// 内置类型
-		if f, ok := writeTagMapping[expr.Name()]; ok {
-			return f
-		}
-		// 自定义类型
-		ref := expr.(*ast.TypeRef)
-		if _, ok := expr.Script().Imports[ref.NamePath[0]]; ok {
-			return fmt.Sprintf(
-				"%s.WriteTag%s",
-				ref.NamePath[0],
-				strings.Title(ref.NamePath[1]),
-			)
-		}
-		return fmt.Sprintf("WriteTag%s", strings.Title(ref.NamePath[0]))
-	case *ast.Array:
-		// 数组
-		array := expr.(*ast.Array)
-		var buff bytes.Buffer
-		if array.Element.Name() == ".gslang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "writeTagByteArray", array); err != nil {
-				panic(err)
-			}
-		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "writeTagArray", array); err != nil {
-				panic(err)
-			}
-		}
-		return buff.String()
-	case *ast.List:
-		// 切片
-		list := expr.(*ast.List)
-		var buff bytes.Buffer
-		if list.Element.Name() == ".gslang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "writeTagByteList", list); err != nil {
-				panic(err)
-			}
-		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "writeTagList", list); err != nil {
-				panic(err)
-			}
-		}
-		return buff.String()
-	}
-	log.Panic("not here")
-	return "unknown"
 }
 
 // calTypeSize 根据类型获取计算大小的函数
@@ -331,7 +258,6 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 		} else {
 			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
 		}
-		log.Debug("看下切片元素类型名字:", ref.Ref.Name())
 		switch ref.Ref.Name() {
 		case "Byte", "Sbyte", "Bool":
 			return fmt.Sprintf(
@@ -398,12 +324,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 		hash := field.Type.(*ast.Map)
 		var keyStr string
 		var valStr string
-		ref, ok := hash.Key.(*ast.TypeRef)
-		if !ok {
-			log.Debug("这个不是引用类型?")
-		}
-		log.Debugf("看下字典类型名字: %s %s",
-			hash.Key.(*ast.TypeRef).Ref.Name(), hash.Value.(*ast.TypeRef).Ref.Name())
+		ref := hash.Key.(*ast.TypeRef)
 		switch ref.Ref.Name() {
 		case "Byte", "Sbyte", "Bool":
 			keyStr = "1"
@@ -416,7 +337,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 		case "String":
 			keyStr = "4 + len(k)"
 		default:
-			switch hash.Key.(type) {
+			switch ref.Ref.(type) {
 			case *ast.Enum:
 				keyStr = "4"
 			default:
@@ -643,12 +564,7 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 		hash := field.Type.(*ast.Map)
 		var keyStr string
 		var valStr string
-		ref, ok := hash.Key.(*ast.TypeRef)
-		if !ok {
-			log.Debug("这个不是引用类型?")
-		}
-		log.Debugf("看下字典类型名字: %s %s",
-			hash.Key.(*ast.TypeRef).Ref.Name(), hash.Value.(*ast.TypeRef).Ref.Name())
+		ref := hash.Key.(*ast.TypeRef)
 		switch ref.Ref.Name() {
 		case "Bool":
 			keyStr = "i = gsnet.WriteBool(data, i, k)"
@@ -801,19 +717,19 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 					`var v int32
 						i, v = gsnet.ReadEnum(data, i)
 						m.%s = %s(v)`,
-					field.Name(), ref.Ref.Name())
+					field.Name(), gen.typeName(ref))
 			case *ast.Table:
 				return fmt.Sprintf(
 					`var size uint32
 						i, size = gsnet.ReadUint32(data, i)
 						if m.%s == nil {
-							m.%s = &%s{}
+							m.%s = %s
 						}
 						if err = m.%s.Unmarshal(data[i:i+int(size)]); err != nil {
 							return
 						} 
 						i += int(size)`,
-					field.Name(), field.Name(), ref.Ref.Name(), field.Name())
+					field.Name(), field.Name(), gen.defaultVal(ref), field.Name())
 			default:
 				log.Panicf("not here %s", field.Type.Name())
 			}
@@ -829,62 +745,47 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
 		}
 		var str string
-		var typeStr string
 		switch ref.Ref.Name() {
 		case "Bool":
 			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadBool(data, i)`, field.Name())
-			typeStr = "bool"
 		case "Byte":
 			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadByte(data, i)`, field.Name())
-			typeStr = "byte"
 		case "Sbyte":
 			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadSbyte(data, i)`, field.Name())
-			typeStr = "int8"
 		case "Int16":
 			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadInt16(data, i)`, field.Name())
-			typeStr = "int16"
 		case "Uint16":
 			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadUint16(data, i)`, field.Name())
-			typeStr = "uint16"
 		case "Int32":
 			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadInt32(data, i)`, field.Name())
-			typeStr = "int32"
 		case "Uint32":
 			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadUint32(data, i)`, field.Name())
-			typeStr = "uint32"
 		case "Float32":
 			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadFloat32(data, i)`, field.Name())
-			typeStr = "float32"
 		case "Int64":
 			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadInt64(data, i)`, field.Name())
-			typeStr = "int64"
 		case "Uint64":
 			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadUint64(data, i)`, field.Name())
-			typeStr = "uint64"
 		case "Float64":
 			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadFloat64(data, i)`, field.Name())
-			typeStr = "float64"
 		case "String":
 			str = fmt.Sprintf(`i, m.%s[j] = gsnet.ReadString(data, i)`, field.Name())
-			typeStr = "string"
 		default:
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				str = fmt.Sprintf(`var v int32
 				i, v = gsnet.ReadEnum(data, i)
 				m.%s[j] = %s(v)`,
-					field.Name(), ref.Ref.Name())
-				typeStr = ref.Ref.Name()
+					field.Name(), gen.typeName(ref))
 			case *ast.Table:
 				str = fmt.Sprintf(
 					`var size uint32
 						i, size = gsnet.ReadUint32(data, i)
-						m.%s[j] = &%s{}
+						m.%s[j] = %s
 						if err = m.%s[j].Unmarshal(data[i:i+int(size)]); err != nil {
 							return
 						}
-						i += int(size)`, field.Name(), ref.Ref.Name(), field.Name())
-				typeStr = "*" + ref.Ref.Name()
+						i += int(size)`, field.Name(), gen.defaultVal(ref), field.Name())
 			default:
 				log.Panicf("not here %s", field.Type.Name())
 			}
@@ -897,7 +798,7 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 				for j := uint32(0); j < length; j++ {
 					%s
 				}`,
-				field.Name(), typeStr, str)
+				field.Name(), gen.typeName(ref), str)
 		} else {
 			return fmt.Sprintf(
 				`var length uint32
@@ -913,62 +814,44 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 		hash := field.Type.(*ast.Map)
 		var keyStr string
 		var valStr string
-		var keyType string
-		var valType string
-		ref, ok := hash.Key.(*ast.TypeRef)
-		if !ok {
-			log.Debug("这个不是引用类型?")
-		}
-		log.Debugf("看下字典类型名字: %s %s",
-			hash.Key.(*ast.TypeRef).Ref.Name(), hash.Value.(*ast.TypeRef).Ref.Name())
+		ref := hash.Key.(*ast.TypeRef)
 		switch ref.Ref.Name() {
 		case "Bool":
 			keyStr = `var k bool
 					i, k = gsnet.ReadBool(data, i)`
-			keyType = "bool"
 		case "Byte":
 			keyStr = `var k byte
 					i, k = gsnet.ReadByte(data, i)`
-			keyType = "byte"
 		case "Sbyte":
 			keyStr = `var k int8
 					i, k = gsnet.ReadSbyte(data, i)`
-			keyType = "int8"
 		case "Int16":
 			keyStr = `var k int16
 					i, k = gsnet.ReadInt16(data, i)`
-			keyType = "int16"
 		case "Uint16":
 			keyStr = `var k uint16
 					i, k = gsnet.ReadUint16(data, i)`
-			keyType = "uint16"
 		case "Int32":
 			keyStr = `var k int32
 					i, k = gsnet.ReadInt32(data, i)`
-			keyType = "int32"
 		case "Uint32":
 			keyStr = `var k uint32
 					i, k = gsnet.ReadUint32(data, i)`
-			keyType = "uint32"
 		case "Int64":
 			keyStr = `var k int64
 					i, k = gsnet.ReadInt64(data, i)`
-			keyType = "int64"
 		case "Uint64":
 			keyStr = `var k uint64
 					i, k = gsnet.ReadUint64(data, i)`
-			keyType = "uint64"
 		case "String":
 			keyStr = `var k string
 					i, k = gsnet.ReadString(data, i)`
-			keyType = "string"
 		default:
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				keyStr = fmt.Sprintf(`var k1 int32
 					i, k1 = gsnet.ReadInt32(data, i)
-					k := %s(k1)`, hash.Key.Name())
-				keyType = hash.Key.Name()
+					k := %s(k1)`, gen.typeName(hash.Key))
 			default:
 				log.Panicf("map key can only be int or string, %s not supported", hash.Key.Name())
 			}
@@ -978,74 +861,60 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 		case "Bool":
 			valStr = `var v bool
 					i, v = gsnet.ReadBool(data, i)`
-			valType = "bool"
 		case "Byte":
 			valStr = `var v byte
 					i, v = gsnet.ReadByte(data, i)`
-			valType = "byte"
 		case "Sbyte":
 			valStr = `var v int8
 					i, v = gsnet.ReadSbyte(data, i)`
-			valType = "int8"
 		case "Int16":
 			valStr = `var v int16
 					i, v = gsnet.ReadInt16(data, i)`
-			valType = "int16"
 		case "Uint16":
 			valStr = `var v uint16
 					i, v = gsnet.ReadUint16(data, i)`
-			valType = "uint16"
 		case "Int32":
 			valStr = `var v int32
 					i, v = gsnet.ReadInt32(data, i)`
-			valType = "int32"
 		case "Uint32":
 			valStr = `var v uint32
 					i, v = gsnet.ReadUint32(data, i)`
-			valType = "uint32"
 		case "Float32":
 			valStr = `var v float32
 					i, v = gsnet.ReadFloat32(data, i)`
-			valType = "float32"
 		case "Int64":
 			valStr = `var v int64
 					i, v = gsnet.ReadInt64(data, i)`
-			valType = "int64"
 		case "Uint64":
 			valStr = `var v uint64
 					i, v = gsnet.ReadUint64(data, i)`
-			valType = "uint64"
 		case "Float64":
 			valStr = `var v float64
 					i, v = gsnet.ReadFloat64(data, i)`
-			valType = "float64"
 		case "String":
 			valStr = `var v string
 					i, v = gsnet.ReadString(data, i)`
-			valType = "string"
 		default:
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				valStr = fmt.Sprintf(`var v1 int32
 					i, v1 = gsnet.ReadInt32(data, i)
-					v := %s(v1)`, hash.Key.Name())
-				valType = ref.Ref.Name()
+					v := %s(v1)`, gen.typeName(hash.Value))
 			case *ast.Table:
 				valStr = fmt.Sprintf(`var size uint32
-						v := &%s{}
+						v := %s
 						i, size = gsnet.ReadUint32(data, i)
-						if err := v.Unmarshal(data[i:i+int(size)]); err != nil {
-							return err
+						if err = v.Unmarshal(data[i:i+int(size)]); err != nil {
+							return
 						}
-						i += int(size)`, ref.Ref.Name())
-				valType = "*" + ref.Ref.Name()
+						i += int(size)`, gen.defaultVal(hash.Value))
 			default:
 				log.Panicf("map key can only be int or string, %s not supported", hash.Key.Name())
 			}
 		}
-
 		return fmt.Sprintf(
 			`var length uint32
+					i, length = gsnet.ReadUint32(data, i)
 					if m.%s == nil{
 						m.%s = make(map[%s]%s)
 					}
@@ -1055,8 +924,8 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 						m.%s[k] = v
 					}`,
 			field.Name(), field.Name(),
-			keyType,
-			valType,
+			gen.typeName(hash.Key),
+			gen.typeName(hash.Value),
 			keyStr, valStr, field.Name())
 	}
 	log.Panic("not here")
@@ -1299,7 +1168,7 @@ func (gen *Gen4Go) writeFile(script *ast.Script, bytes []byte) {
 	if err != nil {
 		panic(err)
 	}
-	log.Debugf("write to file:%s success", fullPath)
+	log.Infof("Write to file successfully: %s success", fullPath)
 
 	cmd := exec.Command("goimports", "-w", fullPath)
 	_, err = cmd.Output()
@@ -1316,7 +1185,6 @@ func (gen *Gen4Go) VisitPackage(pkg *ast.Package) ast.Node {
 	}
 	// 轮询访问包中代码节点
 	for _, script := range pkg.Scripts {
-		log.Debug("生成器")
 		script.Accept(gen)
 	}
 	return pkg
@@ -1331,37 +1199,35 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 	}
 
 	// 轮询访问代码中的所有类型 Enum Struct Table Contract
-	for _, ctype := range script.Types {
-		log.Debugf("生成器 %v", ctype.Name())
-		ctype.Accept(gen)
+	for _, t := range script.Types {
+		t.Accept(gen)
 	}
-	log.Debug("生成器")
 	// 代码中有类型
 	if gen.buff.Len() > 0 {
 		var buff bytes.Buffer
+		filename, _ := gslang.FilePath(script)
+		filename += ".go"
+		filename = filepath.Base(filename)
 		// 写入额外信息
-		buff.WriteString(fmt.Sprintf("// -------------------------------------------\n// @file      : gsc.go\n// @author    : generated by gsc, do not edit\n// @contact   : caibo923@gmail.com\n// @time      : %s\n// -------------------------------------------\n\n", time.Now().Format(time.RFC3339)))
+		buff.WriteString(fmt.Sprintf(
+			`// -------------------------------------------
+// @file      : %s
+// @author    : generated by gsc, do not edit
+// @contact   : caibo923@gmail.com
+// @time      : %s
+// -------------------------------------------
 
-		// 		buff.WriteString(
-		// 			`/**************************************************/
-		// /*     @author:caibo                              */
-		// /*     @mail:48904088@qq.com                      */
-		// /*     @date:2017-06-01                           */
-		// /*     @module:GSC                                */
-		// /*     @desc:自动生成Golang代码                     */
-		// /**************************************************/
-		//
-		// `)
+`, filename, time.Now().Format(time.RFC3339)))
 
 		// 写入包声明
 		buff.WriteString(fmt.Sprintf("package %s\n", filepath.Base(script.Package().Name())))
 		codes := gen.buff.String()
 		// 如果两个特定的内置包中的gs文件 则不需要加包前缀
-		if script.Package().Name() == "yf/platform/yfnet" {
-			codes = strings.Replace(codes, "yfnet.", "", -1)
+		if script.Package().Name() == "gogs/base/gsnet" {
+			codes = strings.Replace(codes, "gsnet.", "", -1)
 		}
-		if script.Package().Name() == "yf/platform/yfdocker" {
-			codes = strings.Replace(codes, "yfdocker.", "", -1)
+		if script.Package().Name() == "gogs/base/gsdocker" {
+			codes = strings.Replace(codes, "gsdocker.", "", -1)
 		}
 		// 如果代码中有特定packageMapping中的包名 则引入对应的包
 		for key, value := range packageMapping {
@@ -1375,7 +1241,10 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 			}
 			// 如果代码中有对应的包名 则引入对应的包 并取别名为 包引用的名字
 			if strings.Contains(codes, ref.Name()) {
-				buff.WriteString(fmt.Sprintf("import %s \"%s\"\n", ref.Name(), ref.Ref))
+				// buff.WriteString(fmt.Sprintf("import %s \"%s/%s\"\n",
+				// 	ref.Name(), moduleName, ref.Ref))
+				buff.WriteString(fmt.Sprintf("import \"%s/%s\"\n",
+					moduleName, ref.Ref))
 			}
 		}
 		// 将代码生成器的buff附加到此buff后

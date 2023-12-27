@@ -6,6 +6,13 @@ enum Err{
   OOS = 1;
 }
 
+message Student {
+  int64 ID = 1;
+  string Name = 2;
+  int32 Age = 3;
+}
+
+
 enum Color{
   White = 0;
   Red = 1;
@@ -17,32 +24,25 @@ message Car {
   Color VarEnum = 1;
   string VarString = 2;
   bool VarBool = 3;
-  int32 VarInt32 = 4;
-  uint32 VarUInt32 = 5;
-  int64 VarInt64 = 6;
-  uint64 VarUInt64 = 7;
-  sint32 VarSInt32 = 8;
-  sint64 VarSInt64 = 9;
-  fixed32 VarFixed32 = 10;
-  fixed64 VarFixed64 = 11;
-  sfixed32 VarSFixed32 = 12;
-  sfixed64 VarSFixed64 = 13;
-  float VarFloat32 = 14;
-  double VarFloat64 = 15;
-  bytes VarBytes = 16;
-  Student VarStruct = 17;
-  repeated Student VarStructs = 18;
-  map<bool, Student> VarMap = 19;
-  repeated int32 VarInt32s = 20;
-  repeated bool VarBools = 21;
-  repeated string VarStrings = 22;
-  repeated float VarFloat32s = 23;
-  repeated double VarFloat64s = 24;
-  repeated Color VarEnums = 25;
+  bool VarByte = 4;
+  bool VarSbyte = 5;
+  int32 VarInt16 = 6;
+  uint32 VarUint16 = 7;
+  int32 VarInt32 = 8;
+  uint32 VarUint32 = 9;
+  int64 VarInt64 = 10;
+  uint64 VarUint64 = 11;
+  float VarFloat32 = 12;
+  double VarFloat64 = 13;
+  Student VarStruct = 14;
+  repeated int32 VarArray =15;
+  repeated Student VarStructs = 16;
+  repeated bool VarBools = 17;
+  repeated string VarStrings = 18;
+  repeated float  VarFloat32s = 19;
+  repeated double VarFloat64s = 20;
+  repeated Color VarEnums = 21;
+  map<string,string> VarMap = 22;
+  map<string,Student> VarMap1 = 23;
 }
 
-message Student {
-  int64 ID = 1;
-  string Name = 2;
-  int32 Age = 3;
-}

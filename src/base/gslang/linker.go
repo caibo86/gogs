@@ -230,7 +230,6 @@ func (linker *Linker) VisitTypeRef(ref *ast.TypeRef) ast.Node {
 		if nodes == 0 {
 			log.Panic("the NamePath,can not be nil")
 		}
-		log.Debug(ref.NamePath, ref.Ref, nodes)
 		switch nodes { // 根据类型路径长度判断
 		case 1: // 长度为1 则NamePath[0]就是类型名
 			// 在代码节点引用的代码包中查找指定名字目标包
@@ -252,7 +251,6 @@ func (linker *Linker) VisitTypeRef(ref *ast.TypeRef) ast.Node {
 			}
 		case 2: // 路径长度为2  eg: ast.Node
 			// 在代码应用的包列表中查找NamePath[0],即目标类型所属的包
-			log.Debug(ref.Script().Imports)
 			if pkg, ok := ref.Script().Imports[ref.NamePath[0]]; ok {
 
 				if pkg.Ref == nil {
@@ -265,7 +263,6 @@ func (linker *Linker) VisitTypeRef(ref *ast.TypeRef) ast.Node {
 					return ref
 				}
 			} else { // 如果不是引用包中的类型 则判断是否是当前包中的枚举类型
-				log.Debug("下面")
 				if expr, ok := ref.Package().Types[ref.NamePath[0]]; ok {
 					if enum, ok := expr.(*ast.Enum); ok {
 						if val, ok := enum.Values[ref.NamePath[1]]; ok {
@@ -401,7 +398,6 @@ func (linker *attrLinker) VisitPackage(pkg *ast.Package) ast.Node {
 	if len(pkg.Scripts) == 0 {
 		return pkg
 	}
-	log.Debugf("我来看下包名:%s", pkg.Name())
 	// 设置属性连接器的 属性目标为 gslang编译器内置的 指定名字的枚举值 解析成的字典
 	if pkg.Name() == GSLangPackage {
 		if expr, ok := pkg.Types[GSLangAttrTarget]; ok {
@@ -422,7 +418,6 @@ func (linker *attrLinker) VisitPackage(pkg *ast.Package) ast.Node {
 		log.Panicf("inner error: can't found gslang.AttrTarget enum")
 	}
 	// 设置结构和枚举两种内置类型
-	log.Debug(pkg.Name(), " ", GSLangPackage)
 	if pkg.Name() == GSLangPackage {
 		linker.attrStruct = pkg.Types[GSLangAttrStruct]
 		if linker.attrStruct == nil {
@@ -489,11 +484,8 @@ func (linker *attrLinker) VisitTable(table *ast.Table) ast.Node {
 		markAsStruct(table)
 	}
 	// 轮询判断table的属性的目标是不是table的类型 不是则移动到对应的类型节点  代码节点或者包节点
-	log.Debugf("现在看%s的attrs", table.Name())
 	for _, attr := range table.Attrs() {
-		log.Debug("参数:", attr.Name())
 		target := linker.EvalAttrUsage(attr)
-		log.Debug("target:", target)
 		var toMove bool
 		if isStruct {
 			if target&linker.attrTarget["Struct"] == 0 {

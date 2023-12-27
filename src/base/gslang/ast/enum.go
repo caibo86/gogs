@@ -9,6 +9,7 @@ package ast
 
 import (
 	log "gogs/base/logger"
+	"strings"
 )
 
 // EnumVal 枚举值 指一个枚举括号中的单个枚举值
@@ -65,4 +66,9 @@ func (enum *Enum) NewEnumVal(name string, val int64) (*EnumVal, bool) {
 		enum.Default = enumVal
 	}
 	return enumVal, true
+}
+
+// TypeName 类型名字
+func (enum *Enum) TypeName() string {
+	return strings.TrimLeft(enum.Name(), ".")
 }

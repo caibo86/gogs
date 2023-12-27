@@ -150,7 +150,6 @@ func (compiler *Compiler) parse(pkg *ast.Package, path string) (*ast.Script, err
 	// 分析器进行分析
 	err = parser.parse()
 	// 返回分析后的代码节点
-	log.Debug("解析完的代码", script.Name(), script.Types)
 	return script, err
 }
 
@@ -258,7 +257,6 @@ func (parser *Parser) parseImports() {
 		// 如果接下来是字符串字面量或者标识符 则认为是单行引用 并进行解析
 		token = parser.Peek()
 		if token.Type == TokenSTRING || token.Type == TokenID {
-			log.Debug(token.Value)
 			ref := parser.parseImport()
 			if ref == nil {
 				log.Panicf("check parser.Import implement")
@@ -420,7 +418,6 @@ func (parser *Parser) parseArgs() ast.Expr {
 		// 分析并附加注释到参数
 		parser.parseComments()
 		parser.attachComments(arg)
-		log.Debug("分析到一个参数:", arg.Name())
 		token = parser.Peek()
 		// 参数分隔符
 		if token.Type != ',' {
@@ -440,7 +437,6 @@ func (parser *Parser) parseArg() ast.Expr {
 		var rhs ast.Expr // 表达式对象
 		switch token.Type {
 		case TokenINT: // 字面量整数值  100
-			log.Debug("这是字面量:", token.Value)
 			parser.Next()
 			rhs = parser.script.NewInt(token.Value.(int64))
 		case TokenFLOAT: // 字面量浮点值 3.14
