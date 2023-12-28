@@ -54,12 +54,12 @@ func main() {
 	// 访问者
 	gen, err := NewGen4Go()
 	if err != nil {
-		log.Errorf("inner error:%s", err)
+		log.Errorf("%s", err)
 		return
 	}
 	err = compiler.Accept(gen)
 	if err != nil {
-		log.Errorf("inner error:%s", err)
+		log.Errorf("%s", err)
 		return
 	}
 	log.Info("Successfully compiled package: ", flag.Args())

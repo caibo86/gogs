@@ -7,6 +7,10 @@
 
 package ast
 
+import (
+	"fmt"
+)
+
 // Array 数组表达式
 type Array struct {
 	BaseExpr        // 内嵌基本表达式实现
@@ -15,7 +19,7 @@ type Array struct {
 }
 
 func (array *Array) OriginName() string {
-	return "[]" + array.Element.OriginName()
+	return fmt.Sprintf("[%d]%s", array.Length, array.Element.OriginName())
 }
 
 // NewArray 在代码节点内新建数组表达式 此数组表达式所属代码节点为此代码节点

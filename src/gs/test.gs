@@ -2,13 +2,23 @@ import "gss"
 
 // 前面的注释
 
+struct Phone {
+    // 前面的注释
+    // 这是一个手机号
+    Number string = 1;
+    // 这是一个国家代码
+    CountryCode int32 = 2;
+}
+
 // 这是一个学生
 // 这还是一个学生
+// +k8s:deepcopy-gen=true
 struct Student {
     // ID 唯一ID
     ID   int64  = 1; // 这是一个ID
     Name string = 2; // 名字
     Age  int32  = 300; // 年龄
+    Phone Phone  = 4; // 手机
 }
 
 // 颜色
@@ -30,6 +40,7 @@ enum ErrCode {
 }
 
 // 汽车
+// +k8s:deepcopy-gen=true
 struct Car {
     // 颜色
     VarEnum    Color                     = 1;
@@ -46,7 +57,7 @@ struct Car {
     VarFloat32 float32                   = 14;
     VarFloat64 float64                   = 15;
     VarStruct  Student                   = 21;
-    VarArray []int32                     = 22;
+    VarList []int32                     = 22;
     VarStructs []Student                 = 23;
     VarBools []bool                      = 24;
     VarStrings []string                  = 25;
@@ -62,6 +73,10 @@ struct Car {
     VarMap2 map[gss.Subject]gss.Subject = 44;
     VarMap3 map[gss.Subject]gss.Teacher = 1000; // 这是一个学科老师映射
     VarBool bool                         = 4;
+    VarArray [3]int32 = 45;
+    VarStructArray [3]gss.Teacher = 46;
+    VarEnumArray [4]gss.Subject = 47;
+    VarStructArray1 [10]Student = 48;
 }
 
 // 最后的日志
