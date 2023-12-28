@@ -35,24 +35,24 @@ func (script *Script) NewArray(length uint32, element Expr) *Array {
 	return array
 }
 
-// List 链表表达式
-type List struct {
+// Slice 切片
+type Slice struct {
 	BaseExpr      // 内嵌基本表达式实现
-	Element  Expr // 链表元素类型
+	Element  Expr // 切片元素类型
 }
 
-func (list *List) OriginName() string {
-	return "[]" + list.Element.OriginName()
+func (slice *Slice) OriginName() string {
+	return "[]" + slice.Element.OriginName()
 }
 
-// NewList 在代码节点内新建链表表达式 此链表表达式所属代码节点为此代码节点
-func (script *Script) NewList(element Expr) *List {
-	list := &List{
+// NewSlice 在代码节点内新建切片表达式 此切片表达式所属代码节点为此代码节点
+func (script *Script) NewSlice(element Expr) *Slice {
+	slice := &Slice{
 		Element: element,
 	}
-	// 初始化链表表达式
-	list.Init(element.Name(), script)
+	// 初始化切片表达式
+	slice.Init(element.Name(), script)
 	// 设置父节点为此代码节点
-	list.Element.SetParent(list)
-	return list
+	slice.Element.SetParent(slice)
+	return slice
 }

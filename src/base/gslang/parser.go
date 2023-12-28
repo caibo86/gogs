@@ -674,16 +674,16 @@ func (parser *Parser) parseType() ast.Expr {
 		// 递归分析类型
 		element := parser.parseType()
 		switch element.(type) {
-		case *ast.List, *ast.Array:
+		case *ast.Slice, *ast.Array:
 			// 不支持递归数组或切片
-			parser.errorf(token.Pos, "gslang didn't support Recursively define array or list")
+			parser.errorf(token.Pos, "gslang didn't support Recursively define array or slice")
 		}
 		// 包装并返回 对应类型的数组或切片
 		var expr ast.Expr
 		if length > 0 {
 			expr = parser.script.NewArray(length, element)
 		} else {
-			expr = parser.script.NewList(element)
+			expr = parser.script.NewSlice(element)
 		}
 		attachPos(expr, token.Pos)
 		return expr
@@ -693,15 +693,15 @@ func (parser *Parser) parseType() ast.Expr {
 		// 分析key
 		key := parser.parseType()
 		switch key.(type) {
-		case *ast.List, *ast.Array, *ast.Map:
-			parser.errorf(token.Pos, "gslang didn't support key(map array list) for map")
+		case *ast.Slice, *ast.Array, *ast.Map:
+			parser.errorf(token.Pos, "gslang didn't support key(map array slice) for map")
 		}
 		parser.expect(']')
 		// 分析value
 		value := parser.parseType()
 		switch value.(type) {
-		case *ast.List, *ast.Array, *ast.Map:
-			parser.errorf(token.Pos, "gslang didn't support value(map array list) for map")
+		case *ast.Slice, *ast.Array, *ast.Map:
+			parser.errorf(token.Pos, "gslang didn't support value(map array slice) for map")
 		}
 		// 包装map并返回
 		var expr ast.Expr

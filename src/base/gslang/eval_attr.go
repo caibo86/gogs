@@ -34,7 +34,7 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 	if args == nil {
 		for _, field := range table.Fields {
 			switch field.Type.(type) {
-			case *ast.Array, *ast.List, *ast.Map:
+			case *ast.Array, *ast.Slice, *ast.Map:
 				visitor.values[field.Name()] = nil
 			case *ast.TypeRef:
 				ref := field.Type.(*ast.TypeRef).Ref
@@ -76,7 +76,7 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 				item = uArgs.Items[field.ID]
 			}
 			switch field.Type.(type) {
-			case *ast.Array, *ast.List, *ast.Map:
+			case *ast.Array, *ast.Slice, *ast.Map:
 				visitor.values[field.Name()] = nil
 			case *ast.TypeRef:
 				ref := field.Type.(*ast.TypeRef).Ref
@@ -129,7 +129,7 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 			fieldName := field.Name()
 			item = nArgs.Items[fieldName]
 			switch field.Type.(type) {
-			case *ast.Array, *ast.List, *ast.Map:
+			case *ast.Array, *ast.Slice, *ast.Map:
 				visitor.values[field.Name()] = nil
 			case *ast.TypeRef:
 				ref := field.Type.(*ast.TypeRef).Ref
@@ -273,8 +273,8 @@ func (visitor *evalAttr) VisitArray(node *ast.Array) ast.Node {
 	return nil
 }
 
-// VisitList 仅为实现访问者接口
-func (visitor *evalAttr) VisitList(node *ast.List) ast.Node {
+// VisitSlice 仅为实现访问者接口
+func (visitor *evalAttr) VisitSlice(node *ast.Slice) ast.Node {
 	log.Panicf("stmt is not attr expr :%s", Pos(node))
 	return nil
 }

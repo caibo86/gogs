@@ -170,11 +170,11 @@ func (linker *Linker) VisitBinaryOp(op *ast.BinaryOp) ast.Node {
 	return op
 }
 
-// VisitList 访问切片
-func (linker *Linker) VisitList(list *ast.List) ast.Node {
+// VisitSlice 访问切片
+func (linker *Linker) VisitSlice(slice *ast.Slice) ast.Node {
 	// 访问切片的元素类型
-	list.Element.Accept(linker)
-	return list
+	slice.Element.Accept(linker)
+	return slice
 }
 
 // VisitArray 访问数组

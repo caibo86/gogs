@@ -20,7 +20,7 @@ type Visitor interface {
 	VisitTypeRef(*TypeRef) Node     // 访问类型引用节点
 	VisitAttr(*Attr) Node           // 访问属性节点
 	VisitArray(*Array) Node         // 访问数组节点
-	VisitList(*List) Node           // 访问链表节点
+	VisitSlice(*Slice) Node         // 访问切片节点
 	VisitArgs(*Args) Node           // 访问参数列表节点
 	VisitNamedArgs(*NamedArgs) Node // 访问命名参数列表节点
 	VisitString(*String) Node       // 访问字符串节点
@@ -90,9 +90,9 @@ func (array *Array) Accept(visitor Visitor) Node {
 	return visitor.VisitArray(array)
 }
 
-// Accept 为链表节点实现Node接口
-func (list *List) Accept(visitor Visitor) Node {
-	return visitor.VisitList(list)
+// Accept 为切片节点实现Node接口
+func (slice *Slice) Accept(visitor Visitor) Node {
+	return visitor.VisitSlice(slice)
 }
 
 // Accept 为参数列表节点实现Node接口
@@ -213,8 +213,8 @@ func (visitor *EmptyVisitor) VisitArray(*Array) Node {
 	return nil
 }
 
-// VisitList 实现访问者接口
-func (visitor *EmptyVisitor) VisitList(*List) Node {
+// VisitSlice 实现访问者接口
+func (visitor *EmptyVisitor) VisitSlice(*Slice) Node {
 	return nil
 }
 

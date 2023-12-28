@@ -249,11 +249,11 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 				panic(gserrors.Newf(nil, "not here %s", field.Type.Name()))
 			}
 		}
-	case *ast.List, *ast.Array:
-		// 数组 切片
+	case *ast.Slice, *ast.Array:
+		// 切片和数组
 		var ref *ast.TypeRef
-		if list, ok := field.Type.(*ast.List); ok {
-			ref = list.Element.(*ast.TypeRef)
+		if slice, ok := field.Type.(*ast.Slice); ok {
+			ref = slice.Element.(*ast.TypeRef)
 		} else {
 			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
 		}
@@ -422,13 +422,13 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 				panic(gserrors.Newf(nil, "not here %s", field.Type.Name()))
 			}
 		}
-	case *ast.List, *ast.Array:
-		// 数组
+	case *ast.Slice, *ast.Array:
+		// 切片和数组
 		var ref *ast.TypeRef
-		isList := false
-		if list, ok := field.Type.(*ast.List); ok {
-			ref = list.Element.(*ast.TypeRef)
-			isList = true
+		isSlice := false
+		if slice, ok := field.Type.(*ast.Slice); ok {
+			ref = slice.Element.(*ast.TypeRef)
+			isSlice = true
 		} else {
 			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
 		}
@@ -451,7 +451,7 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 				panic(gserrors.Newf(nil, "not here %s", field.Type.Name()))
 			}
 		}
-		if isList {
+		if isSlice {
 			return fmt.Sprintf(
 				`if len(m.%s) > 0 {
 					i = gsnet.WriteFieldID(data, i , %d)
@@ -564,13 +564,13 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 				panic(gserrors.Newf(nil, "not here %s", field.Type.Name()))
 			}
 		}
-	case *ast.List, *ast.Array:
-		// 数组
+	case *ast.Slice, *ast.Array:
+		// 切片和数组
 		var ref *ast.TypeRef
-		var isList bool
-		if list, ok := field.Type.(*ast.List); ok {
-			isList = true
-			ref = list.Element.(*ast.TypeRef)
+		var isSlice bool
+		if slice, ok := field.Type.(*ast.Slice); ok {
+			isSlice = true
+			ref = slice.Element.(*ast.TypeRef)
 		} else {
 			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
 		}
@@ -600,7 +600,7 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 				panic(gserrors.Newf(nil, "not here %s", field.Type.Name()))
 			}
 		}
-		if isList {
+		if isSlice {
 			return fmt.Sprintf(
 				`var length uint32
 				i, length = gsnet.ReadUint32(data, i)
@@ -701,9 +701,9 @@ func (gen *Gen4Go) copyType(field *ast.Field) string {
 				}`,
 				field.Name(), field.Name(), field.Name(), gen.defaultVal(ref))
 		}
-	case *ast.List:
-		list := field.Type.(*ast.List)
-		ref := list.Element.(*ast.TypeRef)
+	case *ast.Slice:
+		slice := field.Type.(*ast.Slice)
+		ref := slice.Element.(*ast.TypeRef)
 		if _, ok := keyMapping[ref.Ref.Name()]; ok {
 			return fmt.Sprintf(`if m.%s != nil {
 					in, out := &m.%s, &out.%s
@@ -844,7 +844,7 @@ func (gen *Gen4Go) defaultVal(expr ast.Expr) string {
 			panic(err)
 		}
 		return buff.String()
-	case *ast.List:
+	case *ast.Slice:
 		return "nil"
 	case *ast.Map:
 		// 字典
@@ -888,7 +888,7 @@ func (gen *Gen4Go) zeroVal(expr ast.Expr) string {
 			panic(err)
 		}
 		return buff.String()
-	case *ast.List:
+	case *ast.Slice:
 		return "nil"
 	case *ast.Map:
 		// 字典
@@ -988,10 +988,10 @@ func (gen *Gen4Go) typeName(expr ast.Expr) string {
 		// 数组
 		array := expr.(*ast.Array)
 		return fmt.Sprintf("[%d]%s", array.Length, gen.typeName(array.Element))
-	case *ast.List:
+	case *ast.Slice:
 		// 切片
-		list := expr.(*ast.List)
-		return fmt.Sprintf("[]%s", gen.typeName(list.Element))
+		slice := expr.(*ast.Slice)
+		return fmt.Sprintf("[]%s", gen.typeName(slice.Element))
 	case *ast.Map:
 		// 字典
 		hash := expr.(*ast.Map)

@@ -113,8 +113,8 @@ func (visitor *evalEnumVal) VisitArray(node *ast.Array) ast.Node {
 	return nil
 }
 
-// VisitList 仅为实现访问者接口
-func (visitor *evalEnumVal) VisitList(node *ast.List) ast.Node {
+// VisitSlice 仅为实现访问者接口
+func (visitor *evalEnumVal) VisitSlice(node *ast.Slice) ast.Node {
 	log.Panicf("stmt is not enum expr :%s", Pos(node))
 	return nil
 }

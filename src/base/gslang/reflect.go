@@ -107,7 +107,7 @@ func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int32 {
 			if target, ok := EvalFieldInitArg(field, metaAttr.Args); ok {
 				return EvalEnumVal(target)
 			}
-			log.Panicf("AttrUsage attribute init list expect target val \n\tattr def:%s", Pos(metaAttr))
+			log.Panicf("AttrUsage attribute init args expect target val \n\tattr def:%s", Pos(metaAttr))
 		}
 	}
 	// 能作为属性的Table必须有一个属性@AttrUsage
