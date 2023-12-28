@@ -157,22 +157,23 @@ type Gen4Go struct {
 func NewGen4Go() (gen *Gen4Go, err error) {
 	gen = &Gen4Go{}
 	funcs := template.FuncMap{
-		"symbol":        strings.Title,
-		"typeName":      gen.typeName,
-		"params":        gen.params,
-		"returnParams":  gen.returnParams,
-		"returnErr":     gen.returnErr,
-		"callArgs":      gen.callArgs,
-		"returnArgs":    gen.returnArgs,
-		"readType":      gen.readType,
-		"writeType":     gen.writeType,
-		"defaultVal":    gen.defaultVal,
-		"pos":           gslang.Pos,
-		"lowerFirst":    gen.lowerFirst,
-		"sovFunc":       gen.sovFunc,
-		"calTypeSize":   gen.calTypeSize,
-		"copyType":      gen.copyType,
-		"printComments": gen.printComments,
+		"symbol":              strings.Title,
+		"typeName":            gen.typeName,
+		"params":              gen.params,
+		"returnParams":        gen.returnParams,
+		"returnErr":           gen.returnErr,
+		"callArgs":            gen.callArgs,
+		"returnArgs":          gen.returnArgs,
+		"readType":            gen.readType,
+		"writeType":           gen.writeType,
+		"defaultVal":          gen.defaultVal,
+		"pos":                 gslang.Pos,
+		"lowerFirst":          gen.lowerFirst,
+		"sovFunc":             gen.sovFunc,
+		"calTypeSize":         gen.calTypeSize,
+		"copyType":            gen.copyType,
+		"printComments":       gen.printComments,
+		"printCommentsToLine": gen.printCommentsToLine,
 	}
 	gen.tpl, err = template.New("golang").Funcs(funcs).Parse(tpl4go)
 	return
@@ -1015,6 +1016,7 @@ func (gen *Gen4Go) printComments(node ast.Node) string {
 	var ret string
 	comments := gslang.Comments(node)
 	if len(comments) > 0 {
+		ret += "\n"
 		for i, comment := range comments {
 			value := comment.Value.(string)
 			value = strings.TrimLeft(value, " ")
@@ -1023,6 +1025,21 @@ func (gen *Gen4Go) printComments(node ast.Node) string {
 			} else {
 				ret += fmt.Sprintf("//%s\n", comment.Value)
 			}
+		}
+	}
+	return ret
+}
+
+// printComments 打印注释到一行
+func (gen *Gen4Go) printCommentsToLine(node ast.Node) string {
+	var ret string
+	comments := gslang.Comments(node)
+	if len(comments) > 0 {
+		ret = "//"
+		for _, comment := range comments {
+			value := comment.Value.(string)
+			value = strings.TrimLeft(value, " ")
+			ret += comment.Value.(string)
 		}
 	}
 	return ret
