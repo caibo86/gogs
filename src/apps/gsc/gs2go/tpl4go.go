@@ -302,7 +302,7 @@ func (service *{{$Contract}}Service) Call(call *gsnet.Call) (callReturn *gsnet.R
             return
         }{{"\n"}}{{end}}
 {{range .Return}}        var ret{{.ID}} {{typeName .Type}}{{"\n"}}{{end}}
-        {{returnargs .}} service.I{{$Contract}}.{{$Name}}{{callargs .Params}}
+        {{returnArgs .}} service.I{{$Contract}}.{{$Name}}{{callargs .Params}}
         if err != nil {
             return
         }

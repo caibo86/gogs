@@ -9,6 +9,7 @@ package ast
 
 import (
 	"sort"
+	"strconv"
 )
 
 // EnumVal 枚举值 指一个枚举括号中的单个枚举值
@@ -19,10 +20,11 @@ type EnumVal struct {
 
 // Enum 枚举表达式
 type Enum struct {
-	BaseExpr                         // 内嵌基本表达式实现
-	Values       map[string]*EnumVal // 枚举值字典
-	Default      *EnumVal            // 入口枚举值
-	MaxKeyLength int                 // 最长的枚举值名字长度
+	BaseExpr                           // 内嵌基本表达式实现
+	Values         map[string]*EnumVal // 枚举值字典
+	Default        *EnumVal            // 入口枚举值
+	MaxKeyLength   int                 // 最长的枚举值名字长度
+	MaxValueLength int                 // 最长的枚举值数值长度
 }
 
 // NewEnum 在代码节点内新建枚举节点 所属代码节点为此代码节点
@@ -51,6 +53,10 @@ func (enum *Enum) NewEnumVal(name string, val int32) (*EnumVal, bool) {
 	if len(name) > enum.MaxKeyLength {
 		enum.MaxKeyLength = len(name)
 	}
+	if len(strconv.Itoa(int(val))) > enum.MaxValueLength {
+		enum.MaxValueLength = len(strconv.Itoa(int(val)))
+	}
+
 	// 初始化枚举值,所属代码节点为枚举表达式所属代码节点
 	enumVal.Init(name, enum.Script())
 	// 将枚举值加入到枚举表达式的枚举值字典

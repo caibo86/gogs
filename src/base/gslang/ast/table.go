@@ -7,6 +7,11 @@
 
 package ast
 
+import (
+	"sort"
+	"strconv"
+)
+
 // Field 结构体的字段,表达式
 type Field struct {
 	BaseExpr        // 内嵌基本表达式实现
@@ -20,6 +25,7 @@ type Table struct {
 	Fields             []*Field // 结构体的字段列表
 	MaxFieldNameLength int      // 最长的字段名字长度
 	MaxFieldTypeLength int      // 最长的字段类型名字长度
+	MaxFieldIDLength   int      // 最长的字段ID长度
 }
 
 // NewTable 在代码节点内新建结构体
@@ -68,6 +74,9 @@ func (table *Table) NewField(name string, id uint16, t Expr) (*Field, bool) {
 	if len(t.OriginName()) > table.MaxFieldTypeLength {
 		table.MaxFieldTypeLength = len(t.OriginName())
 	}
+	if len(strconv.Itoa(int(id))) > table.MaxFieldIDLength {
+		table.MaxFieldIDLength = len(strconv.Itoa(int(id)))
+	}
 
 	// 新建字段 ID为结构体的当前字段列表长度
 	field := &Field{
@@ -81,4 +90,11 @@ func (table *Table) NewField(name string, id uint16, t Expr) (*Field, bool) {
 	// 将字段添加到结构体的字段列表
 	table.Fields = append(table.Fields, field)
 	return field, true
+}
+
+// Sort 对字段按ID进行排序
+func (table *Table) Sort() {
+	sort.Slice(table.Fields, func(i, j int) bool {
+		return table.Fields[i].ID < table.Fields[j].ID
+	})
 }

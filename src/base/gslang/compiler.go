@@ -10,6 +10,7 @@ package gslang
 import (
 	"bytes"
 	"fmt"
+	"gogs/base/gserrors"
 	"gogs/base/gslang/ast"
 	log "gogs/base/logger"
 	"os"
@@ -92,7 +93,7 @@ func (compiler *Compiler) circularRefCheck(pkgName string) {
 
 // errorf 编译器报错
 func (compiler *Compiler) errorf(position Position, template string, args ...any) {
-	log.Panicf(fmt.Sprintf("parse:%s err:%s", position.String(), fmt.Sprintf(template, args...)))
+	panic(gserrors.Newf(nil, fmt.Sprintf("compile: %s err: %s", position.String(), fmt.Sprintf(template, args...))))
 }
 
 // Accept 实现访问者模式,编译器访问入口
@@ -146,10 +147,10 @@ func (compiler *Compiler) Compile(pkgName string) (pkg *ast.Package, err error) 
 		// 解析该gs文件,生成一个代码节点
 		log.Info("Parsing file: ", path)
 		script, err := compiler.parse(pkg, path)
-		log.Info("Parsed file: ", path, " err:", err)
 		if err == nil {
 			// 没有错误的话,把绝对路径保存为代码节点的额外信息
 			setFilePath(script, path)
+			log.Info("Done parse file: ", path)
 		}
 		return err
 	})
@@ -159,7 +160,7 @@ func (compiler *Compiler) Compile(pkgName string) (pkg *ast.Package, err error) 
 		return
 	}
 	if pkg == nil {
-		log.Panicf("pkg should not be nil when err is nil")
+		panic(gserrors.Newf(nil, "pkg should not be nil when err is nil"))
 	}
 	compiler.link(pkg)
 	// 加载完成后,将该包从loading列表中移除,并将其加入已加载列表

@@ -10,6 +10,7 @@ package gslang
 import (
 	"bytes"
 	"fmt"
+	"gogs/base/gserrors"
 	"gogs/base/gslang/ast"
 	log "gogs/base/logger"
 	"math"
@@ -84,7 +85,7 @@ func (parser *Parser) Next() *Token {
 
 // errorf 格式化报错
 func (parser *Parser) errorf(position Position, template string, args ...interface{}) {
-	log.Panicf(fmt.Sprintf("parse:%s error:%s", position.String(), fmt.Sprintf(template, args...)))
+	panic(gserrors.Newf(nil, fmt.Sprintf("parse:%s error:%s", position.String(), fmt.Sprintf(template, args...))))
 }
 
 // expect 期望下一个Token的类型为目标rune expect,否则报错
@@ -201,11 +202,6 @@ func (parser *Parser) parseComments() {
 		parser.Next()
 		parser.comments = append(parser.comments, token)
 	}
-	fmt.Println("当前的注释列表为:", len(parser.comments))
-	for _, comment := range parser.comments {
-		fmt.Println("当前的注释:", comment.Value)
-	}
-
 }
 
 // attachComments 将分析器保存的注释列表中符合条件的注释附加给对应节点
@@ -231,11 +227,9 @@ func (parser *Parser) attachComments(node ast.Node) {
 
 		// 如果注释节点的行号与 目标节点行号相同 或者 小1 则认为该注释属于目标节点  递归往上找行号连续的注释
 		if comment.Pos.Line == pos.Line || (comment.Pos.Line+1) == pos.Line {
-			fmt.Println("注释", comment.Value, "属于", node.Name())
 			selected = append(selected, comment)
 			pos = comment.Pos
 		} else {
-			fmt.Println("注释", comment.Value, "不属于", node.Name())
 			rest = append(rest, comment)
 		}
 	}
@@ -399,6 +393,7 @@ func (parser *Parser) parseArgs() ast.Expr {
 	if token.Type == TokenLABEL {
 		// 代码内新建一个命名参数列表
 		args := parser.script.NewNamedArgs()
+		attachPos(args, token.Pos)
 		parser.Next()
 		name := token
 		for {
@@ -408,7 +403,7 @@ func (parser *Parser) parseArgs() ast.Expr {
 			} else {
 				// 分析注释并添加到对应参数
 				parser.parseComments()
-				parser.attachComments(arg)
+				// parser.attachComments(arg.Parent())
 			}
 			// 检查是否是参数分隔符逗号,不是则弹出循环 返回命名参数列表
 			token = parser.Peek()
@@ -423,12 +418,13 @@ func (parser *Parser) parseArgs() ast.Expr {
 	}
 	// 新建一个参数列表
 	args := parser.script.NewArgs()
+	attachPos(args, token.Pos)
 	for {
 		// 分析参数
-		arg := args.NewArg(parser.parseArg())
+		args.NewArg(parser.parseArg())
 		// 分析并附加注释到参数
 		parser.parseComments()
-		parser.attachComments(arg)
+		// parser.attachComments(arg.Parent())
 		token = parser.Peek()
 		// 参数分隔符
 		if token.Type != ',' {

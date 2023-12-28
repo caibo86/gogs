@@ -7,6 +7,10 @@
 
 package ast
 
+import (
+	"fmt"
+)
+
 // Attr 属性节点
 type Attr struct {
 	BaseExpr
@@ -22,4 +26,12 @@ func (script *Script) NewAttr(attrType *TypeRef) *Attr {
 	attr.Init(attrType.Name(), script)
 	attrType.SetParent(attr)
 	return attr
+}
+
+// OriginName 获取属性的原始代码
+func (attr *Attr) OriginName() string {
+	if attr.Args == nil {
+		return fmt.Sprintf("@%s", attr.Type.OriginName())
+	}
+	return fmt.Sprintf("@%s(%s)", attr.Type.OriginName(), attr.Args.OriginName())
 }

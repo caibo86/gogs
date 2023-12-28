@@ -7,6 +7,10 @@
 
 package ast
 
+import (
+	"fmt"
+)
+
 // Args 参数列表节点,是一个Expr
 type Args struct {
 	BaseExpr        // 内嵌基本表达式实现
@@ -29,10 +33,23 @@ func (args *Args) NewArg(arg Expr) Expr {
 	return arg
 }
 
+func (args *Args) OriginName() string {
+	var ret string
+	for i, item := range args.Items {
+		ret += item.OriginName()
+		if i < len(args.Items)-1 {
+			ret += ", "
+		}
+	}
+	return ret
+}
+
 // NamedArgs 命名参数列表节点,是一个Expr
 type NamedArgs struct {
 	BaseExpr                 // 内嵌基本表达式实现
 	Items    map[string]Expr // 用字典保存命名参数列表
+	Names    []string
+	Values   []Expr
 }
 
 // NewNamedArgs 在代码节点内新建命名参数列表 此命名参数列表名字args 所属代码节点为此代码节点
@@ -51,7 +68,20 @@ func (args *NamedArgs) NewArg(name string, arg Expr) (Expr, bool) {
 		return item, false
 	}
 	args.Items[name] = arg
+	args.Names = append(args.Names, name)
+	args.Values = append(args.Values, arg)
 	// 设置此参数的父节点为此命名参数列表
 	arg.SetParent(args)
 	return arg, true
+}
+
+func (args *NamedArgs) OriginName() string {
+	var ret string
+	for i, name := range args.Names {
+		ret += fmt.Sprintf("%s:%s", name, args.Values[i].OriginName())
+		if i < len(args.Items)-1 {
+			ret += ", "
+		}
+	}
+	return ret
 }

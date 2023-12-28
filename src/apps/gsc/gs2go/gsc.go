@@ -9,6 +9,7 @@ package main
 
 import (
 	"flag"
+	"gogs/base/gserrors"
 	"gogs/base/gslang"
 	log "gogs/base/logger"
 )
@@ -25,10 +26,10 @@ func main() {
 	defer func() {
 		e := recover()
 		if e != nil {
-			log.Errorf("inner error\n\t%s", e)
+			log.Errorf(gserrors.New(e.(error)).Error())
 		}
 		if err := log.Close(); err != nil && err.Error() != ignoreErr {
-			panic(err)
+			panic(gserrors.New(err))
 		}
 	}()
 	// 解析命令行参数
