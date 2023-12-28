@@ -9,7 +9,6 @@ package gslang
 
 import (
 	"gogs/base/gslang/ast"
-	log "gogs/base/logger"
 )
 
 // Enum 将Enum表达式内的EnumVal字典解析为map
@@ -79,7 +78,7 @@ func markAsFlower(enum *ast.Enum) {
 func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int32 {
 	// 属性的类型引用必须先连接到对应类型
 	if attr.Type.Ref == nil {
-		log.Panicf("attr(%s) must linked first:\n\t%s", attr, Pos(attr).String())
+		compiler.errorf(Pos(attr), "attr(%s) must linked first", attr)
 	}
 
 	// 对属性求值
@@ -89,28 +88,29 @@ func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int32 {
 	// 只有Table才能被作为属性的类型引用
 	s, ok := attr.Type.Ref.(*ast.Table)
 	if !ok {
-		log.Panicf("only table can be used as attr type:\n\tattr def:%s\n\ttype def:%s",
-			Pos(attr), Pos(attr.Type.Ref))
+		compiler.errorf(Pos(attr), "only table can be used as attr type:\n\ttype def:%s",
+			Pos(attr.Type.Ref))
+
 	}
 	// 轮询属性的类型引用的属性列表
 	for _, metaAttr := range s.Attrs() {
 		// 属性的类型引用必须是Struct
 		usage, ok := metaAttr.Type.Ref.(*ast.Table)
 		if !ok {
-			log.Panicf("attr(%s) must linked first:\n\t%s", metaAttr, Pos(metaAttr))
+			compiler.errorf(Pos(metaAttr), "attr(%s) must linked first", metaAttr)
 		}
 		if IsAttrUsage(usage) {
 			field, ok := usage.Field("Target")
 			if !ok {
-				log.Panicf("inner gslang AttrUsage must declare field Target:\n\t%s", Pos(usage))
+				compiler.errorf(Pos(usage), "inner gslang AttrUsage must declare field Target")
 			}
 			if target, ok := EvalFieldInitArg(field, metaAttr.Args); ok {
 				return EvalEnumVal(target)
 			}
-			log.Panicf("AttrUsage attribute init args expect target val \n\tattr def:%s", Pos(metaAttr))
+			compiler.errorf(Pos(metaAttr), "AttrUsage attribute init args expect target val")
 		}
 	}
 	// 能作为属性的Table必须有一个属性@AttrUsage
-	log.Panicf("target table can not be used as attribute type:\n\tattr def:%s\n\ttype def:%s", Pos(attr), Pos(attr.Type.Ref))
+	compiler.errorf(Pos(attr), "target table can not be used as attribute type:\n\ttype def:%s", Pos(attr.Type.Ref))
 	return 0
 }

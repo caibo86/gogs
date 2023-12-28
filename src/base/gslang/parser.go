@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"gogs/base/gserrors"
 	"gogs/base/gslang/ast"
-	log "gogs/base/logger"
 	"math"
 	"os"
 	"path/filepath"
@@ -69,7 +68,7 @@ type Parser struct {
 func (parser *Parser) Peek() *Token {
 	token, err := parser.Lexer.Peek()
 	if err != nil {
-		log.Panic(err)
+		panic(err)
 	}
 	return token
 }
@@ -78,7 +77,7 @@ func (parser *Parser) Peek() *Token {
 func (parser *Parser) Next() *Token {
 	token, err := parser.Lexer.Next()
 	if err != nil {
-		log.Panic(err)
+		panic(err)
 	}
 	return token
 }
@@ -210,7 +209,7 @@ func (parser *Parser) attachComments(node ast.Node) {
 	pos := Pos(node)
 	// 节点的位置必须有效
 	if !pos.Valid() {
-		log.Panicf("all node have to bind with pos object by calling attachPos: %s", node)
+		parser.errorf(Pos(node), "all node have to bind with pos object by calling attachPos: %s", node)
 	}
 
 	// 用于保存选中的注释
@@ -222,7 +221,7 @@ func (parser *Parser) attachComments(node ast.Node) {
 		comment := parser.comments[i]
 		// 注释节点所属文件名字必须和目标节点所属文件名相同
 		if comment.Pos.Filename != pos.Filename {
-			log.Panicf("comment's filename must equal with node's filename")
+			parser.errorf(comment.Pos, "comment's filename must equal with node's filename")
 		}
 
 		// 如果注释节点的行号与 目标节点行号相同 或者 小1 则认为该注释属于目标节点  递归往上找行号连续的注释
@@ -264,7 +263,7 @@ func (parser *Parser) parseImports() {
 		if token.Type == TokenSTRING || token.Type == TokenID {
 			ref := parser.parseImport()
 			if ref == nil {
-				log.Panicf("check parser.Import implement")
+				parser.errorf(token.Pos, "check parser.Import implement")
 			}
 			parser.parseComments()     // 行尾可能有注释
 			parser.attachComments(ref) // 附加注释到目标
@@ -298,10 +297,10 @@ func (parser *Parser) parseImports() {
 		}
 		ref, ok := parser.script.NewPackageRef("gslang", pkg)
 		if pkg == nil {
-			log.Panicf("check Compiler and Compile implement")
+			parser.errorf(pos, "check Compiler and Compile implement")
 		}
 		if !ok {
-			log.Panicf("check if the script manual import gslang package")
+			parser.errorf(pos, "check if the script manual import gslang package")
 		}
 		attachPos(ref, pos)
 	}
@@ -329,7 +328,7 @@ func (parser *Parser) parseImport() *ast.PackageRef {
 	// 编译目标路径的包
 	pkg, err := parser.compiler.Compile(path)
 	if err != nil {
-		log.Panic(err)
+		panic(err)
 	}
 	// 将该包生成包引用节点并加入到代码节点的包引用列表中
 	ref, ok := parser.script.NewPackageRef(key, pkg)

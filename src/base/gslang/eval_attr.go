@@ -8,8 +8,8 @@
 package gslang
 
 import (
+	"gogs/base/gserrors"
 	"gogs/base/gslang/ast"
-	log "gogs/base/logger"
 )
 
 // evalAttr 访问枚举值
@@ -20,7 +20,7 @@ type evalAttr struct {
 // VisitAttr 仅为实现访问者接口
 func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 	if visitor == nil {
-		log.Panicf("visitor(evalAttr) should not be nil")
+		panic(gserrors.Newf(nil, "visitor(evalAttr) should not be nil"))
 	}
 	if visitor.values == nil {
 		visitor.values = make(map[string]any)
@@ -28,7 +28,7 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 	expr := node.Type.Ref
 	table, ok := expr.(*ast.Table)
 	if !ok {
-		log.Panicf("attr type should be ast.Table")
+		panic(gserrors.Newf(nil, "attr type should be ast.Table"))
 	}
 	args := node.Args
 	if args == nil {
@@ -119,7 +119,7 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 						visitor.values[field.Name()] = i.Value
 					}
 				default:
-					// log.Panicf("不支持的类型:%s", name)
+					//panic(gserrors.Newf(nil, "不支持的类型:%s", name))
 				}
 			}
 		}
@@ -172,12 +172,12 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 						visitor.values[field.Name()] = i.Value
 					}
 				default:
-					// log.Panicf("不支持的类型:%s", name)
+					//panic(gserrors.Newf(nil, "不支持的类型:%s", name))
 				}
 			}
 		}
 	} else {
-		log.Panicf("attr args should be nil or ast.Args or ast.NamedArgs")
+		panic(gserrors.Newf(nil, "attr args should be nil or ast.Args or ast.NamedArgs"))
 	}
 
 	return nil
@@ -185,120 +185,120 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 
 // VisitBinaryOp 访问二元运算
 func (visitor *evalAttr) VisitBinaryOp(node *ast.BinaryOp) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitTypeRef 访问类型引用
 func (visitor *evalAttr) VisitTypeRef(node *ast.TypeRef) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return node
 }
 
 // VisitEnumVal 访问枚举值
 func (visitor *evalAttr) VisitEnumVal(node *ast.EnumVal) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return node
 }
 
 // VisitString 仅为实现访问者接口
 func (visitor *evalAttr) VisitString(node *ast.String) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitFloat 仅为实现访问者接口
 func (visitor *evalAttr) VisitFloat(node *ast.Float) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitInt 仅为实现访问者接口
 func (visitor *evalAttr) VisitInt(node *ast.Int) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitBool 仅为实现访问者接口
 func (visitor *evalAttr) VisitBool(node *ast.Bool) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitPackage 仅为实现访问者接口
 func (visitor *evalAttr) VisitPackage(node *ast.Package) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitScript 仅为实现访问者接口
 func (visitor *evalAttr) VisitScript(node *ast.Script) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitEnum 仅为实现访问者接口
 func (visitor *evalAttr) VisitEnum(node *ast.Enum) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitTable 仅为实现访问者接口
 func (visitor *evalAttr) VisitTable(node *ast.Table) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitField 仅为实现访问者接口
 func (visitor *evalAttr) VisitField(node *ast.Field) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitContract 仅为实现访问者接口
 func (visitor *evalAttr) VisitContract(node *ast.Contract) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitMethod 仅为实现访问者接口
 func (visitor *evalAttr) VisitMethod(node *ast.Method) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitArray 仅为实现访问者接口
 func (visitor *evalAttr) VisitArray(node *ast.Array) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitSlice 仅为实现访问者接口
 func (visitor *evalAttr) VisitSlice(node *ast.Slice) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitMap 仅为实现访问者接口
 func (visitor *evalAttr) VisitMap(node *ast.Map) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitArgs 仅为实现访问者接口
 func (visitor *evalAttr) VisitArgs(node *ast.Args) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitNamedArgs 仅为实现访问者接口
 func (visitor *evalAttr) VisitNamedArgs(node *ast.NamedArgs) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }
 
 // VisitParam 仅为实现访问者接口
 func (visitor *evalAttr) VisitParam(node *ast.Param) ast.Node {
-	log.Panicf("stmt is not attr expr :%s", Pos(node))
+	panic(gserrors.Newf(nil, "node is not attr expr: %s", Pos(node)))
 	return nil
 }

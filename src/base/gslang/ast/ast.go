@@ -10,6 +10,7 @@ package ast
 import (
 	"bytes"
 	"fmt"
+	"gogs/base/gserrors"
 	log "gogs/base/logger"
 	"reflect"
 )
@@ -176,7 +177,7 @@ func (node *BaseNode) DelExtra(name string) {
 
 // Accept 接受访问者
 func (node *BaseNode) Accept(visitor Visitor) Node {
-	log.Panicf("type(%s) not implement Accept method", reflect.TypeOf(node))
+	panic(gserrors.Newf(nil, "type(%s) not implement Accept method", reflect.TypeOf(node)))
 	return nil
 }
 

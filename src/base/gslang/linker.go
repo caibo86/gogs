@@ -237,7 +237,7 @@ func (linker *Linker) VisitTypeRef(ref *ast.TypeRef) ast.Node {
 			if pkg, ok := ref.Script().Imports[ref.NamePath[0]]; !ok {
 				pkg := ref.Package() // 类型引用所属包 必须不为空
 				if pkg == nil {
-					log.Panicf("ref(%s) must bind ast tree ", ref)
+					linker.errorf(Pos(ref), "ref(%s) must bind ast tree", ref)
 				}
 				// 在包内类型列表中查找对应类型 添加引用
 				if expr, ok := pkg.Types[ref.NamePath[0]]; ok {
@@ -252,9 +252,8 @@ func (linker *Linker) VisitTypeRef(ref *ast.TypeRef) ast.Node {
 		case 2: // 路径长度为2  eg: ast.Node
 			// 在代码应用的包列表中查找NamePath[0],即目标类型所属的包
 			if pkg, ok := ref.Script().Imports[ref.NamePath[0]]; ok {
-
 				if pkg.Ref == nil {
-					log.Panicf("(%s)first parse phase must link import package:%s",
+					linker.errorf(Pos(ref), "(%s)first parse phase must link import package:%s",
 						ref.Script(), pkg)
 				}
 				// 在引用的包的类型列表中查找对应名字的类型并引用
@@ -415,27 +414,27 @@ func (linker *attrLinker) VisitPackage(pkg *ast.Package) ast.Node {
 		}
 	}
 	if linker.attrTarget == nil {
-		log.Panicf("inner error: can't found gslang.AttrTarget enum")
+		linker.errorf(Pos(pkg), "inner error: can't found gslang.AttrTarget enum")
 	}
 	// 设置结构和枚举两种内置类型
 	if pkg.Name() == GSLangPackage {
 		linker.attrStruct = pkg.Types[GSLangAttrStruct]
 		if linker.attrStruct == nil {
-			log.Panicf("inner error: can't found gslang.Table attribute type")
+			linker.errorf(Pos(pkg), "inner error: can't found gslang.Table attribute type")
 		}
 		linker.attrError = pkg.Types[GSLangAttrError]
 		if linker.attrError == nil {
-			log.Panicf("inner error: can't found gslang.Error attribute type")
+			linker.errorf(Pos(pkg), "inner error: can't found gslang.Error attribute type")
 		}
 	} else {
 		attrStruct, err := linker.Type(GSLangPackage, GSLangAttrStruct)
 		if err != nil {
-			log.Panicf("inner error: can't found gslang.Table attribute type. err:%v", err)
+			linker.errorf(Pos(pkg), "inner error: can't found gslang.Table attribute type. err:%v", err)
 		}
 		linker.attrStruct = attrStruct
 		attrError, err := linker.Type(GSLangPackage, GSLangAttrError)
 		if err != nil {
-			log.Panicf("inner error: can't found gslang.Error attribute type. err:%v", err)
+			linker.errorf(Pos(pkg), "inner error: can't found gslang.Error attribute type. err:%v", err)
 		}
 		linker.attrError = attrError
 	}

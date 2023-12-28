@@ -63,7 +63,7 @@ func (compiler *Compiler) searchPackage(pkgName string) string {
 	}
 	// 多于1个或者少于1个包均报错
 	if len(found) < 1 {
-		log.Panicf("found no package named:%s", pkgName)
+		compiler.errorf(Position{}, "found no package named:%s", pkgName)
 	}
 	if len(found) > 1 {
 		var buff bytes.Buffer
@@ -71,7 +71,7 @@ func (compiler *Compiler) searchPackage(pkgName string) string {
 		for i, path := range found {
 			buff.WriteString(fmt.Sprintf("\n\t%d:%s", i, path))
 		}
-		log.Panicf("%s", buff.String())
+		compiler.errorf(Position{}, buff.String())
 	}
 	// 返回唯一的包的绝对路径
 	return found[0]
@@ -87,7 +87,7 @@ func (compiler *Compiler) circularRefCheck(pkgName string) {
 		}
 	}
 	if buff.Len() != 0 {
-		log.Panicf("circular package import:\n%s\t%s", buff.String(), pkgName)
+		compiler.errorf(Position{}, "circular package import: %s %s", buff.String(), pkgName)
 	}
 }
 
@@ -160,7 +160,7 @@ func (compiler *Compiler) Compile(pkgName string) (pkg *ast.Package, err error) 
 		return
 	}
 	if pkg == nil {
-		panic(gserrors.Newf(nil, "pkg should not be nil when err is nil"))
+		compiler.errorf(Position{}, "pkg should not be nil when err is nil")
 	}
 	compiler.link(pkg)
 	// 加载完成后,将该包从loading列表中移除,并将其加入已加载列表
