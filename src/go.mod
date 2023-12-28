@@ -3,6 +3,7 @@ module gogs
 go 1.20
 
 require (
+	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.3
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/smartystreets/goconvey v1.8.1

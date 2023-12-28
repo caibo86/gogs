@@ -9,6 +9,7 @@ package gs
 
 import (
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	. "github.com/smartystreets/goconvey/convey"
 	"gogs/pb"
 	"math"
@@ -157,4 +158,80 @@ func BenchmarkPBCar_Marshal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _ = pbCar.Marshal()
 	}
+}
+
+func BenchmarkCar_Copy(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		car.Copy()
+	}
+}
+
+func BenchmarkCar_DeepCopy(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		car.DeepCopy()
+	}
+}
+
+func BenchmarkCar_CopyByMarshal(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		car1 := &Car{}
+		data := car.Marshal()
+		car1.Unmarshal(data)
+	}
+}
+
+func TestPB(t *testing.T) {
+	pbCar := &pb.Car{
+		//VarStructs: make([]*pb.Student, 3),
+		VarMap1: make(map[string]*pb.Student, 3),
+	}
+	pbCar.VarMap1["成都"] = nil
+	fmt.Println(pbCar.VarMap1)
+	data, err := proto.Marshal(pbCar)
+	if err != nil {
+		t.Error(err)
+	}
+	newPbCar := &pb.Car{}
+	err = proto.Unmarshal(data, newPbCar)
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println("结果:", newPbCar.VarMap1 == nil)
+	stu := new(Student)
+	fmt.Println("stu的size:", stu.Size())
+	car := &Car{
+		VarStructs:   make([]*Student, 3),
+		VarStructMap: make(map[string]*Table, 3),
+	}
+	car.VarStructs[1] = new(Student)
+	car.VarStructMap["成都"] = nil
+	data = car.Marshal()
+	newCar := &Car{}
+	err = newCar.Unmarshal(data)
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println("第二个结果:", newCar.VarStructMap, newCar.VarStructs)
+}
+
+func TestDeepCopy(t *testing.T) {
+	Convey("测试深拷贝", t, func() {
+		stu := &Student{
+			ID:   1,
+			Name: "成都扛把子",
+		}
+		car := &Car{
+			VarStructArray1: [10]*Student{stu},
+		}
+		fmt.Println("car:", car.VarStructArray1[0])
+		newCar := car.DeepCopy()
+		newCar1 := car.Copy()
+		fmt.Println("newCar:", newCar.VarStructArray1[0])
+		fmt.Println("newCar1:", newCar1.VarStructArray1[0])
+		car.VarStructArray1[0].Name = "改了名字了"
+		fmt.Println("car:", car.VarStructArray1[0])
+		fmt.Println("newCar:", newCar.VarStructArray1[0])
+		fmt.Println("newCar1:", newCar1.VarStructArray1[0])
+	})
 }

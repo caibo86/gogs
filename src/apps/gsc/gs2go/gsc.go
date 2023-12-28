@@ -28,7 +28,7 @@ func main() {
 		if e != nil {
 			log.Errorf(gserrors.New(e.(error)).Error())
 		}
-		if err := log.Close(); err != nil && err.Error() != ignoreErr {
+		if err := log.Close(); err != nil {
 			panic(gserrors.New(err))
 		}
 	}()

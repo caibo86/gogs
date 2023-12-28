@@ -649,14 +649,15 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 					v := %s(v1)`, gen.typeName(hash.Value))
 			case *ast.Table:
 				valStr = fmt.Sprintf(`var size uint32
-						v := %s
+						var v %s
 						i, size = gsnet.ReadUint32(data, i)
 						if size > 0 {
+							v = %s
 							if err = v.Unmarshal(data[i:i+int(size)]); err != nil {
 								return
 							}
 						}
-						i += int(size)`, gen.defaultVal(hash.Value))
+						i += int(size)`, gen.typeName(hash.Value), gen.defaultVal(hash.Value))
 			default:
 				panic(gserrors.Newf(nil, "map value %s not supported", hash.Value.Name()))
 			}

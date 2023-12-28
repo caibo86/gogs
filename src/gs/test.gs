@@ -39,6 +39,9 @@ enum ErrCode {
     SystemErr = 10000; // 系统错误
 }
 
+struct Table{
+}
+
 // 汽车
 // +k8s:deepcopy-gen=true
 struct Car {
@@ -77,6 +80,8 @@ struct Car {
     VarStructArray [3]gss.Teacher = 46;
     VarEnumArray [4]gss.Subject = 47;
     VarStructArray1 [10]Student = 48;
+    VarStructSlice []Table = 49;
+    VarStructMap map[string]Table = 50;
 }
 
 // 最后的日志

@@ -68,7 +68,11 @@ func Init(options ...Option) {
 // Close 关闭服务时调用
 func Close() error {
 	if global != nil {
-		return global.Close()
+		err := global.Close()
+		if err.Error() == "sync /dev/stdout: invalid argument" {
+			return nil
+		}
+		return err
 	}
 	return nil
 }

@@ -128,6 +128,32 @@ func (in *Car) DeepCopyInto(out *Car) {
 	out.VarStructArray = in.VarStructArray
 	out.VarEnumArray = in.VarEnumArray
 	out.VarStructArray1 = in.VarStructArray1
+	if in.VarStructSlice != nil {
+		in, out := &in.VarStructSlice, &out.VarStructSlice
+		*out = make([]*Table, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(Table)
+				**out = **in
+			}
+		}
+	}
+	if in.VarStructMap != nil {
+		in, out := &in.VarStructMap, &out.VarStructMap
+		*out = make(map[string]*Table, len(*in))
+		for key, val := range *in {
+			var outVal *Table
+			if val == nil {
+				(*out)[key] = nil
+			} else {
+				in, out := &val, &outVal
+				*out = new(Table)
+				**out = **in
+			}
+			(*out)[key] = outVal
+		}
+	}
 	if in.VarMap3 != nil {
 		in, out := &in.VarMap3, &out.VarMap3
 		*out = make(map[gss.Subject]*gss.Teacher, len(*in))

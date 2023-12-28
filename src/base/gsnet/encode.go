@@ -8,63 +8,8 @@
 package gsnet
 
 import (
-	"io"
 	"math"
 )
-
-// Tag 数值类型标签
-type Tag byte
-
-const (
-	// None 空
-	None Tag = iota
-	// Byte 单字节
-	Byte
-	// SByte int8
-	SByte
-	// Uint16 16位无符号整数
-	Uint16
-	// Int16 16位有符号整数
-	Int16
-	// Uint32 32位无符号整数
-	Uint32
-	// Int32 32位有符号整数
-	Int32
-	// Uint64 64位无符号整数
-	Uint64
-	// Int64 64位有符号整数
-	Int64
-	// Float32 32位浮点数
-	Float32
-	// Float64 64位浮点数
-	Float64
-	// Enum 枚举
-	Enum
-	// Struct 结构
-	Struct
-	// Table 表
-	Table
-	// Array 数组
-	Array
-	// List 链表
-	List
-	// String 字符串
-	String
-	// Bool 布尔值
-	Bool
-)
-
-// Reader 读取器
-type Reader interface {
-	io.ByteReader
-	io.Reader
-}
-
-// Writer 写入器
-type Writer interface {
-	io.ByteWriter
-	io.Writer
-}
 
 // WriteFieldID 写入字段编号
 func WriteFieldID(data []byte, i int, v uint16) int {
