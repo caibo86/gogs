@@ -360,3 +360,15 @@ func BenchmarkCar_MarshalByteSlice(b *testing.B) {
 		car.Marshal()
 	}
 }
+
+func TestUse(t *testing.T) {
+	Convey("测试使用", t, func() {
+		data := []byte("aaa")
+		s := string(data)
+		fmt.Println(data)
+		fmt.Println(s)
+		data[1] = 100
+		fmt.Println(data)
+		fmt.Println(s)
+	})
+}

@@ -27,11 +27,11 @@ type IService interface {
 
 // IRemote 远程服务调用接口
 type IRemote interface {
-	Post(service IService, call *gsnet.Call) error                        // 通知消息
-	Wait(service IService, call *gsnet.Call, timeout time.Duration) error // 请求消息
-	Write(msg *gsnet.Message) error                                       // 写入消息
-	Channel() gsnet.IChannel                                              // 句柄对应的通道
-	Close()                                                               // 关闭
+	Post(service IService, call *gsnet.Call) error                                  // 通知消息
+	Wait(service IService, call *gsnet.Call, timeout time.Duration) (Future, error) // 请求消息
+	Write(msg *gsnet.Message) error                                                 // 写入消息
+	Channel() gsnet.IChannel                                                        // 句柄对应的通道
+	Close()                                                                         // 关闭
 }
 
 // IRemoteService 远程服务

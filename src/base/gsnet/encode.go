@@ -8,6 +8,7 @@
 package gsnet
 
 import (
+	"gogs/base/gserrors"
 	"math"
 )
 
@@ -235,4 +236,227 @@ func ReadBytes(data []byte, i int) (int, []byte) {
 func ReadEnum(data []byte, i int) (int, int32) {
 	return i + 4, int32(data[i]) | int32(data[i+1])<<8 |
 		int32(data[i+2])<<16 | int32(data[i+3])<<24
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+// MarshalBool 序列化一个布尔值
+func MarshalBool(v bool) []byte {
+	data := make([]byte, 1)
+	if v == true {
+		data[0] = 1
+	} else {
+		data[0] = 0
+	}
+	return data
+}
+
+// MarshalByte 序列化一个字节
+func MarshalByte(v byte) []byte {
+	data := make([]byte, 1)
+	data[0] = v
+	return data
+}
+
+// MarshalInt8 序列化一个有符号8位整数
+func MarshalInt8(v int8) []byte {
+	data := make([]byte, 1)
+	data[0] = byte(v)
+	return data
+}
+
+// MarshalUint8 序列化一个无符号8位整数
+func MarshalUint8(v uint8) []byte {
+	data := make([]byte, 1)
+	data[0] = v
+	return data
+}
+
+// MarshalInt16 序列化一个有符号16位整数
+func MarshalInt16(v int16) []byte {
+	data := make([]byte, 2)
+	data[0] = byte(v)
+	data[1] = byte(v >> 8)
+	return data
+}
+
+// MarshalUint16 序列化一个无符号16位整数
+func MarshalUint16(v uint16) []byte {
+	data := make([]byte, 2)
+	data[0] = byte(v)
+	data[1] = byte(v >> 8)
+	return data
+}
+
+// MarshalInt32 序列化一个有符号32位整数
+func MarshalInt32(v int32) []byte {
+	data := make([]byte, 4)
+	data[0] = byte(v)
+	data[1] = byte(v >> 8)
+	data[2] = byte(v >> 16)
+	data[3] = byte(v >> 24)
+	return data
+}
+
+// MarshalUint32 序列化一个无符号32位整数
+func MarshalUint32(v uint32) []byte {
+	data := make([]byte, 4)
+	data[0] = byte(v)
+	data[1] = byte(v >> 8)
+	data[2] = byte(v >> 16)
+	data[3] = byte(v >> 24)
+	return data
+}
+
+// MarshalInt64 序列化一个有符号64位整数
+func MarshalInt64(v int64) []byte {
+	data := make([]byte, 8)
+	data[0] = byte(v)
+	data[1] = byte(v >> 8)
+	data[2] = byte(v >> 16)
+	data[3] = byte(v >> 24)
+	data[4] = byte(v >> 32)
+	data[5] = byte(v >> 40)
+	data[6] = byte(v >> 48)
+	data[7] = byte(v >> 56)
+	return data
+}
+
+// MarshalUint64 序列化一个无符号64位整数
+func MarshalUint64(v uint64) []byte {
+	data := make([]byte, 8)
+	data[0] = byte(v)
+	data[1] = byte(v >> 8)
+	data[2] = byte(v >> 16)
+	data[3] = byte(v >> 24)
+	data[4] = byte(v >> 32)
+	data[5] = byte(v >> 40)
+	data[6] = byte(v >> 48)
+	data[7] = byte(v >> 56)
+	return data
+}
+
+// MarshalFloat32 序列化一个32位浮点数
+func MarshalFloat32(v float32) []byte {
+	return MarshalUint32(math.Float32bits(v))
+}
+
+// MarshalFloat64 序列化一个64位浮点数
+func MarshalFloat64(v float64) []byte {
+	return MarshalUint64(math.Float64bits(v))
+}
+
+// MarshalString 序列化一个字符串
+func MarshalString(v string) []byte {
+	return []byte(v)
+}
+
+// MarshalBytes 序列化一个字节流
+func MarshalBytes(v []byte) []byte {
+	data := make([]byte, len(v))
+	copy(data, v)
+	return data
+}
+
+// UnmarshalBool 反序列化一个布尔值
+func UnmarshalBool(data []byte) (bool, error) {
+	if len(data) != 1 {
+		return false, gserrors.Newf("unmarshal bool, data length is not 1")
+	}
+	if data[0] == 0 {
+		return false, nil
+	}
+	return true, nil
+}
+
+// UnmarshalByte 反序列化一个字节
+func UnmarshalByte(data []byte) (byte, error) {
+	if len(data) != 1 {
+		return 0, gserrors.Newf("unmarshal byte, data length is not 1")
+	}
+	return data[0], nil
+}
+
+// UnmarshalInt8 反序列化一个有符号8位整数
+func UnmarshalInt8(data []byte) (int8, error) {
+	if len(data) != 1 {
+		return 0, gserrors.Newf("unmarshal int8, data length is not 1")
+	}
+	return int8(data[0]), nil
+}
+
+// UnmarshalUint8 反序列化一个无符号8位整数
+func UnmarshalUint8(data []byte) (uint8, error) {
+	if len(data) != 1 {
+		return 0, gserrors.Newf("unmarshal uint8, data length is not 1")
+	}
+	return data[0], nil
+}
+
+// UnmarshalInt16 反序列化一个有符号16位整数
+func UnmarshalInt16(data []byte) (int16, error) {
+	if len(data) != 2 {
+		return 0, gserrors.Newf("unmarshal int16, data length is not 2")
+	}
+	return int16(data[0]) | int16(data[1])<<8, nil
+}
+
+// UnmarshalUint16 反序列化一个无符号16位整数
+func UnmarshalUint16(data []byte) (uint16, error) {
+	if len(data) != 2 {
+		return 0, gserrors.Newf("unmarshal uint16, data length is not 2")
+	}
+	return uint16(data[0]) | uint16(data[1])<<8, nil
+}
+
+// UnmarshalInt32 反序列化一个有符号32位整数
+func UnmarshalInt32(data []byte) (int32, error) {
+	if len(data) != 4 {
+		return 0, gserrors.Newf("unmarshal int32, data length is not 4")
+	}
+	return int32(data[0]) | int32(data[1])<<8 |
+		int32(data[2])<<16 | int32(data[3])<<24, nil
+}
+
+// UnmarshalUint32 反序列化一个无符号32位整数
+func UnmarshalUint32(data []byte) (uint32, error) {
+	if len(data) != 4 {
+		return 0, gserrors.Newf("unmarshal uint32, data length is not 4")
+	}
+	return uint32(data[0]) | uint32(data[1])<<8 |
+		uint32(data[2])<<16 | uint32(data[3])<<24, nil
+}
+
+// UnmarshalInt64 反序列化一个有符号64位整数
+func UnmarshalInt64(data []byte) (int64, error) {
+	if len(data) != 8 {
+		return 0, gserrors.Newf("unmarshal int64, data length is not 8")
+	}
+	return int64(data[0]) | int64(data[1])<<8 |
+		int64(data[2])<<16 | int64(data[3])<<24 |
+		int64(data[4])<<32 | int64(data[5])<<40 |
+		int64(data[6])<<48 | int64(data[7])<<56, nil
+}
+
+// UnmarshalUint64 反序列化一个无符号64位整数
+func UnmarshalUint64(data []byte) (uint64, error) {
+	if len(data) != 8 {
+		return 0, gserrors.Newf("unmarshal uint64, data length is not 8")
+	}
+	return uint64(data[0]) | uint64(data[1])<<8 |
+		uint64(data[2])<<16 | uint64(data[3])<<24 |
+		uint64(data[4])<<32 | uint64(data[5])<<40 |
+		uint64(data[6])<<48 | uint64(data[7])<<56, nil
+}
+
+// UnmarshalString 反序列化一个字符串
+func UnmarshalString(data []byte) (string, error) {
+	return string(data), nil
+}
+
+// UnmarshalBytes 反序列化一个字节流
+func UnmarshalBytes(data []byte) ([]byte, error) {
+	bytes := make([]byte, len(data))
+	copy(bytes, data)
+	return bytes, nil
 }

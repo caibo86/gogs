@@ -7,14 +7,16 @@
 
 package config
 
+import "time"
+
 type RPCConfig struct {
-	Timeout int64 `yaml:"timeout"` // 超时时间,单位毫秒
+	Timeout time.Duration `yaml:"timeout"` // 超时时间,单位纳秒
 }
 
 // NewRPCConfig 创建RPC配置
 func NewRPCConfig() *RPCConfig {
 	c := &RPCConfig{
-		Timeout: 5000,
+		Timeout: 5 * time.Second,
 	}
 	return c
 }

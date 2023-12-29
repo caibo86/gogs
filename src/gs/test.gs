@@ -104,5 +104,5 @@ struct Car {
 
 // 游戏服
 service GameServer {
-//     GetServerTime() -> (int64);
+     GetServerTime() -> (int64);
 }

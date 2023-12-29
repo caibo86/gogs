@@ -140,6 +140,42 @@ var compareMapping = map[string]string{
 	"String":  `len(m.%s) > 0`,
 }
 
+// marshalMapping 写入方法映射
+var marshalMapping = map[string]string{
+	"Bool":    "gsnet.MarshalBool",
+	"Byte":    "gsnet.MarshalByte",
+	"Bytes":   "gsnet.MarshalBytes",
+	"Int8":    "gsnet.MarshalInt8",
+	"Uint8":   "gsnet.MarshalUint8",
+	"Int16":   "gsnet.MarshalInt16",
+	"Uint16":  "gsnet.MarshalUint16",
+	"Int32":   "gsnet.MarshalInt32",
+	"Uint32":  "gsnet.MarshalUint32",
+	"Float32": "gsnet.MarshalFloat32",
+	"Int64":   "gsnet.MarshalInt64",
+	"Uint64":  "gsnet.MarshalUint64",
+	"Float64": "gsnet.MarshalFloat64",
+	"String":  "gsnet.MarshalString",
+}
+
+// unmarshalMapping 读方法映射
+var unmarshalMapping = map[string]string{
+	"Bool":    "gsnet.UnmarshalBool",
+	"Byte":    "gsnet.UnmarshalByte",
+	"Bytes":   "gsnet.UnmarshalBytes",
+	"Int8":    "gsnet.UnmarshalInt8",
+	"Uint8":   "gsnet.UnmarshalUint8",
+	"Int16":   "gsnet.UnmarshalInt16",
+	"Uint16":  "gsnet.UnmarshalUint16",
+	"Int32":   "gsnet.UnmarshalInt32",
+	"Uint32":  "gsnet.UnmarshalUint32",
+	"Float32": "gsnet.UnmarshalFloat32",
+	"Int64":   "gsnet.UnmarshalInt64",
+	"Uint64":  "gsnet.UnmarshalUint64",
+	"Float64": "gsnet.UnmarshalFloat64",
+	"String":  "gsnet.UnmarshalString",
+}
+
 // Gen4Go golang代码生成器
 type Gen4Go struct {
 	ast.EmptyVisitor                    // 内嵌空访问者
@@ -169,9 +205,8 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"copyType":            gen.copyType,
 		"printComments":       gen.printComments,
 		"printCommentsToLine": gen.printCommentsToLine,
-		"getReadFunc":         gen.getReadFunc,
-		"getWriteFunc":        gen.getWriteFunc,
-		//"readParam":           gen.readParam,
+		"marshalType":         gen.marshalType,
+		"unmarshalType":       gen.unmarshalType,
 	}
 	gen.tpl, err = template.New("golang").Funcs(functions).Parse(tpl4go)
 	return
@@ -831,43 +866,26 @@ func (gen *Gen4Go) copyType(field *ast.Field) string {
 	return ""
 }
 
-// getReadFunc 根据类型获取读取函数
-func (gen *Gen4Go) getReadFunc(expr ast.Expr, data string) string {
+// marshalType 根据类型取序列化函数
+func (gen *Gen4Go) marshalType(expr ast.Expr) string {
 	switch expr.(type) {
 	case *ast.TypeRef:
+		// 内置类型
 		ref := expr.(*ast.TypeRef)
 		name := ref.Ref.Name()
-		// 内置类型
-		if f, ok := readMapping[name]; ok {
-			return fmt.Sprintf(
-				` = %s(%s, 0)`,
-				data,
-				f)
+		if f, ok := marshalMapping[name]; ok {
+			return f
 		}
-		switch ref.Ref.(type) {
-		case *ast.Enum:
-			return fmt.Sprintf(
-				`var v int32
-				i, v = gsnet.ReadEnum(%s, 0)
-				= %s(v)`,
-				data,
-				gen.typeName(ref))
-		case *ast.Table:
-
-		default:
-			gserrors.Panicf("not here %s", ref.Ref.Name())
-		}
-
 		// 自定义类型
 		if _, ok := expr.Script().Imports[ref.NamePath[0]]; ok {
 			return fmt.Sprintf(
-				", i, err = %s.Read%s",
+				"%s.Marshal%s",
 				ref.NamePath[0],
 				strings.Title(ref.NamePath[1]),
 			)
 		}
 		return fmt.Sprintf(
-			"Read%s",
+			"Marshal%s",
 			strings.Title(ref.NamePath[0]),
 		)
 	case *ast.Array:
@@ -875,12 +893,12 @@ func (gen *Gen4Go) getReadFunc(expr ast.Expr, data string) string {
 		array := expr.(*ast.Array)
 		var buff bytes.Buffer
 		if array.Element.Name() == ".gslang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "readByteArray", array); err != nil {
-				gserrors.Panic(err.Error())
+			if err := gen.tpl.ExecuteTemplate(&buff, "writeByteArray", array); err != nil {
+				panic(err)
 			}
 		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "readArray", array); err != nil {
-				gserrors.Panic(err.Error())
+			if err := gen.tpl.ExecuteTemplate(&buff, "writeArray", array); err != nil {
+				panic(err)
 			}
 		}
 		return buff.String()
@@ -889,12 +907,12 @@ func (gen *Gen4Go) getReadFunc(expr ast.Expr, data string) string {
 		slice := expr.(*ast.Slice)
 		var buff bytes.Buffer
 		if slice.Element.Name() == ".gslang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "readByteSlice", slice); err != nil {
-				gserrors.Panic(err.Error())
+			if err := gen.tpl.ExecuteTemplate(&buff, "writeByteList", slice); err != nil {
+				panic(err)
 			}
 		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "readSlice", slice); err != nil {
-				gserrors.Panic(err.Error())
+			if err := gen.tpl.ExecuteTemplate(&buff, "writeList", slice); err != nil {
+				panic(err)
 			}
 		}
 		return buff.String()
@@ -903,7 +921,7 @@ func (gen *Gen4Go) getReadFunc(expr ast.Expr, data string) string {
 		hash := expr.(*ast.Map)
 		var buff bytes.Buffer
 		if err := gen.tpl.ExecuteTemplate(&buff, "readMap", hash); err != nil {
-			gserrors.Panic(err.Error())
+			panic(err)
 		}
 		return buff.String()
 	}
@@ -911,164 +929,65 @@ func (gen *Gen4Go) getReadFunc(expr ast.Expr, data string) string {
 	return ""
 }
 
-// getWriteFunc 根据类型获取写入函数
-func (gen *Gen4Go) getWriteFunc(typeRef *ast.TypeRef) string {
+// unmarshalType 根据类型取反序列化函数
+func (gen *Gen4Go) unmarshalType(expr ast.Expr) string {
+	switch expr.(type) {
+	case *ast.TypeRef:
+		// 内置类型
+		ref := expr.(*ast.TypeRef)
+		name := ref.Ref.Name()
+		if f, ok := unmarshalMapping[name]; ok {
+			return f
+		}
+		// 自定义类型
+		if _, ok := expr.Script().Imports[ref.NamePath[0]]; ok {
+			return fmt.Sprintf(
+				"%s.Unmarshal%s",
+				ref.NamePath[0],
+				strings.Title(ref.NamePath[1]),
+			)
+		}
+		return fmt.Sprintf("Unmarshal%s", strings.Title(ref.NamePath[0]))
+	case *ast.Array:
+		// 数组
+		array := expr.(*ast.Array)
+		var buff bytes.Buffer
+		if array.Element.Name() == ".gslang.Byte" {
+			if err := gen.tpl.ExecuteTemplate(&buff, "readByteArray", array); err != nil {
+				panic(err)
+			}
+		} else {
+			if err := gen.tpl.ExecuteTemplate(&buff, "readArray", array); err != nil {
+				panic(err)
+			}
+		}
+		return buff.String()
+	case *ast.Slice:
+		// 切片
+		slice := expr.(*ast.Slice)
+		var buff bytes.Buffer
+		if slice.Element.Name() == ".gslang.Byte" {
+			if err := gen.tpl.ExecuteTemplate(&buff, "readByteList", slice); err != nil {
+				panic(err)
+			}
+		} else {
+			if err := gen.tpl.ExecuteTemplate(&buff, "readList", slice); err != nil {
+				panic(err)
+			}
+		}
+		return buff.String()
+	case *ast.Map:
+		// 字典
+		hash := expr.(*ast.Map)
+		var buff bytes.Buffer
+		if err := gen.tpl.ExecuteTemplate(&buff, "readMap", hash); err != nil {
+			panic(err)
+		}
+		return buff.String()
+	}
+	gserrors.Panic("not here")
 	return ""
 }
-
-//// readParam 根据参数类型生成读取代码
-//func (gen *Gen4Go) readParam(param *ast.Param) string {
-//	switch field.Type.(type) {
-//	case *ast.TypeRef:
-//		ref := field.Type.(*ast.TypeRef)
-//		var ok bool
-//		var str string
-//		if str, ok = readMapping[ref.Ref.Name()]; ok {
-//			return fmt.Sprintf("i, m.%s = %s(data, i)", field.Name(), str)
-//		} else {
-//			switch ref.Ref.(type) {
-//			case *ast.Enum:
-//				return fmt.Sprintf(`var v int32
-//						i, v = gsnet.ReadEnum(data, i)
-//						m.%s = %s(v)`,
-//					field.Name(), gen.typeName(ref))
-//			case *ast.Table:
-//				return fmt.Sprintf(`var size uint32
-//						i, size = gsnet.ReadUint32(data, i)
-//						if m.%s == nil {
-//							m.%s = %s
-//						}
-//						if err = m.%s.Unmarshal(data[i:i+int(size)]); err != nil {
-//							return
-//						}
-//						i += int(size)`, field.Name(), field.Name(), gen.defaultVal(ref), field.Name())
-//			default:
-//				gserrors.Panicf("not here %s", field.Type.Name())
-//			}
-//		}
-//	case *ast.Slice, *ast.Array:
-//		// 切片和数组
-//		var ref *ast.TypeRef
-//		var isSlice bool
-//		if slice, ok := field.Type.(*ast.Slice); ok {
-//			isSlice = true
-//			ref = slice.Element.(*ast.TypeRef)
-//		} else {
-//			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
-//		}
-//		var str string
-//		var ok bool
-//		if str, ok = readMapping[ref.Ref.Name()]; ok {
-//			if isSlice && ref.Ref.Name() == "Byte" {
-//				return fmt.Sprintf(`i, m.%s = gsnet.ReadBytes(data, i)`,
-//					field.Name())
-//			} else {
-//				str = fmt.Sprintf("i, m.%s[j] = %s(data, i)", field.Name(), str)
-//			}
-//		} else {
-//			switch ref.Ref.(type) {
-//			case *ast.Enum:
-//				str = fmt.Sprintf(`var v int32
-//				i, v = gsnet.ReadEnum(data, i)
-//				m.%s[j] = %s(v)`,
-//					field.Name(), gen.typeName(ref))
-//			case *ast.Table:
-//				str = fmt.Sprintf(
-//					`var size uint32
-//						i, size = gsnet.ReadUint32(data, i)
-//						if size > 0 {
-//							m.%s[j] = %s
-//							if err = m.%s[j].Unmarshal(data[i:i+int(size)]); err != nil {
-//								return
-//							}
-//						}
-//						i += int(size)`, field.Name(), gen.defaultVal(ref), field.Name())
-//			default:
-//				gserrors.Panicf("not here %s", field.Type.Name())
-//			}
-//		}
-//		if isSlice {
-//			return fmt.Sprintf(
-//				`var length uint32
-//				i, length = gsnet.ReadUint32(data, i)
-//				m.%s = make([]%s, length)
-//				for j := uint32(0); j < length; j++ {
-//					%s
-//				}`,
-//				field.Name(), gen.typeName(ref), str)
-//		} else {
-//			return fmt.Sprintf(
-//				`var length uint32
-//				i, length = gsnet.ReadUint32(data, i)
-//				for j := uint32(0); j < length; j++ {
-//					%s
-//				}`,
-//				str)
-//		}
-//	case *ast.Map:
-//		// 字典
-//		hash := field.Type.(*ast.Map)
-//		var keyStr string
-//		var valStr string
-//		var ok bool
-//		ref := hash.Key.(*ast.TypeRef)
-//		if keyStr, ok = readMapping[ref.Ref.Name()]; ok {
-//			keyStr = fmt.Sprintf(`var k %s
-//					i, k = %s(data, i)`, keyMapping[ref.Ref.Name()], keyStr)
-//		} else {
-//			switch ref.Ref.(type) {
-//			case *ast.Enum:
-//				keyStr = fmt.Sprintf(`var k1 int32
-//					i, k1 = gsnet.ReadEnum(data, i)
-//					k := %s(k1)`, gen.typeName(hash.Key))
-//			default:
-//				gserrors.Panicf("map key can only be int or string, %s not supported", hash.Key.Name())
-//			}
-//		}
-//		ref = hash.Value.(*ast.TypeRef)
-//		if valStr, ok = readMapping[ref.Ref.Name()]; ok {
-//			valStr = fmt.Sprintf(`var v %s
-//					i, v = %s(data, i)`, keyMapping[ref.Ref.Name()], valStr)
-//		} else {
-//			switch ref.Ref.(type) {
-//			case *ast.Enum:
-//				valStr = fmt.Sprintf(`var v1 int32
-//					i, v1 = gsnet.ReadEnum(data, i)
-//					v := %s(v1)`, gen.typeName(hash.Value))
-//			case *ast.Table:
-//				valStr = fmt.Sprintf(`var size uint32
-//						var v %s
-//						i, size = gsnet.ReadUint32(data, i)
-//						if size > 0 {
-//							v = %s
-//							if err = v.Unmarshal(data[i:i+int(size)]); err != nil {
-//								return
-//							}
-//						}
-//						i += int(size)`, gen.typeName(hash.Value), gen.defaultVal(hash.Value))
-//			default:
-//				gserrors.Panicf("map value %s not supported", hash.Value.Name())
-//			}
-//		}
-//		return fmt.Sprintf(
-//			`var length uint32
-//					i, length = gsnet.ReadUint32(data, i)
-//					if m.%s == nil{
-//						m.%s = make(map[%s]%s)
-//					}
-//					for j := uint32(0); j < length; j++ {
-//						%s
-//						%s
-//						m.%s[k] = v
-//					}`,
-//			field.Name(), field.Name(),
-//			gen.typeName(hash.Key),
-//			gen.typeName(hash.Value),
-//			keyStr, valStr, field.Name())
-//	}
-//	gserrors.Panic("not here")
-//	return "unknown"
-//}
 
 // defaultVal 根据类型取其默认值表达式
 func (gen *Gen4Go) defaultVal(expr ast.Expr) string {
