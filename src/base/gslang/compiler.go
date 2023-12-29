@@ -43,7 +43,7 @@ type Compiler struct {
 func NewCompiler() *Compiler {
 	goPath := os.Getenv("GOPATH")
 	if goPath == "" {
-		log.Panic("must set GOPATH first")
+		gserrors.Panicf(nil, "must set GOPATH first")
 	}
 	return &Compiler{
 		Loaded: make(map[string]*ast.Package),
@@ -93,7 +93,7 @@ func (compiler *Compiler) circularRefCheck(pkgName string) {
 
 // errorf 编译器报错
 func (compiler *Compiler) errorf(position Position, template string, args ...any) {
-	panic(gserrors.Newf(nil, fmt.Sprintf("compile: %s err: %s", position.String(), fmt.Sprintf(template, args...))))
+	gserrors.Panicf(nil, fmt.Sprintf("compile: %s err: %s", position.String(), fmt.Sprintf(template, args...)))
 }
 
 // Accept 实现访问者模式,编译器访问入口

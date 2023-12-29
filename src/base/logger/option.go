@@ -11,6 +11,7 @@ import (
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gogs/base/gserrors"
 	"os"
 	"strings"
 )
@@ -212,7 +213,7 @@ func (o *Options) getCore() zapcore.Core {
 		cores = append(cores, o.getErrorFileCore())
 	}
 	if len(cores) == 0 {
-		panic("At least one log output needs to be opened")
+		gserrors.Panicf(nil, "At least one log output needs to be opened")
 	}
 	return zapcore.NewTee(cores...)
 }
@@ -225,7 +226,7 @@ func (o *Options) GetZapLogger() *zap.SugaredLogger {
 
 	logger := zap.New(o.getCore(), options...).Sugar()
 	if logger == nil {
-		panic("get zap logger failed.")
+		gserrors.Panicf(nil, "get zap logger failed.")
 	}
 	return logger
 }

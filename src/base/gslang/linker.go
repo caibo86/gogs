@@ -10,8 +10,8 @@ package gslang
 import (
 	"bytes"
 	"fmt"
+	"gogs/base/gserrors"
 	"gogs/base/gslang/ast"
-	log "gogs/base/logger"
 )
 
 // link 编译器链接方法
@@ -228,7 +228,7 @@ func (linker *Linker) VisitTypeRef(ref *ast.TypeRef) ast.Node {
 		// 路径长度需要大于1
 		nodes := len(ref.NamePath)
 		if nodes == 0 {
-			log.Panic("the NamePath,can not be nil")
+			gserrors.Panicf(nil, "the NamePath,can not be nil")
 		}
 		switch nodes { // 根据类型路径长度判断
 		case 1: // 长度为1 则NamePath[0]就是类型名

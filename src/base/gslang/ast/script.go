@@ -9,7 +9,7 @@ package ast
 
 import (
 	"fmt"
-	log "gogs/base/logger"
+	"gogs/base/gserrors"
 )
 
 // Script 代码节点,是一个Node,代表一个gs文件
@@ -23,7 +23,7 @@ type Script struct {
 // NewScript 在包节点内新建一个代码节点
 func (pkg *Package) NewScript(name string) (*Script, error) {
 	if pkg == nil {
-		log.Panic("pkg can not be nil")
+		gserrors.Panicf(nil, "pkg can not be nil")
 	}
 	if old, ok := pkg.Scripts[name]; ok {
 		err := fmt.Errorf("duplicate script named:%s", old.Name())

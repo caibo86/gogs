@@ -56,13 +56,13 @@ func printComments(buff *bytes.Buffer, node ast.Node) bool {
 func writeFormatFile(script *ast.Script, bytes []byte) {
 	fullPath, ok := gslang.FilePath(script)
 	if !ok {
-		panic(gserrors.Newf(nil, "compile must bind file path to script"))
+		gserrors.Panicf(nil, "compile must bind file path to script")
 	}
 	// 写入文件名为 源文件名+.gss
 	fullPath += ".gss"
 	err := os.WriteFile(fullPath, bytes, 0644)
 	if err != nil {
-		panic(err)
+		gserrors.Panic(err)
 	}
 	log.Infof("Format file successfully: %s success", fullPath)
 }

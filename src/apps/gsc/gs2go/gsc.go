@@ -30,7 +30,7 @@ func main() {
 			log.Errorf(gserrors.New(e.(error)).Error())
 		}
 		if err := log.Close(); err != nil {
-			panic(gserrors.New(err))
+			gserrors.Panic(err)
 		}
 	}()
 	// 解析命令行参数

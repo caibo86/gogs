@@ -28,12 +28,11 @@ var moduleName string
 var packageMapping = map[string]string{
 	"gsnet.":    `import "gogs/base/gsnet"`,
 	"gserrors.": `import "gogs/base/gserrors"`,
-	// "gss.":      `import "gogs/gss"`,
-	"bytes.": `import "bytes"`,
-	"fmt.":   `import "fmt"`,
-	"time.":  `import "time"`,
-	"bits.":  `import "math/bits"`,
-	// "yfdocker.": `import "gogs/base/docker"`,
+	"bytes.":    `import "bytes"`,
+	"fmt.":      `import "fmt"`,
+	"time.":     `import "time"`,
+	"bits.":     `import "math/bits"`,
+	"gsdock.":   `import "gogs/base/gsdock"`,
 	// "yfconfig.": `import "gogs/base/config"`,
 }
 
@@ -152,8 +151,9 @@ type Gen4Go struct {
 // NewGen4Go 新建一个golang代码生成器
 func NewGen4Go() (gen *Gen4Go, err error) {
 	gen = &Gen4Go{}
-	funcs := template.FuncMap{
+	functions := template.FuncMap{
 		"symbol":              strings.Title,
+		"pos":                 gslang.Pos,
 		"typeName":            gen.typeName,
 		"params":              gen.params,
 		"returnParams":        gen.returnParams,
@@ -163,7 +163,6 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"readType":            gen.readType,
 		"writeType":           gen.writeType,
 		"defaultVal":          gen.defaultVal,
-		"pos":                 gslang.Pos,
 		"lowerFirst":          gen.lowerFirst,
 		"sovFunc":             gen.sovFunc,
 		"calTypeSize":         gen.calTypeSize,
@@ -171,7 +170,7 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"printComments":       gen.printComments,
 		"printCommentsToLine": gen.printCommentsToLine,
 	}
-	gen.tpl, err = template.New("golang").Funcs(funcs).Parse(tpl4go)
+	gen.tpl, err = template.New("golang").Funcs(functions).Parse(tpl4go)
 	return
 }
 
@@ -249,7 +248,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 					}`,
 					field.Name(), field.Name())
 			default:
-				panic(gserrors.Newf(nil, "not here %s", field.Type.Name()))
+				gserrors.Panicf(nil, "not here %s", field.Type.Name())
 			}
 		}
 	case *ast.Slice, *ast.Array:
@@ -319,7 +318,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 					}`,
 					field.Name(), field.Name())
 			default:
-				panic(gserrors.Newf(nil, "not here %s", field.Type.Name()))
+				gserrors.Panicf(nil, "not here %s", field.Type.Name())
 			}
 		}
 	case *ast.Map:
@@ -344,7 +343,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 			case *ast.Enum:
 				keyStr = "4"
 			default:
-				panic(gserrors.Newf(nil, "map key can only be int or string, %s not supported", hash.Key.Name()))
+				gserrors.Panicf(nil, "map key can only be int or string, %s not supported", hash.Key.Name())
 			}
 		}
 		ref = hash.Value.(*ast.TypeRef)
@@ -366,7 +365,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 			case *ast.Table:
 				valStr = "4 + v.Size()"
 			default:
-				panic(gserrors.Newf(nil, "map value %s not supported", hash.Value.Name()))
+				gserrors.Panicf(nil, "map value %s not supported", hash.Value.Name())
 			}
 		}
 		return fmt.Sprintf(
@@ -384,7 +383,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 			keyStr,
 			valStr)
 	}
-	panic(gserrors.Newf(nil, "not here"))
+	gserrors.Panicf(nil, "not here")
 	return "unknown"
 }
 
@@ -422,7 +421,7 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 					}`,
 					field.Name(), field.ID, field.Name(), field.Name())
 			default:
-				panic(gserrors.Newf(nil, "not here %s", field.Type.Name()))
+				gserrors.Panicf(nil, "not here %s", field.Type.Name())
 			}
 		}
 	case *ast.Slice, *ast.Array:
@@ -463,7 +462,7 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 						}
 						i += size`
 			default:
-				panic(gserrors.Newf(nil, "not here %s", field.Type.Name()))
+				gserrors.Panicf(nil, "not here %s", field.Type.Name())
 			}
 		}
 		if isSlice {
@@ -507,7 +506,7 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 			case *ast.Enum:
 				keyStr = `i = gsnet.WriteEnum(data, i, int32(k))`
 			default:
-				panic(gserrors.Newf(nil, "map key can only be int or string, %s not supported", hash.Key.Name()))
+				gserrors.Panicf(nil, "map key can only be int or string, %s not supported", hash.Key.Name())
 			}
 		}
 		ref = hash.Value.(*ast.TypeRef)
@@ -525,7 +524,7 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 						}
 						i += size`
 			default:
-				panic(gserrors.Newf(nil, "map value %s not supported", hash.Value.Name()))
+				gserrors.Panicf(nil, "map value %s not supported", hash.Value.Name())
 			}
 		}
 		return fmt.Sprintf(
@@ -544,7 +543,7 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 			keyStr,
 			valStr)
 	}
-	panic(gserrors.Newf(nil, "not here"))
+	gserrors.Panicf(nil, "not here")
 	return "unknown"
 }
 
@@ -576,7 +575,7 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 						i += int(size)`,
 					field.Name(), field.Name(), gen.defaultVal(ref), field.Name())
 			default:
-				panic(gserrors.Newf(nil, "not here %s", field.Type.Name()))
+				gserrors.Panicf(nil, "not here %s", field.Type.Name())
 			}
 		}
 	case *ast.Slice, *ast.Array:
@@ -617,7 +616,7 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 						}
 						i += int(size)`, field.Name(), gen.defaultVal(ref), field.Name())
 			default:
-				panic(gserrors.Newf(nil, "not here %s", field.Type.Name()))
+				gserrors.Panicf(nil, "not here %s", field.Type.Name())
 			}
 		}
 		if isSlice {
@@ -655,7 +654,7 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 					i, k1 = gsnet.ReadEnum(data, i)
 					k := %s(k1)`, gen.typeName(hash.Key))
 			default:
-				panic(gserrors.Newf(nil, "map key can only be int or string, %s not supported", hash.Key.Name()))
+				gserrors.Panicf(nil, "map key can only be int or string, %s not supported", hash.Key.Name())
 			}
 		}
 		ref = hash.Value.(*ast.TypeRef)
@@ -680,7 +679,7 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 						}
 						i += int(size)`, gen.typeName(hash.Value), gen.defaultVal(hash.Value))
 			default:
-				panic(gserrors.Newf(nil, "map value %s not supported", hash.Value.Name()))
+				gserrors.Panicf(nil, "map value %s not supported", hash.Value.Name())
 			}
 		}
 		return fmt.Sprintf(
@@ -699,7 +698,7 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 			gen.typeName(hash.Value),
 			keyStr, valStr, field.Name())
 	}
-	panic(gserrors.Newf(nil, "not here"))
+	gserrors.Panicf(nil, "not here")
 	return "unknown"
 }
 
@@ -861,7 +860,7 @@ func (gen *Gen4Go) defaultVal(expr ast.Expr) string {
 		array := expr.(*ast.Array)
 		var buff bytes.Buffer
 		if err := gen.tpl.ExecuteTemplate(&buff, "arrayInit", array); err != nil {
-			panic(err)
+			gserrors.Panic(err)
 		}
 		return buff.String()
 	case *ast.Slice:
@@ -870,7 +869,7 @@ func (gen *Gen4Go) defaultVal(expr ast.Expr) string {
 		// 字典
 		return fmt.Sprintf("make(%s)", gen.typeName(expr))
 	}
-	panic(gserrors.Newf(nil, "not here"))
+	gserrors.Panicf(nil, "not here")
 	return "unknown"
 }
 
@@ -973,9 +972,9 @@ func (gen *Gen4Go) typeName(expr ast.Expr) string {
 		hash := expr.(*ast.Map)
 		return fmt.Sprintf("map[%s]%s", gen.typeName(hash.Key), gen.typeName(hash.Value))
 	}
-	panic(gserrors.Newf(nil, "unknown golang typeName: %s\n\t%s",
+	gserrors.Panicf(nil, "unknown golang typeName: %s\n\t%s",
 		expr,
-		gslang.Pos(expr)))
+		gslang.Pos(expr))
 	return "unknown"
 }
 
@@ -1025,13 +1024,13 @@ func (gen *Gen4Go) printCommentsToLine(node ast.Node) string {
 func (gen *Gen4Go) writeFile(script *ast.Script, bytes []byte) {
 	fullPath, ok := gslang.FilePath(script)
 	if !ok {
-		panic(gserrors.Newf(nil, "compile must bind file path to script"))
+		gserrors.Panicf(nil, "compile must bind file path to script")
 	}
 	// 写入文件名为 源文件名+.go
 	fullPath += ".go"
 	err := os.WriteFile(fullPath, bytes, 0644)
 	if err != nil {
-		panic(err)
+		gserrors.Panic(err)
 	}
 	log.Infof("Write to file successfully: %s success", fullPath)
 
@@ -1060,7 +1059,7 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 	gen.buff.Reset()
 	// 默认的一些代码
 	if err := gen.tpl.ExecuteTemplate(&gen.buff, "script", script); err != nil {
-		panic(err)
+		gserrors.Panic(err)
 	}
 
 	// 轮询访问代码中的所有类型 Enum Struct Table Contract
@@ -1104,8 +1103,8 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 		if script.Package().Name() == "base/gsnet" {
 			codes = strings.Replace(codes, "gsnet.", "", -1)
 		}
-		if script.Package().Name() == "base/gsdocker" {
-			codes = strings.Replace(codes, "gsdocker.", "", -1)
+		if script.Package().Name() == "base/gsdock" {
+			codes = strings.Replace(codes, "gsdock.", "", -1)
 		}
 		// 如果代码中有特定packageMapping中的包名 则引入对应的包
 		for key, value := range packageMapping {
@@ -1141,11 +1140,11 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 func (gen *Gen4Go) VisitEnum(enum *ast.Enum) ast.Node {
 	if gslang.IsError(enum) {
 		if err := gen.tpl.ExecuteTemplate(&gen.buff, "error", enum); err != nil {
-			panic(err)
+			gserrors.Panic(err)
 		}
 	} else {
 		if err := gen.tpl.ExecuteTemplate(&gen.buff, "enum", enum); err != nil {
-			panic(err)
+			gserrors.Panic(err)
 		}
 	}
 	return enum
@@ -1157,11 +1156,11 @@ func (gen *Gen4Go) VisitTable(table *ast.Table) ast.Node {
 
 	if gslang.IsStruct(table) {
 		if err := gen.tpl.ExecuteTemplate(&gen.buff, "struct", table); err != nil {
-			panic(err)
+			gserrors.Panic(err)
 		}
 	} else {
 		if err := gen.tpl.ExecuteTemplate(&gen.buff, "table", table); err != nil {
-			panic(err)
+			gserrors.Panic(err)
 		}
 	}
 	return table
@@ -1178,7 +1177,7 @@ func (gen *Gen4Go) VisitContract(contract *ast.Contract) ast.Node {
 		log.Debugf("%v", method.Params)
 	}
 	if err := gen.tpl.ExecuteTemplate(&gen.buff, "contract", contract); err != nil {
-		panic(err)
+		gserrors.Panic(err)
 	}
 	return contract
 }

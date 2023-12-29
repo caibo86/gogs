@@ -40,114 +40,114 @@ func (visitor *evalArg) VisitNamedArgs(node *ast.NamedArgs) ast.Node {
 
 // VisitString 仅仅为实现访问者
 func (visitor *evalArg) VisitString(node *ast.String) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitFloat 仅仅为实现访问者
 func (visitor *evalArg) VisitFloat(node *ast.Float) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitInt 仅仅为实现访问者
 func (visitor *evalArg) VisitInt(node *ast.Int) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitBool 仅仅为实现访问者
 func (visitor *evalArg) VisitBool(node *ast.Bool) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitPackage 仅仅为实现访问者
 func (visitor *evalArg) VisitPackage(node *ast.Package) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitScript 仅仅为实现访问者
 func (visitor *evalArg) VisitScript(node *ast.Script) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitEnum 仅仅为实现访问者
 func (visitor *evalArg) VisitEnum(node *ast.Enum) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitEnumVal 仅仅为实现访问者
 func (visitor *evalArg) VisitEnumVal(node *ast.EnumVal) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitTable 仅仅为实现访问者
 func (visitor *evalArg) VisitTable(node *ast.Table) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitField 仅仅为实现访问者
 func (visitor *evalArg) VisitField(node *ast.Field) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitContract 仅仅为实现访问者
 func (visitor *evalArg) VisitContract(node *ast.Contract) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitMethod 仅仅为实现访问者
 func (visitor *evalArg) VisitMethod(node *ast.Method) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitTypeRef 仅仅为实现访问者
 func (visitor *evalArg) VisitTypeRef(node *ast.TypeRef) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitAttr 仅仅为实现访问者
 func (visitor *evalArg) VisitAttr(node *ast.Attr) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitArray 仅仅为实现访问者
 func (visitor *evalArg) VisitArray(node *ast.Array) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitSlice 仅仅为实现访问者
 func (visitor *evalArg) VisitSlice(node *ast.Slice) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitMap 仅仅为实现访问者
 func (visitor *evalArg) VisitMap(node *ast.Map) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitParam 仅仅为实现访问者
 func (visitor *evalArg) VisitParam(node *ast.Param) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }
 
 // VisitBinaryOp 仅仅为实现访问者
 func (visitor *evalArg) VisitBinaryOp(node *ast.BinaryOp) ast.Node {
-	panic(gserrors.Newf(nil, "node is not args or named args: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not args or named args: %s", Pos(node))
 	return nil
 }

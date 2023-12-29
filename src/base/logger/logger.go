@@ -10,6 +10,7 @@ package logger
 import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gogs/base/gserrors"
 	"sync"
 	"time"
 )
@@ -119,7 +120,7 @@ func GetZapLogger(core zapcore.Core, callerSkip int) *zap.SugaredLogger {
 
 	logger := zap.New(core, options...).Sugar()
 	if logger == nil {
-		panic("get zap logger failed.")
+		gserrors.Panicf(nil, "get zap logger failed.")
 	}
 	return logger
 }

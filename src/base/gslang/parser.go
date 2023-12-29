@@ -85,7 +85,7 @@ type Parser struct {
 func (parser *Parser) Peek() *Token {
 	token, err := parser.Lexer.Peek()
 	if err != nil {
-		panic(err)
+		gserrors.Panic(err)
 	}
 	return token
 }
@@ -94,14 +94,14 @@ func (parser *Parser) Peek() *Token {
 func (parser *Parser) Next() *Token {
 	token, err := parser.Lexer.Next()
 	if err != nil {
-		panic(err)
+		gserrors.Panic(err)
 	}
 	return token
 }
 
 // errorf 格式化报错
 func (parser *Parser) errorf(position Position, template string, args ...interface{}) {
-	panic(gserrors.Newf(nil, fmt.Sprintf("parse: %s, error: %s", position.String(), fmt.Sprintf(template, args...))))
+	gserrors.Panicf(nil, fmt.Sprintf("parse: %s, error: %s", position.String(), fmt.Sprintf(template, args...)))
 }
 
 // expect 期望下一个Token的类型为目标rune expect,否则报错
@@ -301,7 +301,7 @@ func (parser *Parser) parseImports() {
 		parser.script.Imports["gslang"] == nil {
 		pkg, err := parser.compiler.Compile(GSLangPackage)
 		if err != nil {
-			panic(err)
+			gserrors.Panic(err)
 		}
 		pos := Position{
 			Filename: parser.script.Name(),
@@ -341,7 +341,7 @@ func (parser *Parser) parseImport() *ast.PackageRef {
 	// 编译目标路径的包
 	pkg, err := parser.compiler.Compile(path)
 	if err != nil {
-		panic(err)
+		gserrors.Panic(err)
 	}
 	// 将该包生成包引用节点并加入到代码节点的包引用列表中
 	ref, ok := parser.script.NewPackageRef(key, pkg)

@@ -11,7 +11,6 @@ import (
 	"bytes"
 	"fmt"
 	"gogs/base/gserrors"
-	log "gogs/base/logger"
 	"reflect"
 )
 
@@ -177,7 +176,7 @@ func (node *BaseNode) DelExtra(name string) {
 
 // Accept 接受访问者
 func (node *BaseNode) Accept(visitor Visitor) Node {
-	panic(gserrors.Newf(nil, "type(%s) not implement Accept method", reflect.TypeOf(node)))
+	gserrors.Panicf(nil, "type(%s) not implement Accept method", reflect.TypeOf(node))
 	return nil
 }
 
@@ -197,7 +196,7 @@ type BaseExpr struct {
 // Init 初始化
 func (expr *BaseExpr) Init(name string, script *Script) {
 	if script == nil {
-		log.Panic("the param script can not be nil")
+		gserrors.Panicf(nil, "the param script can not be nil")
 	}
 	expr.BaseNode.Init(name, nil)
 	expr.script = script

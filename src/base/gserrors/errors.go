@@ -92,3 +92,13 @@ func Newf(err error, template string, args ...interface{}) GSError {
 		message: fmt.Sprintf(template, args...),
 	}
 }
+
+// Panic create new GSError and panic
+func Panic(err error) {
+	panic(New(err))
+}
+
+// Panicf create new GSError and panic
+func Panicf(err error, template string, args ...interface{}) {
+	panic(Newf(err, template, args...))
+}

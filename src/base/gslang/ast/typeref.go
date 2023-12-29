@@ -9,7 +9,7 @@ package ast
 
 import (
 	"bytes"
-	log "gogs/base/logger"
+	"gogs/base/gserrors"
 )
 
 // TypeRef 类型引用 是一个Expr
@@ -27,7 +27,7 @@ func (ref *TypeRef) OriginName() string {
 // NewTypeRef 在代码节点内新建类型引用
 func (script *Script) NewTypeRef(namePath []string, origin string) *TypeRef {
 	if len(namePath) == 0 {
-		log.Panic("namePath can not be nil")
+		gserrors.Panicf(nil, "namePath can not be nil")
 	}
 	typeRef := &TypeRef{
 		NamePath: namePath,

@@ -11,7 +11,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	log "gogs/base/logger"
+	"gogs/base/gserrors"
 	"io"
 	"strconv"
 	"unicode"
@@ -193,7 +193,7 @@ func (lexer *Lexer) nextChar() error {
 		for !utf8.FullRune(lexer.buff[0:lexer.buffPos]) {
 			// buffPos必须小于buff的长度
 			if lexer.buffPos >= len(lexer.buff) {
-				log.Panic("utf8.UTFMax must < len(lexer.buff)")
+				gserrors.Panicf(nil, "utf8.UTFMax must < len(lexer.buff)")
 			}
 			c, err = lexer.reader.ReadByte()
 			if err != nil {

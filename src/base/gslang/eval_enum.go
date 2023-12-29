@@ -37,108 +37,108 @@ func (visitor *evalEnumVal) VisitEnumVal(node *ast.EnumVal) ast.Node {
 
 // VisitString 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitString(node *ast.String) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitFloat 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitFloat(node *ast.Float) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitInt 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitInt(node *ast.Int) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitBool 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitBool(node *ast.Bool) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitPackage 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitPackage(node *ast.Package) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitScript 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitScript(node *ast.Script) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitEnum 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitEnum(node *ast.Enum) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitTable 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitTable(node *ast.Table) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitField 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitField(node *ast.Field) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitContract 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitContract(node *ast.Contract) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitMethod 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitMethod(node *ast.Method) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitAttr 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitAttr(node *ast.Attr) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitArray 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitArray(node *ast.Array) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitSlice 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitSlice(node *ast.Slice) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitMap 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitMap(node *ast.Map) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitArgs 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitArgs(node *ast.Args) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitNamedArgs 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitNamedArgs(node *ast.NamedArgs) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
 
 // VisitParam 仅为实现访问者接口
 func (visitor *evalEnumVal) VisitParam(node *ast.Param) ast.Node {
-	panic(gserrors.Newf(nil, "node is not an enum expr: %s", Pos(node)))
+	gserrors.Panicf(nil, "node is not an enum expr: %s", Pos(node))
 	return nil
 }
