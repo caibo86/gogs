@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/smartystreets/goconvey/convey"
+	"gogs/gss"
 	"gogs/pb"
 	"math"
 	"testing"
@@ -18,10 +19,11 @@ import (
 
 var car = &Car{
 	VarEnum:    ColorBlue,
+	VarUint8:   'B',
 	VarString:  "我这个是中文和English混合的string",
 	VarBool:    true,
 	VarByte:    'C',
-	VarUint8:   'B',
+	VarInt8:    -100,
 	VarInt16:   math.MaxInt16,
 	VarUint16:  math.MaxUint16,
 	VarInt32:   math.MaxInt32,
@@ -41,25 +43,43 @@ var car = &Car{
 	VarEnums:    []Color{ColorRed, ColorBlue, ColorGreen},
 	VarMap:      map[string]string{"key1": "我是中文", "键2": "I am English"},
 	VarMap1: map[string]*Student{
-		"成都": &Student{
+		"成都": {
 			ID:   1,
 			Name: "成都扛把子",
 			Age:  15,
 		},
-		"资中": &Student{
+		"资中": {
 			ID:   2,
 			Name: "资中绕王",
 			Age:  25,
 		},
 	},
+	VarSubject:      gss.SubjectBiology,
+	VarTeacher:      &gss.Teacher{ID: 1, Name: "石老师", Age: 15},
+	VarTeachers:     []*gss.Teacher{{ID: 1, Name: "石老师", Age: 15}, {ID: 2, Name: "李老师", Age: 25}},
+	VarSubjects:     []gss.Subject{gss.SubjectBiology, gss.SubjectChemistry, gss.SubjectChinese},
+	VarMap2:         map[gss.Subject]gss.Subject{gss.SubjectBiology: gss.SubjectChemistry},
+	VarArray:        [3]int32{3, 6, 9},
+	VarStructArray:  [3]*gss.Teacher{{ID: 1, Name: "石老师", Age: 15}, nil, {ID: 2, Name: "李老师", Age: 25}},
+	VarEnumArray:    [4]gss.Subject{gss.SubjectBiology, gss.SubjectChemistry, gss.SubjectChinese, gss.SubjectChinese},
+	VarStructArray1: [4]*Student{{ID: 904088, Name: "蔡波", Age: 18}, nil, nil, {ID: 111, Name: "桌子", Age: 22}},
+	VarStructSlice:  []*Table{{}, nil, {}},
+	VarStructMap:    map[string]*Table{"aaa": {}, "bbb": nil},
+	VarData:         []byte("asdsadsadsadsadsadsadsa"),
+	VarBytes:        []byte("bbbdf1221231321"),
+	VarArrayBytes:   [10]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
+	VarMap3: map[gss.Subject]*gss.Teacher{gss.SubjectBiology: {ID: 1, Name: "石老师", Age: 15},
+		gss.SubjectChemistry: {ID: 2, Name: "李老师", Age: 25},
+		gss.SubjectChinese:   nil},
 }
 
 var pbCar = &pb.Car{
 	VarEnum:    pb.Color_Blue,
+	VarUint8:   'B',
 	VarString:  "我这个是中文和English混合的string",
 	VarBool:    true,
-	VarByte:    true,
-	VarSbyte:   true,
+	VarByte:    'C',
+	VarInt8:    -100,
 	VarInt16:   math.MaxInt16,
 	VarUint16:  math.MaxUint16,
 	VarInt32:   math.MaxInt32,
@@ -69,7 +89,7 @@ var pbCar = &pb.Car{
 	VarFloat32: math.MaxFloat32,
 	VarFloat64: math.MaxFloat64,
 	VarStruct:  &pb.Student{ID: 904088, Name: "蔡波", Age: 18},
-	VarArray:   []int32{1, 2, 3, 4, 5},
+	VarList:    []int32{1, 2, 3, 4, 5},
 	VarStructs: []*pb.Student{{ID: 123, Name: "汪汪队", Age: 33},
 		{ID: 999, Name: "超人", Age: 888}},
 	VarBools:    []bool{true, false, true, false},
@@ -90,6 +110,23 @@ var pbCar = &pb.Car{
 			Age:  25,
 		},
 	},
+	VarSubject:      pb.Subject_Biology,
+	VarTeacher:      &pb.Teacher{ID: 1, Name: "石老师", Age: 15},
+	VarTeachers:     []*pb.Teacher{{ID: 1, Name: "石老师", Age: 15}, {ID: 2, Name: "李老师", Age: 25}},
+	VarSubjects:     []pb.Subject{pb.Subject_Biology, pb.Subject_Chemistry, pb.Subject_Chinese},
+	VarMap2:         map[int32]pb.Subject{10000000: pb.Subject_Chemistry},
+	VarArray:        []int32{3, 6, 9},
+	VarStructArray:  []*pb.Teacher{{ID: 1, Name: "石老师", Age: 15}, {}, {ID: 2, Name: "李老师", Age: 25}},
+	VarEnumArray:    []pb.Subject{pb.Subject_Biology, pb.Subject_Chemistry, pb.Subject_Chinese, pb.Subject_Chinese},
+	VarStructArray1: []*pb.Student{{ID: 904088, Name: "蔡波", Age: 18}, {}, {}, {ID: 111, Name: "桌子", Age: 22}},
+	VarStructSlice:  []*pb.Table{{}, {}, {}},
+	VarStructMap:    map[string]*pb.Table{"aaa": {}, "bbb": {}},
+	VarData:         []byte("asdsadsadsadsadsadsadsa"),
+	VarBytes:        []byte("bbbdf1221231321"),
+	VarArrayBytes:   []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
+	VarMap3: map[int32]*pb.Teacher{int32(pb.Subject_Biology): {ID: 1, Name: "石老师", Age: 15},
+		int32(pb.Subject_Chemistry): {ID: 2, Name: "李老师", Age: 25},
+		int32(pb.Subject_Chinese):   {}},
 }
 
 func TestGSLangMarshal(t *testing.T) {
@@ -135,6 +172,66 @@ func TestGSLangMarshal(t *testing.T) {
 		So(newCar.VarMap1["资中"].ID, ShouldEqual, 2)
 		So(newCar.VarMap1["资中"].Name, ShouldEqual, "资中绕王")
 		So(newCar.VarMap1["资中"].Age, ShouldEqual, 25)
+		So(newCar.VarSubject, ShouldEqual, gss.SubjectBiology)
+		So(newCar.VarTeacher.ID, ShouldEqual, 1)
+		So(newCar.VarTeacher.Name, ShouldEqual, "石老师")
+		So(newCar.VarTeacher.Age, ShouldEqual, 15)
+		So(newCar.VarTeachers[0].ID, ShouldEqual, 1)
+		So(newCar.VarTeachers[0].Name, ShouldEqual, "石老师")
+		So(newCar.VarTeachers[0].Age, ShouldEqual, 15)
+		So(newCar.VarTeachers[1].ID, ShouldEqual, 2)
+		So(newCar.VarTeachers[1].Name, ShouldEqual, "李老师")
+		So(newCar.VarTeachers[1].Age, ShouldEqual, 25)
+		So(newCar.VarSubjects[0], ShouldEqual, gss.SubjectBiology)
+		So(newCar.VarSubjects[1], ShouldEqual, gss.SubjectChemistry)
+		So(newCar.VarSubjects[2], ShouldEqual, gss.SubjectChinese)
+		So(newCar.VarMap2[gss.SubjectBiology], ShouldEqual, gss.SubjectChemistry)
+		So(newCar.VarArray[0], ShouldEqual, 3)
+		So(newCar.VarArray[1], ShouldEqual, 6)
+		So(newCar.VarArray[2], ShouldEqual, 9)
+		So(newCar.VarStructArray[0].ID, ShouldEqual, 1)
+		So(newCar.VarStructArray[0].Name, ShouldEqual, "石老师")
+		So(newCar.VarStructArray[0].Age, ShouldEqual, 15)
+		So(newCar.VarStructArray[1], ShouldBeNil)
+		So(newCar.VarStructArray[2].ID, ShouldEqual, 2)
+		So(newCar.VarStructArray[2].Name, ShouldEqual, "李老师")
+		So(newCar.VarStructArray[2].Age, ShouldEqual, 25)
+		So(newCar.VarEnumArray[0], ShouldEqual, gss.SubjectBiology)
+		So(newCar.VarEnumArray[1], ShouldEqual, gss.SubjectChemistry)
+		So(newCar.VarEnumArray[2], ShouldEqual, gss.SubjectChinese)
+		So(newCar.VarEnumArray[3], ShouldEqual, gss.SubjectChinese)
+		So(newCar.VarStructArray1[0].ID, ShouldEqual, 904088)
+		So(newCar.VarStructArray1[0].Name, ShouldEqual, "蔡波")
+		So(newCar.VarStructArray1[0].Age, ShouldEqual, 18)
+		So(newCar.VarStructArray1[1], ShouldBeNil)
+		So(newCar.VarStructArray1[2], ShouldBeNil)
+		So(newCar.VarStructArray1[3].ID, ShouldEqual, 111)
+		So(newCar.VarStructArray1[3].Name, ShouldEqual, "桌子")
+		So(newCar.VarStructArray1[3].Age, ShouldEqual, 22)
+		So(newCar.VarStructSlice[0], ShouldNotBeNil)
+		So(newCar.VarStructSlice[1], ShouldBeNil)
+		So(newCar.VarStructSlice[2], ShouldNotBeNil)
+		So(newCar.VarStructMap["aaa"], ShouldNotBeNil)
+		So(newCar.VarStructMap["bbb"], ShouldBeNil)
+		So(newCar.VarData, ShouldResemble, []byte("asdsadsadsadsadsadsadsa"))
+		So(newCar.VarBytes, ShouldResemble, []byte("bbbdf1221231321"))
+		So(newCar.VarArrayBytes[0], ShouldEqual, 1)
+		So(newCar.VarArrayBytes[1], ShouldEqual, 2)
+		So(newCar.VarArrayBytes[2], ShouldEqual, 3)
+		So(newCar.VarArrayBytes[3], ShouldEqual, 4)
+		So(newCar.VarArrayBytes[4], ShouldEqual, 5)
+		So(newCar.VarArrayBytes[5], ShouldEqual, 6)
+		So(newCar.VarArrayBytes[6], ShouldEqual, 7)
+		So(newCar.VarArrayBytes[7], ShouldEqual, 8)
+		So(newCar.VarArrayBytes[8], ShouldEqual, 9)
+		So(newCar.VarArrayBytes[9], ShouldEqual, 0)
+		So(newCar.VarMap3[gss.SubjectBiology].ID, ShouldEqual, 1)
+		So(newCar.VarMap3[gss.SubjectBiology].Name, ShouldEqual, "石老师")
+		So(newCar.VarMap3[gss.SubjectBiology].Age, ShouldEqual, 15)
+		So(newCar.VarMap3[gss.SubjectChemistry].ID, ShouldEqual, 2)
+		So(newCar.VarMap3[gss.SubjectChemistry].Name, ShouldEqual, "李老师")
+		So(newCar.VarMap3[gss.SubjectChemistry].Age, ShouldEqual, 25)
+		So(newCar.VarMap3[gss.SubjectChinese], ShouldBeNil)
 	})
 }
 
@@ -176,6 +273,14 @@ func BenchmarkCar_CopyByMarshal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		car1 := &Car{}
 		data := car.Marshal()
+		car1.Unmarshal(data)
+	}
+}
+
+func BenchmarkPBCar_CopyByMarshal(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		car1 := &pb.Car{}
+		data, _ := pbCar.Marshal()
 		car1.Unmarshal(data)
 	}
 }
@@ -222,7 +327,7 @@ func TestDeepCopy(t *testing.T) {
 			Name: "成都扛把子",
 		}
 		car := &Car{
-			VarStructArray1: [10]*Student{stu},
+			VarStructArray1: [4]*Student{stu},
 		}
 		fmt.Println("car:", car.VarStructArray1[0])
 		newCar := car.DeepCopy()

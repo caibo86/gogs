@@ -79,6 +79,55 @@ func (Color) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_c161fcfdc0c3ff1e, []int{1}
 }
 
+type Subject int32
+
+const (
+	Subject_Blank     Subject = 0
+	Subject_Math      Subject = 1
+	Subject_English   Subject = 2
+	Subject_Chinese   Subject = 3
+	Subject_Physics   Subject = 4
+	Subject_Chemistry Subject = 5
+	Subject_Biology   Subject = 6
+	Subject_History   Subject = 7
+	Subject_Geography Subject = 8
+	Subject_Politics  Subject = 9
+)
+
+var Subject_name = map[int32]string{
+	0: "Blank",
+	1: "Math",
+	2: "English",
+	3: "Chinese",
+	4: "Physics",
+	5: "Chemistry",
+	6: "Biology",
+	7: "History",
+	8: "Geography",
+	9: "Politics",
+}
+
+var Subject_value = map[string]int32{
+	"Blank":     0,
+	"Math":      1,
+	"English":   2,
+	"Chinese":   3,
+	"Physics":   4,
+	"Chemistry": 5,
+	"Biology":   6,
+	"History":   7,
+	"Geography": 8,
+	"Politics":  9,
+}
+
+func (x Subject) String() string {
+	return proto.EnumName(Subject_name, int32(x))
+}
+
+func (Subject) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_c161fcfdc0c3ff1e, []int{2}
+}
+
 type Student struct {
 	ID                   int64    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	Name                 string   `protobuf:"bytes,2,opt,name=Name,proto3" json:"Name,omitempty"`
@@ -142,30 +191,148 @@ func (m *Student) GetAge() int32 {
 	return 0
 }
 
+type Table struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Table) Reset()         { *m = Table{} }
+func (m *Table) String() string { return proto.CompactTextString(m) }
+func (*Table) ProtoMessage()    {}
+func (*Table) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c161fcfdc0c3ff1e, []int{1}
+}
+func (m *Table) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Table) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Table.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Table) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Table.Merge(m, src)
+}
+func (m *Table) XXX_Size() int {
+	return m.Size()
+}
+func (m *Table) XXX_DiscardUnknown() {
+	xxx_messageInfo_Table.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Table proto.InternalMessageInfo
+
+type Teacher struct {
+	ID                   int64    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=Name,proto3" json:"Name,omitempty"`
+	Age                  int32    `protobuf:"varint,3,opt,name=Age,proto3" json:"Age,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Teacher) Reset()         { *m = Teacher{} }
+func (m *Teacher) String() string { return proto.CompactTextString(m) }
+func (*Teacher) ProtoMessage()    {}
+func (*Teacher) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c161fcfdc0c3ff1e, []int{2}
+}
+func (m *Teacher) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Teacher) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Teacher.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Teacher) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Teacher.Merge(m, src)
+}
+func (m *Teacher) XXX_Size() int {
+	return m.Size()
+}
+func (m *Teacher) XXX_DiscardUnknown() {
+	xxx_messageInfo_Teacher.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Teacher proto.InternalMessageInfo
+
+func (m *Teacher) GetID() int64 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *Teacher) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *Teacher) GetAge() int32 {
+	if m != nil {
+		return m.Age
+	}
+	return 0
+}
+
 type Car struct {
 	VarEnum              Color               `protobuf:"varint,1,opt,name=VarEnum,proto3,enum=pb.Color" json:"VarEnum,omitempty"`
-	VarString            string              `protobuf:"bytes,2,opt,name=VarString,proto3" json:"VarString,omitempty"`
-	VarBool              bool                `protobuf:"varint,3,opt,name=VarBool,proto3" json:"VarBool,omitempty"`
-	VarByte              bool                `protobuf:"varint,4,opt,name=VarByte,proto3" json:"VarByte,omitempty"`
-	VarSbyte             bool                `protobuf:"varint,5,opt,name=VarSbyte,proto3" json:"VarSbyte,omitempty"`
-	VarInt16             int32               `protobuf:"varint,6,opt,name=VarInt16,proto3" json:"VarInt16,omitempty"`
-	VarUint16            uint32              `protobuf:"varint,7,opt,name=VarUint16,proto3" json:"VarUint16,omitempty"`
-	VarInt32             int32               `protobuf:"varint,8,opt,name=VarInt32,proto3" json:"VarInt32,omitempty"`
-	VarUint32            uint32              `protobuf:"varint,9,opt,name=VarUint32,proto3" json:"VarUint32,omitempty"`
-	VarInt64             int64               `protobuf:"varint,10,opt,name=VarInt64,proto3" json:"VarInt64,omitempty"`
-	VarUint64            uint64              `protobuf:"varint,11,opt,name=VarUint64,proto3" json:"VarUint64,omitempty"`
-	VarFloat32           float32             `protobuf:"fixed32,12,opt,name=VarFloat32,proto3" json:"VarFloat32,omitempty"`
-	VarFloat64           float64             `protobuf:"fixed64,13,opt,name=VarFloat64,proto3" json:"VarFloat64,omitempty"`
-	VarStruct            *Student            `protobuf:"bytes,14,opt,name=VarStruct,proto3" json:"VarStruct,omitempty"`
-	VarArray             []int32             `protobuf:"varint,15,rep,packed,name=VarArray,proto3" json:"VarArray,omitempty"`
-	VarStructs           []*Student          `protobuf:"bytes,16,rep,name=VarStructs,proto3" json:"VarStructs,omitempty"`
-	VarBools             []bool              `protobuf:"varint,17,rep,packed,name=VarBools,proto3" json:"VarBools,omitempty"`
-	VarStrings           []string            `protobuf:"bytes,18,rep,name=VarStrings,proto3" json:"VarStrings,omitempty"`
-	VarFloat32S          []float32           `protobuf:"fixed32,19,rep,packed,name=VarFloat32s,proto3" json:"VarFloat32s,omitempty"`
-	VarFloat64S          []float64           `protobuf:"fixed64,20,rep,packed,name=VarFloat64s,proto3" json:"VarFloat64s,omitempty"`
-	VarEnums             []Color             `protobuf:"varint,21,rep,packed,name=VarEnums,proto3,enum=pb.Color" json:"VarEnums,omitempty"`
-	VarMap               map[string]string   `protobuf:"bytes,22,rep,name=VarMap,proto3" json:"VarMap,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	VarMap1              map[string]*Student `protobuf:"bytes,23,rep,name=VarMap1,proto3" json:"VarMap1,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	VarUint8             uint32              `protobuf:"varint,2,opt,name=VarUint8,proto3" json:"VarUint8,omitempty"`
+	VarString            string              `protobuf:"bytes,3,opt,name=VarString,proto3" json:"VarString,omitempty"`
+	VarBool              bool                `protobuf:"varint,4,opt,name=VarBool,proto3" json:"VarBool,omitempty"`
+	VarByte              uint32              `protobuf:"varint,5,opt,name=VarByte,proto3" json:"VarByte,omitempty"`
+	VarInt8              int32               `protobuf:"varint,6,opt,name=VarInt8,proto3" json:"VarInt8,omitempty"`
+	VarInt16             int32               `protobuf:"varint,7,opt,name=VarInt16,proto3" json:"VarInt16,omitempty"`
+	VarUint16            uint32              `protobuf:"varint,8,opt,name=VarUint16,proto3" json:"VarUint16,omitempty"`
+	VarInt32             int32               `protobuf:"varint,9,opt,name=VarInt32,proto3" json:"VarInt32,omitempty"`
+	VarUint32            uint32              `protobuf:"varint,10,opt,name=VarUint32,proto3" json:"VarUint32,omitempty"`
+	VarInt64             int64               `protobuf:"varint,11,opt,name=VarInt64,proto3" json:"VarInt64,omitempty"`
+	VarUint64            uint64              `protobuf:"varint,12,opt,name=VarUint64,proto3" json:"VarUint64,omitempty"`
+	VarFloat32           float32             `protobuf:"fixed32,13,opt,name=VarFloat32,proto3" json:"VarFloat32,omitempty"`
+	VarFloat64           float64             `protobuf:"fixed64,14,opt,name=VarFloat64,proto3" json:"VarFloat64,omitempty"`
+	VarStruct            *Student            `protobuf:"bytes,15,opt,name=VarStruct,proto3" json:"VarStruct,omitempty"`
+	VarList              []int32             `protobuf:"varint,16,rep,packed,name=VarList,proto3" json:"VarList,omitempty"`
+	VarStructs           []*Student          `protobuf:"bytes,17,rep,name=VarStructs,proto3" json:"VarStructs,omitempty"`
+	VarBools             []bool              `protobuf:"varint,18,rep,packed,name=VarBools,proto3" json:"VarBools,omitempty"`
+	VarStrings           []string            `protobuf:"bytes,19,rep,name=VarStrings,proto3" json:"VarStrings,omitempty"`
+	VarFloat32S          []float32           `protobuf:"fixed32,20,rep,packed,name=VarFloat32s,proto3" json:"VarFloat32s,omitempty"`
+	VarFloat64S          []float64           `protobuf:"fixed64,21,rep,packed,name=VarFloat64s,proto3" json:"VarFloat64s,omitempty"`
+	VarEnums             []Color             `protobuf:"varint,22,rep,packed,name=VarEnums,proto3,enum=pb.Color" json:"VarEnums,omitempty"`
+	VarMap               map[string]string   `protobuf:"bytes,23,rep,name=VarMap,proto3" json:"VarMap,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	VarMap1              map[string]*Student `protobuf:"bytes,24,rep,name=VarMap1,proto3" json:"VarMap1,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	VarSubject           Subject             `protobuf:"varint,25,opt,name=VarSubject,proto3,enum=pb.Subject" json:"VarSubject,omitempty"`
+	VarTeacher           *Teacher            `protobuf:"bytes,26,opt,name=VarTeacher,proto3" json:"VarTeacher,omitempty"`
+	VarTeachers          []*Teacher          `protobuf:"bytes,27,rep,name=VarTeachers,proto3" json:"VarTeachers,omitempty"`
+	VarSubjects          []Subject           `protobuf:"varint,28,rep,packed,name=VarSubjects,proto3,enum=pb.Subject" json:"VarSubjects,omitempty"`
+	VarMap2              map[int32]Subject   `protobuf:"bytes,29,rep,name=VarMap2,proto3" json:"VarMap2,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3,enum=pb.Subject"`
+	VarArray             []int32             `protobuf:"varint,30,rep,packed,name=VarArray,proto3" json:"VarArray,omitempty"`
+	VarStructArray       []*Teacher          `protobuf:"bytes,31,rep,name=VarStructArray,proto3" json:"VarStructArray,omitempty"`
+	VarEnumArray         []Subject           `protobuf:"varint,32,rep,packed,name=VarEnumArray,proto3,enum=pb.Subject" json:"VarEnumArray,omitempty"`
+	VarStructArray1      []*Student          `protobuf:"bytes,33,rep,name=VarStructArray1,proto3" json:"VarStructArray1,omitempty"`
+	VarStructSlice       []*Table            `protobuf:"bytes,34,rep,name=VarStructSlice,proto3" json:"VarStructSlice,omitempty"`
+	VarStructMap         map[string]*Table   `protobuf:"bytes,35,rep,name=VarStructMap,proto3" json:"VarStructMap,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	VarData              []byte              `protobuf:"bytes,36,opt,name=VarData,proto3" json:"VarData,omitempty"`
+	VarBytes             []byte              `protobuf:"bytes,37,opt,name=VarBytes,proto3" json:"VarBytes,omitempty"`
+	VarArrayBytes        []byte              `protobuf:"bytes,38,opt,name=VarArrayBytes,proto3" json:"VarArrayBytes,omitempty"`
+	VarMap3              map[int32]*Teacher  `protobuf:"bytes,1000,rep,name=VarMap3,proto3" json:"VarMap3,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
 	XXX_unrecognized     []byte              `json:"-"`
 	XXX_sizecache        int32               `json:"-"`
@@ -175,7 +342,7 @@ func (m *Car) Reset()         { *m = Car{} }
 func (m *Car) String() string { return proto.CompactTextString(m) }
 func (*Car) ProtoMessage()    {}
 func (*Car) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c161fcfdc0c3ff1e, []int{1}
+	return fileDescriptor_c161fcfdc0c3ff1e, []int{3}
 }
 func (m *Car) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -211,6 +378,13 @@ func (m *Car) GetVarEnum() Color {
 	return Color_White
 }
 
+func (m *Car) GetVarUint8() uint32 {
+	if m != nil {
+		return m.VarUint8
+	}
+	return 0
+}
+
 func (m *Car) GetVarString() string {
 	if m != nil {
 		return m.VarString
@@ -225,18 +399,18 @@ func (m *Car) GetVarBool() bool {
 	return false
 }
 
-func (m *Car) GetVarByte() bool {
+func (m *Car) GetVarByte() uint32 {
 	if m != nil {
 		return m.VarByte
 	}
-	return false
+	return 0
 }
 
-func (m *Car) GetVarSbyte() bool {
+func (m *Car) GetVarInt8() int32 {
 	if m != nil {
-		return m.VarSbyte
+		return m.VarInt8
 	}
-	return false
+	return 0
 }
 
 func (m *Car) GetVarInt16() int32 {
@@ -302,9 +476,9 @@ func (m *Car) GetVarStruct() *Student {
 	return nil
 }
 
-func (m *Car) GetVarArray() []int32 {
+func (m *Car) GetVarList() []int32 {
 	if m != nil {
-		return m.VarArray
+		return m.VarList
 	}
 	return nil
 }
@@ -365,55 +539,189 @@ func (m *Car) GetVarMap1() map[string]*Student {
 	return nil
 }
 
+func (m *Car) GetVarSubject() Subject {
+	if m != nil {
+		return m.VarSubject
+	}
+	return Subject_Blank
+}
+
+func (m *Car) GetVarTeacher() *Teacher {
+	if m != nil {
+		return m.VarTeacher
+	}
+	return nil
+}
+
+func (m *Car) GetVarTeachers() []*Teacher {
+	if m != nil {
+		return m.VarTeachers
+	}
+	return nil
+}
+
+func (m *Car) GetVarSubjects() []Subject {
+	if m != nil {
+		return m.VarSubjects
+	}
+	return nil
+}
+
+func (m *Car) GetVarMap2() map[int32]Subject {
+	if m != nil {
+		return m.VarMap2
+	}
+	return nil
+}
+
+func (m *Car) GetVarArray() []int32 {
+	if m != nil {
+		return m.VarArray
+	}
+	return nil
+}
+
+func (m *Car) GetVarStructArray() []*Teacher {
+	if m != nil {
+		return m.VarStructArray
+	}
+	return nil
+}
+
+func (m *Car) GetVarEnumArray() []Subject {
+	if m != nil {
+		return m.VarEnumArray
+	}
+	return nil
+}
+
+func (m *Car) GetVarStructArray1() []*Student {
+	if m != nil {
+		return m.VarStructArray1
+	}
+	return nil
+}
+
+func (m *Car) GetVarStructSlice() []*Table {
+	if m != nil {
+		return m.VarStructSlice
+	}
+	return nil
+}
+
+func (m *Car) GetVarStructMap() map[string]*Table {
+	if m != nil {
+		return m.VarStructMap
+	}
+	return nil
+}
+
+func (m *Car) GetVarData() []byte {
+	if m != nil {
+		return m.VarData
+	}
+	return nil
+}
+
+func (m *Car) GetVarBytes() []byte {
+	if m != nil {
+		return m.VarBytes
+	}
+	return nil
+}
+
+func (m *Car) GetVarArrayBytes() []byte {
+	if m != nil {
+		return m.VarArrayBytes
+	}
+	return nil
+}
+
+func (m *Car) GetVarMap3() map[int32]*Teacher {
+	if m != nil {
+		return m.VarMap3
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterEnum("pb.Err", Err_name, Err_value)
 	proto.RegisterEnum("pb.Color", Color_name, Color_value)
+	proto.RegisterEnum("pb.Subject", Subject_name, Subject_value)
 	proto.RegisterType((*Student)(nil), "pb.Student")
+	proto.RegisterType((*Table)(nil), "pb.Table")
+	proto.RegisterType((*Teacher)(nil), "pb.Teacher")
 	proto.RegisterType((*Car)(nil), "pb.Car")
 	proto.RegisterMapType((map[string]*Student)(nil), "pb.Car.VarMap1Entry")
+	proto.RegisterMapType((map[int32]Subject)(nil), "pb.Car.VarMap2Entry")
+	proto.RegisterMapType((map[int32]*Teacher)(nil), "pb.Car.VarMap3Entry")
 	proto.RegisterMapType((map[string]string)(nil), "pb.Car.VarMapEntry")
+	proto.RegisterMapType((map[string]*Table)(nil), "pb.Car.VarStructMapEntry")
 }
 
 func init() { proto.RegisterFile("test.proto", fileDescriptor_c161fcfdc0c3ff1e) }
 
 var fileDescriptor_c161fcfdc0c3ff1e = []byte{
-	// 568 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x54, 0xdf, 0x6e, 0xd3, 0x3c,
-	0x14, 0x9f, 0xe3, 0x76, 0x69, 0x4e, 0xb7, 0x7d, 0xf9, 0xbc, 0x01, 0xd6, 0x40, 0x95, 0x19, 0x42,
-	0x0a, 0x9b, 0x54, 0xd1, 0xb4, 0xaa, 0x80, 0x1b, 0xb4, 0x6e, 0x65, 0xea, 0xc5, 0x98, 0xe4, 0x8a,
-	0x72, 0xed, 0x76, 0xd6, 0xa8, 0xe8, 0x92, 0xca, 0x71, 0x90, 0x7a, 0xcb, 0x53, 0xf0, 0x48, 0x5c,
-	0xf2, 0x08, 0xa8, 0xbc, 0x08, 0x8a, 0x93, 0x34, 0xee, 0xc4, 0x5d, 0xce, 0xef, 0x9f, 0x8f, 0x7d,
-	0xec, 0x00, 0x68, 0x99, 0xe8, 0xf6, 0x52, 0xc5, 0x3a, 0x26, 0xce, 0x72, 0x7a, 0xf2, 0x1e, 0xdc,
-	0xb1, 0x4e, 0x6f, 0x65, 0xa4, 0xc9, 0x01, 0x38, 0xa3, 0x4b, 0x8a, 0x18, 0x0a, 0x30, 0x77, 0x46,
-	0x97, 0x84, 0x40, 0xed, 0xa3, 0xb8, 0x97, 0xd4, 0x61, 0x28, 0xf0, 0xb8, 0xf9, 0x26, 0x3e, 0xe0,
-	0xf3, 0x3b, 0x49, 0x31, 0x43, 0x41, 0x9d, 0x67, 0x9f, 0x27, 0xdf, 0x5d, 0xc0, 0x17, 0x42, 0x91,
-	0x17, 0xe0, 0x4e, 0x84, 0x1a, 0x46, 0xe9, 0xbd, 0x89, 0x38, 0x08, 0xbd, 0xf6, 0x72, 0xda, 0xbe,
-	0x88, 0x17, 0xb1, 0xe2, 0x25, 0x43, 0x9e, 0x81, 0x37, 0x11, 0x6a, 0xac, 0xd5, 0x3c, 0xba, 0x2b,
-	0x72, 0x2b, 0x80, 0x50, 0x13, 0x31, 0x88, 0xe3, 0x85, 0x59, 0xa0, 0xc1, 0xcb, 0xb2, 0x64, 0x56,
-	0x5a, 0xd2, 0x5a, 0xc5, 0xac, 0xb4, 0x24, 0xc7, 0xd0, 0xc8, 0x02, 0xa6, 0x19, 0x55, 0x37, 0xd4,
-	0xa6, 0x2e, 0xb8, 0x51, 0xa4, 0x3b, 0x7d, 0xba, 0x6b, 0x3a, 0xde, 0xd4, 0x45, 0x27, 0x9f, 0xe6,
-	0x86, 0x74, 0x19, 0x0a, 0xf6, 0x79, 0x05, 0x54, 0xce, 0x6e, 0x48, 0x1b, 0xb6, 0xb3, 0x1b, 0x5a,
-	0xce, 0x6e, 0x48, 0xbd, 0x2d, 0x67, 0x37, 0xac, 0x9c, 0xfd, 0x1e, 0x05, 0x73, 0x94, 0x9b, 0xda,
-	0x72, 0xf6, 0x7b, 0xb4, 0xc9, 0x50, 0x50, 0xe3, 0x15, 0x40, 0x5a, 0x00, 0x13, 0xa1, 0x3e, 0x2c,
-	0x62, 0x91, 0x05, 0xef, 0x31, 0x14, 0x38, 0xdc, 0x42, 0x6c, 0xbe, 0xdf, 0xa3, 0xfb, 0x0c, 0x05,
-	0x88, 0x5b, 0x08, 0x79, 0x55, 0x9e, 0x6d, 0x3a, 0xd3, 0xf4, 0x80, 0xa1, 0xa0, 0x19, 0x36, 0xb3,
-	0x11, 0x14, 0xe3, 0xe5, 0x15, 0x5b, 0x34, 0x79, 0xae, 0x94, 0x58, 0xd1, 0xff, 0x18, 0x2e, 0xb6,
-	0x67, 0x6a, 0x72, 0x66, 0x96, 0xc9, 0x85, 0x09, 0xf5, 0x19, 0x7e, 0x98, 0x63, 0xd1, 0x45, 0x50,
-	0x36, 0xa2, 0x84, 0xfe, 0xcf, 0x70, 0x71, 0xfa, 0xa6, 0x2e, 0xfa, 0xcd, 0x47, 0x9b, 0x50, 0xc2,
-	0x70, 0xe0, 0x71, 0x0b, 0x21, 0x0c, 0x9a, 0xd5, 0xee, 0x12, 0x7a, 0xc8, 0x70, 0xe0, 0x70, 0x1b,
-	0xb2, 0x15, 0xfd, 0x5e, 0x42, 0x8f, 0x18, 0x0e, 0x10, 0xb7, 0x21, 0xf2, 0xd2, 0xac, 0x9f, 0x5d,
-	0xad, 0x84, 0x3e, 0x62, 0x78, 0xfb, 0xd6, 0x6d, 0x28, 0x72, 0x06, 0xbb, 0x13, 0xa1, 0xae, 0xc5,
-	0x92, 0x3e, 0x36, 0xfb, 0x39, 0x34, 0x22, 0xa1, 0xda, 0x39, 0x3a, 0x8c, 0xb4, 0x5a, 0xf1, 0x42,
-	0x42, 0xda, 0xe6, 0xae, 0x5d, 0x8b, 0x65, 0x87, 0x3e, 0x31, 0xea, 0xa3, 0x6d, 0x75, 0x27, 0x97,
-	0x97, 0xa2, 0xe3, 0xb7, 0xa6, 0xcb, 0x32, 0x26, 0x7b, 0x21, 0x5f, 0xe5, 0xca, 0xbc, 0x01, 0x8f,
-	0x67, 0x9f, 0xe4, 0x08, 0xea, 0xdf, 0xc4, 0x22, 0x2d, 0x1f, 0x52, 0x5e, 0xbc, 0x73, 0xde, 0xa0,
-	0xe3, 0x2b, 0xd8, 0xb3, 0x33, 0xff, 0xe1, 0x7d, 0x6e, 0x7b, 0x1f, 0x0c, 0xa2, 0x0a, 0x3a, 0x7d,
-	0x0a, 0x78, 0xa8, 0x14, 0x69, 0x82, 0x3b, 0x4e, 0x67, 0x33, 0x99, 0x24, 0xfe, 0x0e, 0x71, 0x01,
-	0xdf, 0xdc, 0x8c, 0x7d, 0x74, 0xfa, 0x1a, 0xea, 0xe6, 0x40, 0x88, 0x07, 0xf5, 0xcf, 0x5f, 0xe6,
-	0x5a, 0xe6, 0x24, 0x97, 0xb7, 0x3e, 0xca, 0xb0, 0x2b, 0x25, 0x65, 0xe4, 0x3b, 0xa4, 0x01, 0xb5,
-	0xc1, 0x22, 0x95, 0x3e, 0x1e, 0xf8, 0x3f, 0xd7, 0x2d, 0xf4, 0x6b, 0xdd, 0x42, 0xbf, 0xd7, 0x2d,
-	0xf4, 0xe3, 0x4f, 0x6b, 0x67, 0xba, 0x6b, 0xfe, 0x18, 0xdd, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff,
-	0x3b, 0x50, 0xcf, 0x9e, 0x3f, 0x04, 0x00, 0x00,
+	// 942 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0xdd, 0x72, 0x1b, 0x35,
+	0x14, 0x8e, 0xbc, 0x76, 0xec, 0x95, 0x13, 0x77, 0xab, 0x06, 0x50, 0xd3, 0xe2, 0x6e, 0xd3, 0x96,
+	0x59, 0xd2, 0xc1, 0xc5, 0xde, 0xe0, 0x29, 0xcc, 0x30, 0x4c, 0x9d, 0x84, 0x10, 0x86, 0xd0, 0x8e,
+	0x5c, 0xcc, 0xb5, 0xec, 0x6a, 0xec, 0xa5, 0x9b, 0x5d, 0x8f, 0x24, 0x33, 0xb3, 0xcf, 0xc0, 0x0b,
+	0xe4, 0x91, 0xb8, 0xe4, 0x11, 0x98, 0x70, 0xc3, 0x63, 0x30, 0xd2, 0xfe, 0x69, 0x6d, 0x5f, 0x30,
+	0xbd, 0xf3, 0x77, 0xbe, 0xef, 0x7c, 0x3a, 0x3a, 0xe7, 0xac, 0x12, 0x08, 0x25, 0x13, 0xb2, 0xb7,
+	0xe4, 0xb1, 0x8c, 0x51, 0x6d, 0x39, 0x3d, 0xfa, 0x0e, 0x36, 0xc7, 0x72, 0xf5, 0x8e, 0x45, 0x12,
+	0x75, 0x60, 0xed, 0xf2, 0x0c, 0x03, 0x17, 0x78, 0x16, 0xa9, 0x5d, 0x9e, 0x21, 0x04, 0xeb, 0x3f,
+	0xd3, 0x6b, 0x86, 0x6b, 0x2e, 0xf0, 0x6c, 0xa2, 0x7f, 0x23, 0x07, 0x5a, 0xaf, 0xe6, 0x0c, 0x5b,
+	0x2e, 0xf0, 0x1a, 0x44, 0xfd, 0x3c, 0x6a, 0xc2, 0xc6, 0x5b, 0x3a, 0x0d, 0x99, 0x72, 0x7a, 0xcb,
+	0xe8, 0x6c, 0xc1, 0xf8, 0x07, 0x3a, 0xdd, 0x74, 0xa0, 0x75, 0x4a, 0x39, 0x7a, 0x02, 0x9b, 0x13,
+	0xca, 0xcf, 0xa3, 0xd5, 0xb5, 0xb6, 0xe8, 0x0c, 0xec, 0xde, 0x72, 0xda, 0x3b, 0x8d, 0xc3, 0x98,
+	0x93, 0x9c, 0x41, 0x87, 0xb0, 0x35, 0xa1, 0xfc, 0x97, 0x20, 0x92, 0x2f, 0xb5, 0xed, 0x3e, 0x29,
+	0x30, 0x7a, 0x08, 0xed, 0x09, 0xe5, 0x63, 0xc9, 0x83, 0x68, 0xae, 0x0f, 0xb0, 0x49, 0x19, 0x40,
+	0x58, 0xdb, 0x8f, 0xe2, 0x38, 0xc4, 0x75, 0x17, 0x78, 0x2d, 0x92, 0xc3, 0x9c, 0x49, 0x24, 0xc3,
+	0x0d, 0x6d, 0x99, 0xc3, 0x8c, 0xb9, 0x54, 0x87, 0xed, 0xea, 0x82, 0x73, 0x98, 0xd5, 0x71, 0x19,
+	0xc9, 0xfe, 0x10, 0x37, 0x35, 0x55, 0xe0, 0xac, 0x0e, 0x55, 0x53, 0x7f, 0x88, 0x5b, 0xda, 0xb1,
+	0x0c, 0x94, 0x99, 0xfe, 0x00, 0xdb, 0x66, 0xa6, 0x3f, 0x30, 0x32, 0xfd, 0x01, 0x86, 0x95, 0x4c,
+	0x7f, 0x50, 0x66, 0x0e, 0x4f, 0x70, 0x5b, 0x37, 0xb9, 0xc0, 0x46, 0xe6, 0xf0, 0x04, 0xef, 0xb9,
+	0xc0, 0xab, 0x93, 0x32, 0x80, 0xba, 0x10, 0x4e, 0x28, 0xff, 0x3e, 0x8c, 0xa9, 0x32, 0xde, 0x77,
+	0x81, 0x57, 0x23, 0x46, 0xc4, 0xe4, 0x87, 0x27, 0xb8, 0xe3, 0x02, 0x0f, 0x10, 0x23, 0x82, 0x3e,
+	0xcf, 0x3b, 0xbb, 0x9a, 0x49, 0x7c, 0xc7, 0x05, 0x5e, 0x7b, 0xd0, 0x56, 0xc3, 0xc9, 0x56, 0x88,
+	0x94, 0x6c, 0xd6, 0xb2, 0x9f, 0x02, 0x21, 0xb1, 0xe3, 0x5a, 0x59, 0xcb, 0x14, 0x44, 0xcf, 0xf5,
+	0x21, 0xa9, 0x4c, 0xe0, 0xbb, 0xae, 0xb5, 0xee, 0x62, 0xd0, 0xd9, 0x5d, 0xd5, 0x78, 0x04, 0x46,
+	0xae, 0xe5, 0xb5, 0x48, 0x81, 0xb3, 0x6a, 0xd3, 0xb1, 0x0a, 0x7c, 0xcf, 0xb5, 0x3c, 0x9b, 0x18,
+	0x11, 0xe4, 0xc2, 0x76, 0x79, 0x37, 0x81, 0x0f, 0x5c, 0xcb, 0xab, 0x11, 0x33, 0x64, 0x2a, 0x86,
+	0x27, 0x02, 0x7f, 0xe4, 0x5a, 0x1e, 0x20, 0x66, 0x08, 0x3d, 0xd3, 0xe7, 0xab, 0x95, 0x13, 0xf8,
+	0x63, 0xd7, 0xaa, 0x6e, 0x63, 0x41, 0xa1, 0xe7, 0x70, 0x77, 0x42, 0xf9, 0x15, 0x5d, 0xe2, 0x4f,
+	0xf4, 0x7d, 0xee, 0x69, 0x11, 0xe5, 0xbd, 0x34, 0x7a, 0x1e, 0x49, 0x9e, 0x90, 0x4c, 0x82, 0x7a,
+	0xba, 0x35, 0x57, 0x74, 0xd9, 0xc7, 0x58, 0xab, 0x0f, 0xaa, 0xea, 0x7e, 0x2a, 0xcf, 0x45, 0x79,
+	0xc3, 0x56, 0xd3, 0xdf, 0xd8, 0x4c, 0xe2, 0xfb, 0xfa, 0x9b, 0x48, 0x1b, 0x96, 0x86, 0x88, 0x41,
+	0x67, 0xe2, 0xec, 0x4b, 0xc4, 0x87, 0xe5, 0x8c, 0xb2, 0x10, 0x31, 0x68, 0xf4, 0x85, 0xbe, 0x7f,
+	0x86, 0x04, 0x7e, 0x50, 0xce, 0x22, 0x57, 0x9b, 0x7c, 0x26, 0xcf, 0x4e, 0x12, 0xf8, 0xa1, 0xee,
+	0x47, 0xa5, 0x12, 0x93, 0x2f, 0xef, 0x39, 0xc0, 0x9f, 0x6e, 0xbb, 0xe7, 0xa0, 0x72, 0xcf, 0x7c,
+	0xaf, 0x5f, 0x71, 0x4e, 0x13, 0xdc, 0xd5, 0x3b, 0x53, 0x60, 0xe4, 0xc3, 0x4e, 0xb1, 0x15, 0xa9,
+	0xe2, 0xd1, 0x66, 0xb1, 0x6b, 0x12, 0xf4, 0x02, 0xee, 0x65, 0x13, 0x4a, 0x53, 0xdc, 0xcd, 0x82,
+	0x2b, 0x02, 0xf4, 0x15, 0xbc, 0x53, 0xb5, 0xe8, 0xe3, 0xc7, 0x9b, 0xfb, 0xb9, 0xae, 0x41, 0x7d,
+	0xa3, 0xb8, 0x71, 0x18, 0xcc, 0x18, 0x3e, 0xd2, 0x59, 0x7a, 0x55, 0xf4, 0xeb, 0x48, 0xd6, 0x04,
+	0xe8, 0x5b, 0x5d, 0x5a, 0x1a, 0x51, 0x6b, 0xf3, 0x44, 0x27, 0xdc, 0x37, 0x1a, 0x54, 0x70, 0x69,
+	0x97, 0x2a, 0xf2, 0xec, 0xeb, 0x3a, 0xa3, 0x92, 0xe2, 0xa7, 0x2e, 0xf0, 0xf6, 0x48, 0x0e, 0xf3,
+	0x0f, 0x26, 0x91, 0x4c, 0xe0, 0x67, 0x9a, 0x2a, 0x30, 0x7a, 0x0a, 0xf7, 0xf3, 0x86, 0xa6, 0x82,
+	0xcf, 0xb4, 0xa0, 0x1a, 0x44, 0x2f, 0xf2, 0xb1, 0xf9, 0xf8, 0xdf, 0xe6, 0xb6, 0xb9, 0xf9, 0x95,
+	0xb9, 0xf9, 0x87, 0x5f, 0xeb, 0xb5, 0xc8, 0x2b, 0x55, 0x2f, 0xfb, 0x7b, 0x96, 0xe8, 0xb7, 0xdb,
+	0x26, 0xea, 0x27, 0x3a, 0x80, 0x8d, 0xdf, 0x69, 0xb8, 0xca, 0xff, 0x00, 0xa4, 0xe0, 0x9b, 0xda,
+	0x4b, 0x70, 0x78, 0xa1, 0xdb, 0x50, 0xec, 0xfc, 0x96, 0xdc, 0xc7, 0x66, 0xee, 0xda, 0x20, 0xb6,
+	0x19, 0x0d, 0x36, 0x8c, 0x1a, 0x5b, 0x8c, 0xd6, 0xb6, 0xc0, 0x30, 0xfa, 0x11, 0xde, 0xdd, 0x68,
+	0xfe, 0x96, 0xb2, 0x1e, 0x55, 0xcb, 0x32, 0x26, 0xbd, 0xad, 0x28, 0xff, 0x7f, 0x15, 0xb5, 0xb6,
+	0xcd, 0xa5, 0xd1, 0xf1, 0x03, 0x68, 0x9d, 0x73, 0x8e, 0xda, 0xb0, 0x39, 0x5e, 0xcd, 0x66, 0x4c,
+	0x08, 0x67, 0x07, 0x35, 0xa1, 0xf5, 0xfa, 0xf5, 0xd8, 0x01, 0xc7, 0x5f, 0xc2, 0x86, 0x7e, 0x8e,
+	0x90, 0x0d, 0x1b, 0xbf, 0x2e, 0x02, 0xc9, 0x52, 0x92, 0xb0, 0x77, 0x0e, 0x50, 0xb1, 0x0b, 0xce,
+	0x58, 0xe4, 0xd4, 0x50, 0x0b, 0xd6, 0x47, 0xe1, 0x8a, 0x39, 0xd6, 0xf1, 0x1f, 0x40, 0x19, 0xa5,
+	0xef, 0x85, 0x0d, 0x1b, 0xa3, 0x90, 0x46, 0xef, 0x9d, 0x1d, 0x25, 0xb8, 0xa2, 0x72, 0xe1, 0x00,
+	0x75, 0xd0, 0x79, 0x34, 0x0f, 0x03, 0xb1, 0x70, 0x6a, 0x0a, 0x9c, 0x2e, 0x82, 0x88, 0x09, 0xe6,
+	0x58, 0x0a, 0xbc, 0x59, 0x24, 0x22, 0x98, 0x09, 0xa7, 0x8e, 0xf6, 0xa1, 0x7d, 0xba, 0x60, 0xd7,
+	0x81, 0x90, 0x3c, 0x71, 0x1a, 0x8a, 0x1b, 0x05, 0x71, 0x18, 0xcf, 0x13, 0x67, 0x57, 0x81, 0x1f,
+	0x02, 0x21, 0x63, 0x9e, 0x38, 0x4d, 0x25, 0xbc, 0x60, 0xf1, 0x9c, 0xd3, 0xe5, 0x22, 0x71, 0x5a,
+	0x68, 0x0f, 0xb6, 0xde, 0xc4, 0x61, 0x20, 0x95, 0x8b, 0x3d, 0x72, 0xfe, 0xbc, 0xed, 0x82, 0xbf,
+	0x6e, 0xbb, 0xe0, 0xef, 0xdb, 0x2e, 0xb8, 0xf9, 0xa7, 0xbb, 0x33, 0xdd, 0xd5, 0xff, 0x9f, 0xf8,
+	0xff, 0x05, 0x00, 0x00, 0xff, 0xff, 0x64, 0x85, 0x8e, 0xcd, 0xad, 0x08, 0x00, 0x00,
 }
 
 func (m *Student) Marshal() (dAtA []byte, err error) {
@@ -432,6 +740,77 @@ func (m *Student) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *Student) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Age != 0 {
+		i = encodeVarintTest(dAtA, i, uint64(m.Age))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintTest(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.ID != 0 {
+		i = encodeVarintTest(dAtA, i, uint64(m.ID))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Table) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Table) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Table) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Teacher) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Teacher) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Teacher) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -484,6 +863,250 @@ func (m *Car) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
+	if len(m.VarMap3) > 0 {
+		for k := range m.VarMap3 {
+			v := m.VarMap3[k]
+			baseI := i
+			if v != nil {
+				{
+					size, err := v.MarshalToSizedBuffer(dAtA[:i])
+					if err != nil {
+						return 0, err
+					}
+					i -= size
+					i = encodeVarintTest(dAtA, i, uint64(size))
+				}
+				i--
+				dAtA[i] = 0x12
+			}
+			i = encodeVarintTest(dAtA, i, uint64(k))
+			i--
+			dAtA[i] = 0x8
+			i = encodeVarintTest(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x3e
+			i--
+			dAtA[i] = 0xc2
+		}
+	}
+	if len(m.VarArrayBytes) > 0 {
+		i -= len(m.VarArrayBytes)
+		copy(dAtA[i:], m.VarArrayBytes)
+		i = encodeVarintTest(dAtA, i, uint64(len(m.VarArrayBytes)))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0xb2
+	}
+	if len(m.VarBytes) > 0 {
+		i -= len(m.VarBytes)
+		copy(dAtA[i:], m.VarBytes)
+		i = encodeVarintTest(dAtA, i, uint64(len(m.VarBytes)))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0xaa
+	}
+	if len(m.VarData) > 0 {
+		i -= len(m.VarData)
+		copy(dAtA[i:], m.VarData)
+		i = encodeVarintTest(dAtA, i, uint64(len(m.VarData)))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0xa2
+	}
+	if len(m.VarStructMap) > 0 {
+		for k := range m.VarStructMap {
+			v := m.VarStructMap[k]
+			baseI := i
+			if v != nil {
+				{
+					size, err := v.MarshalToSizedBuffer(dAtA[:i])
+					if err != nil {
+						return 0, err
+					}
+					i -= size
+					i = encodeVarintTest(dAtA, i, uint64(size))
+				}
+				i--
+				dAtA[i] = 0x12
+			}
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintTest(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintTest(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x2
+			i--
+			dAtA[i] = 0x9a
+		}
+	}
+	if len(m.VarStructSlice) > 0 {
+		for iNdEx := len(m.VarStructSlice) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.VarStructSlice[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTest(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2
+			i--
+			dAtA[i] = 0x92
+		}
+	}
+	if len(m.VarStructArray1) > 0 {
+		for iNdEx := len(m.VarStructArray1) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.VarStructArray1[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTest(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2
+			i--
+			dAtA[i] = 0x8a
+		}
+	}
+	if len(m.VarEnumArray) > 0 {
+		dAtA4 := make([]byte, len(m.VarEnumArray)*10)
+		var j3 int
+		for _, num := range m.VarEnumArray {
+			for num >= 1<<7 {
+				dAtA4[j3] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j3++
+			}
+			dAtA4[j3] = uint8(num)
+			j3++
+		}
+		i -= j3
+		copy(dAtA[i:], dAtA4[:j3])
+		i = encodeVarintTest(dAtA, i, uint64(j3))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0x82
+	}
+	if len(m.VarStructArray) > 0 {
+		for iNdEx := len(m.VarStructArray) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.VarStructArray[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTest(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xfa
+		}
+	}
+	if len(m.VarArray) > 0 {
+		dAtA6 := make([]byte, len(m.VarArray)*10)
+		var j5 int
+		for _, num1 := range m.VarArray {
+			num := uint64(num1)
+			for num >= 1<<7 {
+				dAtA6[j5] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j5++
+			}
+			dAtA6[j5] = uint8(num)
+			j5++
+		}
+		i -= j5
+		copy(dAtA[i:], dAtA6[:j5])
+		i = encodeVarintTest(dAtA, i, uint64(j5))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xf2
+	}
+	if len(m.VarMap2) > 0 {
+		for k := range m.VarMap2 {
+			v := m.VarMap2[k]
+			baseI := i
+			i = encodeVarintTest(dAtA, i, uint64(v))
+			i--
+			dAtA[i] = 0x10
+			i = encodeVarintTest(dAtA, i, uint64(k))
+			i--
+			dAtA[i] = 0x8
+			i = encodeVarintTest(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xea
+		}
+	}
+	if len(m.VarSubjects) > 0 {
+		dAtA8 := make([]byte, len(m.VarSubjects)*10)
+		var j7 int
+		for _, num := range m.VarSubjects {
+			for num >= 1<<7 {
+				dAtA8[j7] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j7++
+			}
+			dAtA8[j7] = uint8(num)
+			j7++
+		}
+		i -= j7
+		copy(dAtA[i:], dAtA8[:j7])
+		i = encodeVarintTest(dAtA, i, uint64(j7))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xe2
+	}
+	if len(m.VarTeachers) > 0 {
+		for iNdEx := len(m.VarTeachers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.VarTeachers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTest(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xda
+		}
+	}
+	if m.VarTeacher != nil {
+		{
+			size, err := m.VarTeacher.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTest(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xd2
+	}
+	if m.VarSubject != 0 {
+		i = encodeVarintTest(dAtA, i, uint64(m.VarSubject))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xc8
+	}
 	if len(m.VarMap1) > 0 {
 		for k := range m.VarMap1 {
 			v := m.VarMap1[k]
@@ -509,7 +1132,7 @@ func (m *Car) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x1
 			i--
-			dAtA[i] = 0xba
+			dAtA[i] = 0xc2
 		}
 	}
 	if len(m.VarMap) > 0 {
@@ -530,52 +1153,52 @@ func (m *Car) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x1
 			i--
-			dAtA[i] = 0xb2
+			dAtA[i] = 0xba
 		}
 	}
 	if len(m.VarEnums) > 0 {
-		dAtA3 := make([]byte, len(m.VarEnums)*10)
-		var j2 int
+		dAtA12 := make([]byte, len(m.VarEnums)*10)
+		var j11 int
 		for _, num := range m.VarEnums {
 			for num >= 1<<7 {
-				dAtA3[j2] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA12[j11] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j2++
+				j11++
 			}
-			dAtA3[j2] = uint8(num)
-			j2++
+			dAtA12[j11] = uint8(num)
+			j11++
 		}
-		i -= j2
-		copy(dAtA[i:], dAtA3[:j2])
-		i = encodeVarintTest(dAtA, i, uint64(j2))
+		i -= j11
+		copy(dAtA[i:], dAtA12[:j11])
+		i = encodeVarintTest(dAtA, i, uint64(j11))
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xaa
+		dAtA[i] = 0xb2
 	}
 	if len(m.VarFloat64S) > 0 {
 		for iNdEx := len(m.VarFloat64S) - 1; iNdEx >= 0; iNdEx-- {
-			f4 := math.Float64bits(float64(m.VarFloat64S[iNdEx]))
+			f13 := math.Float64bits(float64(m.VarFloat64S[iNdEx]))
 			i -= 8
-			encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(f4))
+			encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(f13))
 		}
 		i = encodeVarintTest(dAtA, i, uint64(len(m.VarFloat64S)*8))
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xa2
+		dAtA[i] = 0xaa
 	}
 	if len(m.VarFloat32S) > 0 {
 		for iNdEx := len(m.VarFloat32S) - 1; iNdEx >= 0; iNdEx-- {
-			f5 := math.Float32bits(float32(m.VarFloat32S[iNdEx]))
+			f14 := math.Float32bits(float32(m.VarFloat32S[iNdEx]))
 			i -= 4
-			encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(f5))
+			encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(f14))
 		}
 		i = encodeVarintTest(dAtA, i, uint64(len(m.VarFloat32S)*4))
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x9a
+		dAtA[i] = 0xa2
 	}
 	if len(m.VarStrings) > 0 {
 		for iNdEx := len(m.VarStrings) - 1; iNdEx >= 0; iNdEx-- {
@@ -585,7 +1208,7 @@ func (m *Car) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x1
 			i--
-			dAtA[i] = 0x92
+			dAtA[i] = 0x9a
 		}
 	}
 	if len(m.VarBools) > 0 {
@@ -601,7 +1224,7 @@ func (m *Car) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x8a
+		dAtA[i] = 0x92
 	}
 	if len(m.VarStructs) > 0 {
 		for iNdEx := len(m.VarStructs) - 1; iNdEx >= 0; iNdEx-- {
@@ -616,27 +1239,29 @@ func (m *Car) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x1
 			i--
-			dAtA[i] = 0x82
+			dAtA[i] = 0x8a
 		}
 	}
-	if len(m.VarArray) > 0 {
-		dAtA7 := make([]byte, len(m.VarArray)*10)
-		var j6 int
-		for _, num1 := range m.VarArray {
+	if len(m.VarList) > 0 {
+		dAtA16 := make([]byte, len(m.VarList)*10)
+		var j15 int
+		for _, num1 := range m.VarList {
 			num := uint64(num1)
 			for num >= 1<<7 {
-				dAtA7[j6] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA16[j15] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j6++
+				j15++
 			}
-			dAtA7[j6] = uint8(num)
-			j6++
+			dAtA16[j15] = uint8(num)
+			j15++
 		}
-		i -= j6
-		copy(dAtA[i:], dAtA7[:j6])
-		i = encodeVarintTest(dAtA, i, uint64(j6))
+		i -= j15
+		copy(dAtA[i:], dAtA16[:j15])
+		i = encodeVarintTest(dAtA, i, uint64(j15))
 		i--
-		dAtA[i] = 0x7a
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x82
 	}
 	if m.VarStruct != nil {
 		{
@@ -648,69 +1273,59 @@ func (m *Car) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintTest(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x72
+		dAtA[i] = 0x7a
 	}
 	if m.VarFloat64 != 0 {
 		i -= 8
 		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.VarFloat64))))
 		i--
-		dAtA[i] = 0x69
+		dAtA[i] = 0x71
 	}
 	if m.VarFloat32 != 0 {
 		i -= 4
 		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.VarFloat32))))
 		i--
-		dAtA[i] = 0x65
+		dAtA[i] = 0x6d
 	}
 	if m.VarUint64 != 0 {
 		i = encodeVarintTest(dAtA, i, uint64(m.VarUint64))
 		i--
-		dAtA[i] = 0x58
+		dAtA[i] = 0x60
 	}
 	if m.VarInt64 != 0 {
 		i = encodeVarintTest(dAtA, i, uint64(m.VarInt64))
 		i--
-		dAtA[i] = 0x50
+		dAtA[i] = 0x58
 	}
 	if m.VarUint32 != 0 {
 		i = encodeVarintTest(dAtA, i, uint64(m.VarUint32))
 		i--
-		dAtA[i] = 0x48
+		dAtA[i] = 0x50
 	}
 	if m.VarInt32 != 0 {
 		i = encodeVarintTest(dAtA, i, uint64(m.VarInt32))
 		i--
-		dAtA[i] = 0x40
+		dAtA[i] = 0x48
 	}
 	if m.VarUint16 != 0 {
 		i = encodeVarintTest(dAtA, i, uint64(m.VarUint16))
 		i--
-		dAtA[i] = 0x38
+		dAtA[i] = 0x40
 	}
 	if m.VarInt16 != 0 {
 		i = encodeVarintTest(dAtA, i, uint64(m.VarInt16))
 		i--
+		dAtA[i] = 0x38
+	}
+	if m.VarInt8 != 0 {
+		i = encodeVarintTest(dAtA, i, uint64(m.VarInt8))
+		i--
 		dAtA[i] = 0x30
 	}
-	if m.VarSbyte {
-		i--
-		if m.VarSbyte {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
+	if m.VarByte != 0 {
+		i = encodeVarintTest(dAtA, i, uint64(m.VarByte))
 		i--
 		dAtA[i] = 0x28
-	}
-	if m.VarByte {
-		i--
-		if m.VarByte {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x20
 	}
 	if m.VarBool {
 		i--
@@ -720,14 +1335,19 @@ func (m *Car) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0
 		}
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x20
 	}
 	if len(m.VarString) > 0 {
 		i -= len(m.VarString)
 		copy(dAtA[i:], m.VarString)
 		i = encodeVarintTest(dAtA, i, uint64(len(m.VarString)))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x1a
+	}
+	if m.VarUint8 != 0 {
+		i = encodeVarintTest(dAtA, i, uint64(m.VarUint8))
+		i--
+		dAtA[i] = 0x10
 	}
 	if m.VarEnum != 0 {
 		i = encodeVarintTest(dAtA, i, uint64(m.VarEnum))
@@ -770,6 +1390,40 @@ func (m *Student) Size() (n int) {
 	return n
 }
 
+func (m *Table) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Teacher) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ID != 0 {
+		n += 1 + sovTest(uint64(m.ID))
+	}
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovTest(uint64(l))
+	}
+	if m.Age != 0 {
+		n += 1 + sovTest(uint64(m.Age))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
 func (m *Car) Size() (n int) {
 	if m == nil {
 		return 0
@@ -779,6 +1433,9 @@ func (m *Car) Size() (n int) {
 	if m.VarEnum != 0 {
 		n += 1 + sovTest(uint64(m.VarEnum))
 	}
+	if m.VarUint8 != 0 {
+		n += 1 + sovTest(uint64(m.VarUint8))
+	}
 	l = len(m.VarString)
 	if l > 0 {
 		n += 1 + l + sovTest(uint64(l))
@@ -786,11 +1443,11 @@ func (m *Car) Size() (n int) {
 	if m.VarBool {
 		n += 2
 	}
-	if m.VarByte {
-		n += 2
+	if m.VarByte != 0 {
+		n += 1 + sovTest(uint64(m.VarByte))
 	}
-	if m.VarSbyte {
-		n += 2
+	if m.VarInt8 != 0 {
+		n += 1 + sovTest(uint64(m.VarInt8))
 	}
 	if m.VarInt16 != 0 {
 		n += 1 + sovTest(uint64(m.VarInt16))
@@ -820,12 +1477,12 @@ func (m *Car) Size() (n int) {
 		l = m.VarStruct.Size()
 		n += 1 + l + sovTest(uint64(l))
 	}
-	if len(m.VarArray) > 0 {
+	if len(m.VarList) > 0 {
 		l = 0
-		for _, e := range m.VarArray {
+		for _, e := range m.VarList {
 			l += sovTest(uint64(e))
 		}
-		n += 1 + sovTest(uint64(l)) + l
+		n += 2 + sovTest(uint64(l)) + l
 	}
 	if len(m.VarStructs) > 0 {
 		for _, e := range m.VarStructs {
@@ -876,6 +1533,104 @@ func (m *Car) Size() (n int) {
 			n += mapEntrySize + 2 + sovTest(uint64(mapEntrySize))
 		}
 	}
+	if m.VarSubject != 0 {
+		n += 2 + sovTest(uint64(m.VarSubject))
+	}
+	if m.VarTeacher != nil {
+		l = m.VarTeacher.Size()
+		n += 2 + l + sovTest(uint64(l))
+	}
+	if len(m.VarTeachers) > 0 {
+		for _, e := range m.VarTeachers {
+			l = e.Size()
+			n += 2 + l + sovTest(uint64(l))
+		}
+	}
+	if len(m.VarSubjects) > 0 {
+		l = 0
+		for _, e := range m.VarSubjects {
+			l += sovTest(uint64(e))
+		}
+		n += 2 + sovTest(uint64(l)) + l
+	}
+	if len(m.VarMap2) > 0 {
+		for k, v := range m.VarMap2 {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + sovTest(uint64(k)) + 1 + sovTest(uint64(v))
+			n += mapEntrySize + 2 + sovTest(uint64(mapEntrySize))
+		}
+	}
+	if len(m.VarArray) > 0 {
+		l = 0
+		for _, e := range m.VarArray {
+			l += sovTest(uint64(e))
+		}
+		n += 2 + sovTest(uint64(l)) + l
+	}
+	if len(m.VarStructArray) > 0 {
+		for _, e := range m.VarStructArray {
+			l = e.Size()
+			n += 2 + l + sovTest(uint64(l))
+		}
+	}
+	if len(m.VarEnumArray) > 0 {
+		l = 0
+		for _, e := range m.VarEnumArray {
+			l += sovTest(uint64(e))
+		}
+		n += 2 + sovTest(uint64(l)) + l
+	}
+	if len(m.VarStructArray1) > 0 {
+		for _, e := range m.VarStructArray1 {
+			l = e.Size()
+			n += 2 + l + sovTest(uint64(l))
+		}
+	}
+	if len(m.VarStructSlice) > 0 {
+		for _, e := range m.VarStructSlice {
+			l = e.Size()
+			n += 2 + l + sovTest(uint64(l))
+		}
+	}
+	if len(m.VarStructMap) > 0 {
+		for k, v := range m.VarStructMap {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovTest(uint64(l))
+			}
+			mapEntrySize := 1 + len(k) + sovTest(uint64(len(k))) + l
+			n += mapEntrySize + 2 + sovTest(uint64(mapEntrySize))
+		}
+	}
+	l = len(m.VarData)
+	if l > 0 {
+		n += 2 + l + sovTest(uint64(l))
+	}
+	l = len(m.VarBytes)
+	if l > 0 {
+		n += 2 + l + sovTest(uint64(l))
+	}
+	l = len(m.VarArrayBytes)
+	if l > 0 {
+		n += 2 + l + sovTest(uint64(l))
+	}
+	if len(m.VarMap3) > 0 {
+		for k, v := range m.VarMap3 {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovTest(uint64(l))
+			}
+			mapEntrySize := 1 + sovTest(uint64(k)) + l
+			n += mapEntrySize + 2 + sovTest(uint64(mapEntrySize))
+		}
+	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
 	}
@@ -915,6 +1670,184 @@ func (m *Student) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: Student: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			m.ID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ID |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTest
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTest
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Age", wireType)
+			}
+			m.Age = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Age |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTest(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTest
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTest
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Table) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTest
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Table: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Table: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTest(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTest
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTest
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Teacher) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTest
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Teacher: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Teacher: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1061,6 +1994,25 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarUint8", wireType)
+			}
+			m.VarUint8 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.VarUint8 |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarString", wireType)
 			}
@@ -1092,7 +2044,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 			}
 			m.VarString = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarBool", wireType)
 			}
@@ -1112,11 +2064,11 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.VarBool = bool(v != 0)
-		case 4:
+		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarByte", wireType)
 			}
-			var v int
+			m.VarByte = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTest
@@ -1126,33 +2078,31 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= int(b&0x7F) << shift
+				m.VarByte |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.VarByte = bool(v != 0)
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VarSbyte", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTest
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.VarSbyte = bool(v != 0)
 		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarInt8", wireType)
+			}
+			m.VarInt8 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.VarInt8 |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarInt16", wireType)
 			}
@@ -1171,7 +2121,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 7:
+		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarUint16", wireType)
 			}
@@ -1190,7 +2140,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 8:
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarInt32", wireType)
 			}
@@ -1209,7 +2159,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 9:
+		case 10:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarUint32", wireType)
 			}
@@ -1228,7 +2178,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 10:
+		case 11:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarInt64", wireType)
 			}
@@ -1247,7 +2197,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 11:
+		case 12:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarUint64", wireType)
 			}
@@ -1266,7 +2216,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 12:
+		case 13:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarFloat32", wireType)
 			}
@@ -1277,7 +2227,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
 			m.VarFloat32 = float32(math.Float32frombits(v))
-		case 13:
+		case 14:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarFloat64", wireType)
 			}
@@ -1288,7 +2238,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
 			m.VarFloat64 = float64(math.Float64frombits(v))
-		case 14:
+		case 15:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarStruct", wireType)
 			}
@@ -1324,7 +2274,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 15:
+		case 16:
 			if wireType == 0 {
 				var v int32
 				for shift := uint(0); ; shift += 7 {
@@ -1341,7 +2291,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 						break
 					}
 				}
-				m.VarArray = append(m.VarArray, v)
+				m.VarList = append(m.VarList, v)
 			} else if wireType == 2 {
 				var packedLen int
 				for shift := uint(0); ; shift += 7 {
@@ -1376,8 +2326,8 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 					}
 				}
 				elementCount = count
-				if elementCount != 0 && len(m.VarArray) == 0 {
-					m.VarArray = make([]int32, 0, elementCount)
+				if elementCount != 0 && len(m.VarList) == 0 {
+					m.VarList = make([]int32, 0, elementCount)
 				}
 				for iNdEx < postIndex {
 					var v int32
@@ -1395,12 +2345,12 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 							break
 						}
 					}
-					m.VarArray = append(m.VarArray, v)
+					m.VarList = append(m.VarList, v)
 				}
 			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field VarArray", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field VarList", wireType)
 			}
-		case 16:
+		case 17:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarStructs", wireType)
 			}
@@ -1434,7 +2384,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 17:
+		case 18:
 			if wireType == 0 {
 				var v int
 				for shift := uint(0); ; shift += 7 {
@@ -1504,7 +2454,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 			} else {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarBools", wireType)
 			}
-		case 18:
+		case 19:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarStrings", wireType)
 			}
@@ -1536,7 +2486,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 			}
 			m.VarStrings = append(m.VarStrings, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
-		case 19:
+		case 20:
 			if wireType == 5 {
 				var v uint32
 				if (iNdEx + 4) > l {
@@ -1590,7 +2540,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 			} else {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarFloat32S", wireType)
 			}
-		case 20:
+		case 21:
 			if wireType == 1 {
 				var v uint64
 				if (iNdEx + 8) > l {
@@ -1644,7 +2594,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 			} else {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarFloat64S", wireType)
 			}
-		case 21:
+		case 22:
 			if wireType == 0 {
 				var v Color
 				for shift := uint(0); ; shift += 7 {
@@ -1713,7 +2663,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 			} else {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarEnums", wireType)
 			}
-		case 22:
+		case 23:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarMap", wireType)
 			}
@@ -1840,7 +2790,7 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 			}
 			m.VarMap[mapkey] = mapvalue
 			iNdEx = postIndex
-		case 23:
+		case 24:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VarMap1", wireType)
 			}
@@ -1968,6 +2918,856 @@ func (m *Car) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.VarMap1[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 25:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarSubject", wireType)
+			}
+			m.VarSubject = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.VarSubject |= Subject(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 26:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarTeacher", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTest
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTest
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.VarTeacher == nil {
+				m.VarTeacher = &Teacher{}
+			}
+			if err := m.VarTeacher.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 27:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarTeachers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTest
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTest
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VarTeachers = append(m.VarTeachers, &Teacher{})
+			if err := m.VarTeachers[len(m.VarTeachers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 28:
+			if wireType == 0 {
+				var v Subject
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTest
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= Subject(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.VarSubjects = append(m.VarSubjects, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTest
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthTest
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthTest
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				if elementCount != 0 && len(m.VarSubjects) == 0 {
+					m.VarSubjects = make([]Subject, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v Subject
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTest
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= Subject(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.VarSubjects = append(m.VarSubjects, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarSubjects", wireType)
+			}
+		case 29:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarMap2", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTest
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTest
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.VarMap2 == nil {
+				m.VarMap2 = make(map[int32]Subject)
+			}
+			var mapkey int32
+			var mapvalue Subject
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTest
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTest
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= int32(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTest
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapvalue |= Subject(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipTest(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthTest
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.VarMap2[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 30:
+			if wireType == 0 {
+				var v int32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTest
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.VarArray = append(m.VarArray, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTest
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthTest
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthTest
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.VarArray) == 0 {
+					m.VarArray = make([]int32, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v int32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTest
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= int32(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.VarArray = append(m.VarArray, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarArray", wireType)
+			}
+		case 31:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarStructArray", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTest
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTest
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VarStructArray = append(m.VarStructArray, &Teacher{})
+			if err := m.VarStructArray[len(m.VarStructArray)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 32:
+			if wireType == 0 {
+				var v Subject
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTest
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= Subject(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.VarEnumArray = append(m.VarEnumArray, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTest
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthTest
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthTest
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				if elementCount != 0 && len(m.VarEnumArray) == 0 {
+					m.VarEnumArray = make([]Subject, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v Subject
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTest
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= Subject(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.VarEnumArray = append(m.VarEnumArray, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarEnumArray", wireType)
+			}
+		case 33:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarStructArray1", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTest
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTest
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VarStructArray1 = append(m.VarStructArray1, &Student{})
+			if err := m.VarStructArray1[len(m.VarStructArray1)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 34:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarStructSlice", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTest
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTest
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VarStructSlice = append(m.VarStructSlice, &Table{})
+			if err := m.VarStructSlice[len(m.VarStructSlice)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 35:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarStructMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTest
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTest
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.VarStructMap == nil {
+				m.VarStructMap = make(map[string]*Table)
+			}
+			var mapkey string
+			var mapvalue *Table
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTest
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTest
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthTest
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTest
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTest
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthTest
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if postmsgIndex < 0 {
+						return ErrInvalidLengthTest
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &Table{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipTest(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthTest
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.VarStructMap[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 36:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarData", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTest
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTest
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VarData = append(m.VarData[:0], dAtA[iNdEx:postIndex]...)
+			if m.VarData == nil {
+				m.VarData = []byte{}
+			}
+			iNdEx = postIndex
+		case 37:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarBytes", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTest
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTest
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VarBytes = append(m.VarBytes[:0], dAtA[iNdEx:postIndex]...)
+			if m.VarBytes == nil {
+				m.VarBytes = []byte{}
+			}
+			iNdEx = postIndex
+		case 38:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarArrayBytes", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTest
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTest
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VarArrayBytes = append(m.VarArrayBytes[:0], dAtA[iNdEx:postIndex]...)
+			if m.VarArrayBytes == nil {
+				m.VarArrayBytes = []byte{}
+			}
+			iNdEx = postIndex
+		case 1000:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VarMap3", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTest
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTest
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTest
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.VarMap3 == nil {
+				m.VarMap3 = make(map[int32]*Teacher)
+			}
+			var mapkey int32
+			var mapvalue *Teacher
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTest
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTest
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= int32(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTest
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthTest
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if postmsgIndex < 0 {
+						return ErrInvalidLengthTest
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &Teacher{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipTest(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthTest
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.VarMap3[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

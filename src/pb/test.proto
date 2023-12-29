@@ -20,29 +20,68 @@ enum Color{
   Blue = 3;
 }
 
+message Table {
+
+}
+
+enum Subject {
+  Blank = 0;
+  Math      = 1;
+  English   = 2;
+  Chinese   = 3;
+  Physics   = 4;
+  Chemistry = 5;
+  Biology   = 6;
+  History   = 7;
+  Geography = 8;
+  Politics  = 9;
+}
+
+message Teacher {
+  int64 ID = 1;
+  string Name = 2;
+  int32 Age = 3;
+}
+
 message Car {
   Color VarEnum = 1;
-  string VarString = 2;
-  bool VarBool = 3;
-  bool VarByte = 4;
-  bool VarSbyte = 5;
-  int32 VarInt16 = 6;
-  uint32 VarUint16 = 7;
-  int32 VarInt32 = 8;
-  uint32 VarUint32 = 9;
-  int64 VarInt64 = 10;
-  uint64 VarUint64 = 11;
-  float VarFloat32 = 12;
-  double VarFloat64 = 13;
-  Student VarStruct = 14;
-  repeated int32 VarArray =15;
-  repeated Student VarStructs = 16;
-  repeated bool VarBools = 17;
-  repeated string VarStrings = 18;
-  repeated float  VarFloat32s = 19;
-  repeated double VarFloat64s = 20;
-  repeated Color VarEnums = 21;
-  map<string,string> VarMap = 22;
-  map<string,Student> VarMap1 = 23;
+  uint32 VarUint8 = 2;
+  string VarString = 3;
+  bool VarBool = 4;
+  uint32 VarByte = 5;
+  int32 VarInt8 = 6;
+  int32 VarInt16 = 7;
+  uint32 VarUint16 = 8;
+  int32 VarInt32 = 9;
+  uint32 VarUint32 = 10;
+  int64 VarInt64 = 11;
+  uint64 VarUint64 = 12;
+  float VarFloat32 = 13;
+  double VarFloat64 = 14;
+  Student VarStruct = 15;
+  repeated int32 VarList =16;
+  repeated Student VarStructs = 17;
+  repeated bool VarBools = 18;
+  repeated string VarStrings = 19;
+  repeated float  VarFloat32s = 20;
+  repeated double VarFloat64s = 21;
+  repeated Color VarEnums = 22;
+  map<string,string> VarMap = 23;
+  map<string,Student> VarMap1 = 24;
+  Subject VarSubject = 25;
+  Teacher VarTeacher = 26;
+  repeated Teacher VarTeachers = 27;
+  repeated Subject VarSubjects = 28;
+  map<int32, Subject> VarMap2 = 29;
+  repeated int32 VarArray  = 30;
+  repeated Teacher VarStructArray = 31;
+  repeated Subject VarEnumArray = 32;
+  repeated Student VarStructArray1 = 33;
+  repeated Table VarStructSlice = 34;
+  map<string,Table> VarStructMap = 35;
+  bytes VarData = 36;
+  bytes VarBytes = 37;
+  bytes VarArrayBytes = 38;
+  map<int32,Teacher> VarMap3 = 1000;
 }
 

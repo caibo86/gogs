@@ -100,7 +100,7 @@ struct Car {
     VarArray [3]int32 = 45;
     VarStructArray [3]gss.Teacher = 46;
     VarEnumArray [4]gss.Subject = 47;
-    VarStructArray1 [10]Student = 48;
+    VarStructArray1 [4]Student = 48;
     VarStructSlice []Table = 49;
     VarStructMap map[string]Table = 50;
     VarData []byte = 51;
