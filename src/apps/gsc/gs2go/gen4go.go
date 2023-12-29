@@ -169,6 +169,8 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"copyType":            gen.copyType,
 		"printComments":       gen.printComments,
 		"printCommentsToLine": gen.printCommentsToLine,
+		"getReadFunc":         gen.getReadFunc,
+		"getWriteFunc":        gen.getWriteFunc,
 		//"readParam":           gen.readParam,
 	}
 	gen.tpl, err = template.New("golang").Funcs(functions).Parse(tpl4go)
@@ -830,7 +832,7 @@ func (gen *Gen4Go) copyType(field *ast.Field) string {
 }
 
 // getReadFunc 根据类型获取读取函数
-func (gen *Gen4Go) getReadFunc(expr ast.Expr) string {
+func (gen *Gen4Go) getReadFunc(expr ast.Expr, data string) string {
 	switch expr.(type) {
 	case *ast.TypeRef:
 		ref := expr.(*ast.TypeRef)
@@ -838,9 +840,24 @@ func (gen *Gen4Go) getReadFunc(expr ast.Expr) string {
 		// 内置类型
 		if f, ok := readMapping[name]; ok {
 			return fmt.Sprintf(
-				` = %s`,
+				` = %s(%s, 0)`,
+				data,
 				f)
 		}
+		switch ref.Ref.(type) {
+		case *ast.Enum:
+			return fmt.Sprintf(
+				`var v int32
+				i, v = gsnet.ReadEnum(%s, 0)
+				= %s(v)`,
+				data,
+				gen.typeName(ref))
+		case *ast.Table:
+
+		default:
+			gserrors.Panicf("not here %s", ref.Ref.Name())
+		}
+
 		// 自定义类型
 		if _, ok := expr.Script().Imports[ref.NamePath[0]]; ok {
 			return fmt.Sprintf(
@@ -896,7 +913,7 @@ func (gen *Gen4Go) getReadFunc(expr ast.Expr) string {
 
 // getWriteFunc 根据类型获取写入函数
 func (gen *Gen4Go) getWriteFunc(typeRef *ast.TypeRef) string {
-
+	return ""
 }
 
 //// readParam 根据参数类型生成读取代码
