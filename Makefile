@@ -28,7 +28,7 @@ gsc:
 t:
 	@rm -f src/base/gslang/*.gs.go
 	@cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/gsc/gs2go
-	GOPATH=$(GOPATH) gs2go --module gogs gs
+	GOPATH=$(GOPATH) gs2go --module gogs gs base/gsnet
 
 getdeepcopy:
 	cd src/cmd/gengo/examples/deepcopy-gen && go build . && cp deepcopy-gen $(GOPATH)/bin

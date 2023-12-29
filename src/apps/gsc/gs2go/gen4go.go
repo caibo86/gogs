@@ -1101,10 +1101,10 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 		buff.WriteString(fmt.Sprintf("package %s\n", filepath.Base(script.Package().Name())))
 		codes := gen.buff.String()
 		// 如果两个特定的内置包中的gs文件 则不需要加包前缀
-		if script.Package().Name() == "gogs/base/gsnet" {
+		if script.Package().Name() == "base/gsnet" {
 			codes = strings.Replace(codes, "gsnet.", "", -1)
 		}
-		if script.Package().Name() == "gogs/base/gsdocker" {
+		if script.Package().Name() == "base/gsdocker" {
 			codes = strings.Replace(codes, "gsdocker.", "", -1)
 		}
 		// 如果代码中有特定packageMapping中的包名 则引入对应的包
