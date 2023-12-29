@@ -18,6 +18,7 @@ import (
 	"strings"
 )
 
+// printAttrs 输出格式化后属性
 func printAttrs(buff *bytes.Buffer, node ast.Node) {
 	for _, attr := range node.Attrs() {
 		if attr.Name() != ".Struct" && attr.Name() != ".gslang.Struct" {
@@ -27,6 +28,7 @@ func printAttrs(buff *bytes.Buffer, node ast.Node) {
 	}
 }
 
+// printCommentsToLine 输出格式化后的注释到一行
 func printCommentsToLine(buff *bytes.Buffer, node ast.Node) {
 	comments := gslang.Comments(node)
 	if len(comments) > 0 {
@@ -39,6 +41,7 @@ func printCommentsToLine(buff *bytes.Buffer, node ast.Node) {
 	}
 }
 
+// printComments 输出格式化后的注释
 func printComments(buff *bytes.Buffer, node ast.Node) bool {
 	comments := gslang.Comments(node)
 	if len(comments) > 0 {

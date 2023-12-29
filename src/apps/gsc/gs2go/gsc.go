@@ -37,8 +37,7 @@ func main() {
 	flag.StringVar(&moduleName, "module", "gogs", "golang module name")
 	flag.Parse()
 	log.Infof("Set module name: %s", moduleName)
-	// packages := []string{"yf/platform/yfnet", "yf/platform/yfdocker"}
-	var packages []string
+	packages := []string{"base/gsnet", "base/gsdock"}
 	compiler := gslang.NewCompiler()
 	log.Info("Start compiling packages: ", flag.Args())
 	packages = append(packages, flag.Args()...)
