@@ -23,7 +23,7 @@ type Script struct {
 // NewScript 在包节点内新建一个代码节点
 func (pkg *Package) NewScript(name string) (*Script, error) {
 	if pkg == nil {
-		gserrors.Panicf(nil, "pkg can not be nil")
+		gserrors.Panic("pkg can not be nil")
 	}
 	if old, ok := pkg.Scripts[name]; ok {
 		err := fmt.Errorf("duplicate script named:%s", old.Name())

@@ -1,0 +1,11 @@
+game:
+  logPath: ./log/game_${SERVICE_ID}.log
+  dbName: game_${SERVICE_ID}
+  mapFile: ./gd_config/NavMeshConfig.json
+
+etcd:
+  <<: *baseETCD
+  depList:
+    - GAME_CONFIG
+    - MONGO
+    - GATE

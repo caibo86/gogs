@@ -21,6 +21,7 @@ type GSError interface {
 	NewOrigin(error) // reset the origin error
 }
 
+// gsError 自定义错误对象
 type errorHost struct {
 	origin  error  // origin error
 	stack   string // stack trace message
@@ -31,24 +32,26 @@ func (err *errorHost) Error() string {
 	if err.message != "" {
 		if err.origin != nil {
 			return fmt.Sprintf(
-				"%s\nbacktrace:\n%sbacktrace error:\n%s",
+				"%s\norigin: %s\nbacktrace:\n%s",
 				err.message,
-				err.stack,
 				err.origin.Error(),
+				err.stack,
 			)
 		}
-
-		return fmt.Sprintf("%s\nbacktrace:\n%s", err.message, err.stack)
+		return fmt.Sprintf("%s\n%s", err.message, err.stack)
 	}
-
 	if err.origin != nil {
 		return fmt.Sprintf(
-			"%s\nbacktrace:\n%s",
+			"origin: %s\nbacktrace:\n%s",
 			err.origin.Error(),
 			err.stack,
 		)
 	}
-	return fmt.Sprintf("<unknown error>\n%s", err.stack)
+	return fmt.Sprintf("<unknown error>\nbacktrace:\n%s", err.stack)
+}
+
+func (err *errorHost) String() string {
+	return err.Error()
 }
 
 func (err *errorHost) Stack() string {
@@ -59,8 +62,8 @@ func (err *errorHost) Origin() error {
 	return err.origin
 }
 
-func (err *errorHost) NewOrigin(target error) {
-	err.origin = target
+func (err *errorHost) NewOrigin(origin error) {
+	err.origin = origin
 }
 
 func stack() []byte {
@@ -72,33 +75,61 @@ func stack() []byte {
 		}
 		buff.WriteString(fmt.Sprintf("\tfile = %s, line = %d\n", file, line))
 	}
-
 	return buff.Bytes()
 }
 
 // New create new GSError object
-func New(err error) GSError {
+func New(message string) GSError {
 	return &errorHost{
-		origin: err,
-		stack:  string(stack()),
+		origin:  nil,
+		message: message,
+		stack:   string(stack()),
 	}
 }
 
 // Newf create new GSError object
-func Newf(err error, template string, args ...interface{}) GSError {
+func Newf(template string, args ...interface{}) GSError {
 	return &errorHost{
-		origin:  err,
+		origin:  nil,
 		stack:   string(stack()),
 		message: fmt.Sprintf(template, args...),
 	}
 }
 
 // Panic create new GSError and panic
-func Panic(err error) {
-	panic(New(err))
+func Panic(message string) {
+	panic(New(message))
+}
+
+// PanicWith create new GSError and panic
+func PanicWith(err error, message string) {
+	panic(NewWith(err, message))
 }
 
 // Panicf create new GSError and panic
-func Panicf(err error, template string, args ...interface{}) {
-	panic(Newf(err, template, args...))
+func Panicf(template string, args ...interface{}) {
+	panic(Newf(template, args...))
+}
+
+// PanicfWith create new GSError and panic
+func PanicfWith(err error, template string, args ...interface{}) {
+	panic(NewfWith(err, template, args...))
+}
+
+// NewWith create new GSError with origin error
+func NewWith(err error, message string) GSError {
+	return &errorHost{
+		origin:  err,
+		message: message,
+		stack:   string(stack()),
+	}
+}
+
+// NewfWith create new GSError with origin error
+func NewfWith(err error, template string, args ...interface{}) GSError {
+	return &errorHost{
+		origin:  err,
+		message: fmt.Sprintf(template, args...),
+		stack:   string(stack()),
+	}
 }

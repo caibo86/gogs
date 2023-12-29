@@ -103,6 +103,6 @@ struct Car {
 }
 
 // 游戏服
-contract GameServer {
-    // GetServerTime() -> (int64);
+service GameServer {
+//     GetServerTime() -> (int64);
 }

@@ -15,7 +15,7 @@ type Visitor interface {
 	VisitEnumVal(*EnumVal) Node     // 访问枚举值节点
 	VisitTable(*Table) Node         // 访问结构体节点
 	VisitField(*Field) Node         // 访问结构体字段节点
-	VisitContract(*Contract) Node   // 访问服务节点
+	VisitService(*Service) Node     // 访问服务节点
 	VisitMethod(*Method) Node       // 访问函数节点
 	VisitParam(*Param) Node         // 访问函数参数节点
 	VisitTypeRef(*TypeRef) Node     // 访问类型引用节点
@@ -67,8 +67,8 @@ func (field *Field) Accept(visitor Visitor) Node {
 }
 
 // Accept 为服务节点实现Node接口
-func (contract *Contract) Accept(visitor Visitor) Node {
-	return visitor.VisitContract(contract)
+func (service *Service) Accept(visitor Visitor) Node {
+	return visitor.VisitService(service)
 }
 
 // Accept 为函数节点实现Node接口
@@ -194,8 +194,8 @@ func (visitor *EmptyVisitor) VisitField(*Field) Node {
 	return nil
 }
 
-// VisitContract 实现访问者接口
-func (visitor *EmptyVisitor) VisitContract(*Contract) Node {
+// VisitService 实现访问者接口
+func (visitor *EmptyVisitor) VisitService(*Service) Node {
 	return nil
 }
 

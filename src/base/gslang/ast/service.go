@@ -1,5 +1,5 @@
 // -------------------------------------------
-// @file      : contract.go
+// @file      : service.go
 // @author    : 蔡波
 // @contact   : caibo923@gmail.com
 // @time      : 2023/12/16 下午6:41
@@ -72,16 +72,16 @@ func (method *Method) NewParam(paramType Expr) *Param {
 	return param
 }
 
-// Contract 协议,表达式
-type Contract struct {
+// Service 协议,表达式
+type Service struct {
 	BaseExpr                    // 内嵌基本表达式实现
 	Methods  map[string]*Method // 函数列表
 	Bases    []*TypeRef         // 基类列表,协议可以继承自多个协议
 }
 
 // NewService 在代码节点内新建协议
-func (script *Script) NewService(name string) *Contract {
-	service := &Contract{
+func (script *Script) NewService(name string) *Service {
+	service := &Service{
 		Methods: make(map[string]*Method),
 	}
 	// 设置协议节点为给定的名字 设置所属代码节点
@@ -90,35 +90,35 @@ func (script *Script) NewService(name string) *Contract {
 }
 
 // NewBase 为此协议添加一个基类
-func (contract *Contract) NewBase(base *TypeRef) (*TypeRef, bool) {
+func (service *Service) NewBase(base *TypeRef) (*TypeRef, bool) {
 	// 检查是否已经存在此基类
-	for _, old := range contract.Bases {
+	for _, old := range service.Bases {
 		if old == base {
 			return old, false
 		}
 	}
 	// 添加基类
-	contract.Bases = append(contract.Bases, base)
+	service.Bases = append(service.Bases, base)
 	return base, true
 }
 
 // NewMethod 在协议内新建一个方法
-func (contract *Contract) NewMethod(name string) (*Method, bool) {
+func (service *Service) NewMethod(name string) (*Method, bool) {
 	// 检查是否已经存在此函数
-	method, ok := contract.Methods[name]
+	method, ok := service.Methods[name]
 	if ok {
 		return method, false
 	}
 	// 新建协议
 	method = &Method{
 		// TODO 使用hash计算函数ID
-		ID: uint32(len(contract.Methods)),
+		ID: uint32(len(service.Methods)),
 	}
 	// 初始化协议
-	method.Init(name, contract.Script())
+	method.Init(name, service.Script())
 	// 设置方法的父节点为此协议节点
-	method.SetParent(contract)
+	method.SetParent(service)
 	// 将方法加入到协议的方法列表
-	contract.Methods[name] = method
+	service.Methods[name] = method
 	return method, true
 }

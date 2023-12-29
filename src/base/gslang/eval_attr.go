@@ -20,7 +20,7 @@ type evalAttr struct {
 // VisitAttr 仅为实现访问者接口
 func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 	if visitor == nil {
-		gserrors.Panicf(nil, "visitor(evalAttr) should not be nil")
+		gserrors.Panic("visitor(evalAttr) should not be nil")
 	}
 	if visitor.values == nil {
 		visitor.values = make(map[string]any)
@@ -28,14 +28,14 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 	expr := node.Type.Ref
 	table, ok := expr.(*ast.Table)
 	if !ok {
-		gserrors.Panicf(nil, "attr type should be ast.Table")
+		gserrors.Panic("attr type should be ast.Table")
 	}
 	args := node.Args
 	if args == nil {
 		for _, field := range table.Fields {
 			switch field.Type.(type) {
 			case *ast.Array, *ast.Slice, *ast.Map:
-				gserrors.Panicf(nil, "attr field should not be array, slice or map")
+				gserrors.Panic("attr field should not be array, slice or map")
 			case *ast.TypeRef:
 				ref := field.Type.(*ast.TypeRef).Ref
 				name := ref.Name()
@@ -71,7 +71,7 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 					case *ast.Enum:
 						visitor.values[field.Name()] = int32(0)
 					default:
-						gserrors.Panicf(nil, "attr:%s filed should be inner type or enum", ref.Name())
+						gserrors.Panicf("attr:%s filed should be inner type or enum", ref.Name())
 					}
 				}
 			}
@@ -83,7 +83,7 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 			item = nArgs.Items[fieldName]
 			switch field.Type.(type) {
 			case *ast.Array, *ast.Slice, *ast.Map:
-				gserrors.Panicf(nil, "attr field should not be array, slice or map")
+				gserrors.Panic("attr field should not be array, slice or map")
 			case *ast.TypeRef:
 				ref := field.Type.(*ast.TypeRef).Ref
 				name := ref.Name()
@@ -189,133 +189,133 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 							visitor.values[field.Name()] = i.Ref.(*ast.EnumVal).Value
 						}
 					default:
-						gserrors.Panicf(nil, "attr:%s filed should be inner type or enum", ref.Name())
+						gserrors.Panicf("attr:%s filed should be inner type or enum", ref.Name())
 					}
 				}
 			}
 		}
 	} else {
-		gserrors.Panicf(nil, "attr args should be nil or ast.NamedArgs")
+		gserrors.Panic("attr args should be nil or ast.NamedArgs")
 	}
 	return nil
 }
 
 // VisitBinaryOp 访问二元运算
 func (visitor *evalAttr) VisitBinaryOp(node *ast.BinaryOp) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitTypeRef 访问类型引用
 func (visitor *evalAttr) VisitTypeRef(node *ast.TypeRef) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return node
 }
 
 // VisitEnumVal 访问枚举值
 func (visitor *evalAttr) VisitEnumVal(node *ast.EnumVal) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return node
 }
 
 // VisitString 仅为实现访问者接口
 func (visitor *evalAttr) VisitString(node *ast.String) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitFloat 仅为实现访问者接口
 func (visitor *evalAttr) VisitFloat(node *ast.Float) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitInt 仅为实现访问者接口
 func (visitor *evalAttr) VisitInt(node *ast.Int) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitBool 仅为实现访问者接口
 func (visitor *evalAttr) VisitBool(node *ast.Bool) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitPackage 仅为实现访问者接口
 func (visitor *evalAttr) VisitPackage(node *ast.Package) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitScript 仅为实现访问者接口
 func (visitor *evalAttr) VisitScript(node *ast.Script) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitEnum 仅为实现访问者接口
 func (visitor *evalAttr) VisitEnum(node *ast.Enum) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitTable 仅为实现访问者接口
 func (visitor *evalAttr) VisitTable(node *ast.Table) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitField 仅为实现访问者接口
 func (visitor *evalAttr) VisitField(node *ast.Field) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
-// VisitContract 仅为实现访问者接口
-func (visitor *evalAttr) VisitContract(node *ast.Contract) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+// VisitService 仅为实现访问者接口
+func (visitor *evalAttr) VisitService(node *ast.Service) ast.Node {
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitMethod 仅为实现访问者接口
 func (visitor *evalAttr) VisitMethod(node *ast.Method) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitArray 仅为实现访问者接口
 func (visitor *evalAttr) VisitArray(node *ast.Array) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitSlice 仅为实现访问者接口
 func (visitor *evalAttr) VisitSlice(node *ast.Slice) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitMap 仅为实现访问者接口
 func (visitor *evalAttr) VisitMap(node *ast.Map) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitArgs 仅为实现访问者接口
 func (visitor *evalAttr) VisitArgs(node *ast.Args) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitNamedArgs 仅为实现访问者接口
 func (visitor *evalAttr) VisitNamedArgs(node *ast.NamedArgs) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }
 
 // VisitParam 仅为实现访问者接口
 func (visitor *evalAttr) VisitParam(node *ast.Param) ast.Node {
-	gserrors.Panicf(nil, "node is not attr expr: %s", Pos(node))
+	gserrors.Panicf("node is not attr expr: %s", Pos(node))
 	return nil
 }

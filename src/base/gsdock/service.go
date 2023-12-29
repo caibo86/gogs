@@ -20,7 +20,7 @@ type ID uint32
 type IService interface {
 	fmt.Stringer
 	Type() string                                 // 获取服务类型
-	ID() uint32                                   // 服务ID
+	ID() ID                                       // 服务ID
 	Call(call *gsnet.Call) (*gsnet.Return, error) // 调用服务
 	Context() interface{}                         // 服务上下文
 }
@@ -37,8 +37,8 @@ type IRemote interface {
 // IRemoteService 远程服务
 type IRemoteService interface {
 	IService
-	RemoteID() uint32 // 远程服务在其本地的ID
-	Remote() IRemote  // 获取Remote
+	RemoteID() ID    // 远程服务在其本地的ID
+	Remote() IRemote // 获取Remote
 }
 
 // ITypeBuilder 服务类型builder

@@ -176,7 +176,7 @@ func (node *BaseNode) DelExtra(name string) {
 
 // Accept 接受访问者
 func (node *BaseNode) Accept(visitor Visitor) Node {
-	gserrors.Panicf(nil, "type(%s) not implement Accept method", reflect.TypeOf(node))
+	gserrors.Panicf("type(%s) not implement Accept method", reflect.TypeOf(node))
 	return nil
 }
 
@@ -196,7 +196,7 @@ type BaseExpr struct {
 // Init 初始化
 func (expr *BaseExpr) Init(name string, script *Script) {
 	if script == nil {
-		gserrors.Panicf(nil, "the param script can not be nil")
+		gserrors.Panic("the param script can not be nil")
 	}
 	expr.BaseNode.Init(name, nil)
 	expr.script = script

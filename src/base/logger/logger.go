@@ -120,7 +120,7 @@ func GetZapLogger(core zapcore.Core, callerSkip int) *zap.SugaredLogger {
 
 	logger := zap.New(core, options...).Sugar()
 	if logger == nil {
-		gserrors.Panicf(nil, "get zap logger failed.")
+		gserrors.Panic("get zap logger failed.")
 	}
 	return logger
 }

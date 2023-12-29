@@ -77,7 +77,7 @@ func (node *Node) NewDriver(driver IDriver) error {
 	protocol := driver.Protocol()
 	if _, ok := node.drivers[protocol]; ok {
 		// 同个节点下不能有相同协议的驱动
-		return gserrors.Newf(ErrNode, "duplicate driver support: %s", protocol)
+		return gserrors.Newf("duplicate driver support: %s", protocol)
 	}
 	node.drivers[protocol] = driver
 	return nil
@@ -101,7 +101,7 @@ func (node *Node) NewChannel(protocol string, name string, connectionType byte) 
 	if driver, ok := node.drivers[protocol]; ok {
 		return driver.NewChannel(name, connectionType)
 	}
-	return nil, gserrors.Newf(ErrNode, "new channel failed: driver protocol not found: %s", protocol)
+	return nil, gserrors.Newf("new channel failed: driver protocol not found: %s", protocol)
 }
 
 // DelChannel 在节点内指定协议的驱动上删除指定名字的通道

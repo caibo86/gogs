@@ -27,10 +27,10 @@ func main() {
 	defer func() {
 		e := recover()
 		if e != nil {
-			log.Errorf(gserrors.New(e.(error)).Error())
+			log.Errorf(e.(error).Error())
 		}
 		if err := log.Close(); err != nil {
-			gserrors.Panic(err)
+			gserrors.Panic(err.Error())
 		}
 	}()
 	// 解析命令行参数

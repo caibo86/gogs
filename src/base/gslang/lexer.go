@@ -46,7 +46,7 @@ const (
 	KeyString                          // KeyString string
 	KeyStruct                          // KeyStruct struct
 	KeyTable                           // KeyTable table
-	KeyContract                        // KeyService service
+	KeyService                         // KeyService service
 	KeyImport                          // KeyImport import
 	KeyMap                             // KeyMap map
 )
@@ -79,32 +79,32 @@ var tokenName = map[rune]string{
 	KeyString:       "string",
 	KeyStruct:       "struct",
 	KeyTable:        "table",
-	KeyContract:     "contract",
+	KeyService:      "service",
 	KeyImport:       "import",
 	KeyMap:          "map",
 }
 
 var keyMap = map[string]rune{
-	"byte":     KeyByte,
-	"bytes":    KeyBytes,
-	"int8":     KeyInt8,
-	"uint8":    KeyUint8,
-	"int16":    KeyInt16,
-	"uint16":   KeyUint16,
-	"int32":    KeyInt32,
-	"uint32":   KeyUint32,
-	"int64":    KeyInt64,
-	"uint64":   KeyUint64,
-	"float32":  KeyFloat32,
-	"float64":  KeyFloat64,
-	"string":   KeyString,
-	"bool":     KeyBool,
-	"enum":     KeyEnum,
-	"struct":   KeyStruct,
-	"table":    KeyTable,
-	"contract": KeyContract,
-	"import":   KeyImport,
-	"map":      KeyMap,
+	"byte":    KeyByte,
+	"bytes":   KeyBytes,
+	"int8":    KeyInt8,
+	"uint8":   KeyUint8,
+	"int16":   KeyInt16,
+	"uint16":  KeyUint16,
+	"int32":   KeyInt32,
+	"uint32":  KeyUint32,
+	"int64":   KeyInt64,
+	"uint64":  KeyUint64,
+	"float32": KeyFloat32,
+	"float64": KeyFloat64,
+	"string":  KeyString,
+	"bool":    KeyBool,
+	"enum":    KeyEnum,
+	"struct":  KeyStruct,
+	"table":   KeyTable,
+	"service": KeyService,
+	"import":  KeyImport,
+	"map":     KeyMap,
 }
 
 // TokenName 取Token类型rune对应的字符串表示 大于0的为字符本身 小于0的为内置类型
@@ -193,7 +193,7 @@ func (lexer *Lexer) nextChar() error {
 		for !utf8.FullRune(lexer.buff[0:lexer.buffPos]) {
 			// buffPos必须小于buff的长度
 			if lexer.buffPos >= len(lexer.buff) {
-				gserrors.Panicf(nil, "utf8.UTFMax must < len(lexer.buff)")
+				gserrors.Panic("utf8.UTFMax must < len(lexer.buff)")
 			}
 			c, err = lexer.reader.ReadByte()
 			if err != nil {

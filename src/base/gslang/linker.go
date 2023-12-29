@@ -31,7 +31,7 @@ func (compiler *Compiler) link(pkg *ast.Package) {
 	pkg.Accept(linker2)
 
 	// 新建协议连接器并访问包
-	linker3 := &contractLinker{
+	linker3 := &serviceLinker{
 		Compiler: compiler,
 	}
 	// 协议展开 每一个协议都包含自己所有父协议的所有函数 并按全局编号
@@ -116,21 +116,21 @@ func (linker *Linker) VisitEnumVal(val *ast.EnumVal) ast.Node {
 	return val
 }
 
-// VisitContract 访问服务
-func (linker *Linker) VisitContract(contract *ast.Contract) ast.Node {
+// VisitService 访问服务
+func (linker *Linker) VisitService(service *ast.Service) ast.Node {
 	// 轮询访问协议的属性
-	for _, attr := range contract.Attrs() {
+	for _, attr := range service.Attrs() {
 		attr.Accept(linker)
 	}
 	// 轮询访问协议的父协议
-	for _, base := range contract.Bases {
+	for _, base := range service.Bases {
 		base.Accept(linker)
 	}
 	// 轮询访问协议的函数列表
-	for _, method := range contract.Methods {
+	for _, method := range service.Methods {
 		method.Accept(linker)
 	}
-	return contract
+	return service
 }
 
 // VisitMethod 访问方法
@@ -228,7 +228,7 @@ func (linker *Linker) VisitTypeRef(ref *ast.TypeRef) ast.Node {
 		// 路径长度需要大于1
 		nodes := len(ref.NamePath)
 		if nodes == 0 {
-			gserrors.Panicf(nil, "the NamePath,can not be nil")
+			gserrors.Panic("the NamePath,can not be nil")
 		}
 		switch nodes { // 根据类型路径长度判断
 		case 1: // 长度为1 则NamePath[0]就是类型名
@@ -290,13 +290,13 @@ func (linker *Linker) VisitTypeRef(ref *ast.TypeRef) ast.Node {
 }
 
 // 协议连接器
-type contractLinker struct {
+type serviceLinker struct {
 	*Compiler        // 所属连接器
 	ast.EmptyVisitor // 内嵌空访问者
 }
 
 // VisitPackage 访问包
-func (linker *contractLinker) VisitPackage(pkg *ast.Package) ast.Node {
+func (linker *serviceLinker) VisitPackage(pkg *ast.Package) ast.Node {
 	// 轮询访问包内代码列表
 	for _, script := range pkg.Scripts {
 		script.Accept(linker)
@@ -305,7 +305,7 @@ func (linker *contractLinker) VisitPackage(pkg *ast.Package) ast.Node {
 }
 
 // VisitScript 访问代码
-func (linker *contractLinker) VisitScript(script *ast.Script) ast.Node {
+func (linker *serviceLinker) VisitScript(script *ast.Script) ast.Node {
 	// 轮询访问代码内的类型
 	for _, expr := range script.Types {
 		expr.Accept(linker)
@@ -313,23 +313,23 @@ func (linker *contractLinker) VisitScript(script *ast.Script) ast.Node {
 	return script
 }
 
-// VisitContract 访问协议
-func (linker *contractLinker) VisitContract(contract *ast.Contract) ast.Node {
-	linker.unwind(contract, nil)
-	return contract
+// VisitService 访问协议
+func (linker *serviceLinker) VisitService(service *ast.Service) ast.Node {
+	linker.unwind(service, nil)
+	return service
 }
 
 // unwind 展开协议 协议展开后 每一个协议都持有所有父协议的函数 并重新分配 ID
-func (linker *contractLinker) unwind(expr *ast.Contract, stack []*ast.Contract) []*ast.Contract {
+func (linker *serviceLinker) unwind(expr *ast.Service, stack []*ast.Service) []*ast.Service {
 	// 如果协议有已经展开的额外信息 则直接返回协议栈
 	if _, ok := expr.Extra("unwind"); ok {
 		return stack
 	}
 	var buff bytes.Buffer
 	// 在协议栈中查找是否存在递归继承 如果有则报错
-	for _, contract := range stack {
-		if contract == expr || buff.Len() != 0 {
-			buff.WriteString(fmt.Sprintf("\t%s inheri\n", contract))
+	for _, service := range stack {
+		if service == expr || buff.Len() != 0 {
+			buff.WriteString(fmt.Sprintf("\t%s inheri\n", service))
 		}
 	}
 	if buff.Len() != 0 {
@@ -341,16 +341,16 @@ func (linker *contractLinker) unwind(expr *ast.Contract, stack []*ast.Contract) 
 	modify := uint32(0)
 	// 检查协议的父协议 并展开
 	for _, base := range expr.Bases {
-		contract, ok := base.Ref.(*ast.Contract)
+		service, ok := base.Ref.(*ast.Service)
 		if !ok { // 检查父协议的类型是否正确
 			linker.errorf(Pos(base),
-				"contract(%s) inherit type is not contract:\n\tsee: %s", expr,
+				"service(%s) inherit type is not service:\n\tsee: %s", expr,
 				Pos(base.Ref))
 		}
 		// 将所有父协议压栈
-		stack = linker.unwind(contract, stack)
+		stack = linker.unwind(service, stack)
 		// 统计父协议函数总数
-		modify = modify + uint32(len(contract.Methods))
+		modify = modify + uint32(len(service.Methods))
 	}
 	// 处理协议的函数ID 加上父协议的函数总数
 	for _, method := range expr.Methods {
@@ -359,8 +359,8 @@ func (linker *contractLinker) unwind(expr *ast.Contract, stack []*ast.Contract) 
 	// 将父协议的函数列表复制到当前协议
 	modify = uint32(0)
 	for _, base := range expr.Bases {
-		contract := base.Ref.(*ast.Contract)
-		for _, method := range contract.Methods {
+		service := base.Ref.(*ast.Service)
+		for _, method := range service.Methods {
 			clone := &ast.Method{}
 			*clone = *method
 			clone.ID = clone.ID + modify
@@ -374,7 +374,7 @@ func (linker *contractLinker) unwind(expr *ast.Contract, stack []*ast.Contract) 
 			method.SetParent(expr)
 			expr.Methods[clone.Name()] = clone
 		}
-		modify = modify + uint32(len(contract.Methods))
+		modify = modify + uint32(len(service.Methods))
 	}
 	// 标记当前协议已经展开
 	expr.NewExtra("unwind", true)
@@ -571,30 +571,30 @@ func (linker *attrLinker) VisitEnumVal(val *ast.EnumVal) ast.Node {
 	return val
 }
 
-// VisitContract 访问协议
-func (linker *attrLinker) VisitContract(contract *ast.Contract) ast.Node {
-	for _, attr := range contract.Attrs() {
+// VisitService 访问协议
+func (linker *attrLinker) VisitService(service *ast.Service) ast.Node {
+	for _, attr := range service.Attrs() {
 		target := linker.EvalAttrUsage(attr)
 		if target&linker.attrTarget["Script"] != 0 {
-			contract.RemoveAttr(attr)
-			contract.Script().AddAttr(attr)
+			service.RemoveAttr(attr)
+			service.Script().AddAttr(attr)
 			continue
 		}
 		if target&linker.attrTarget["Package"] != 0 {
-			contract.RemoveAttr(attr)
-			contract.Package().AddAttr(attr)
+			service.RemoveAttr(attr)
+			service.Package().AddAttr(attr)
 			continue
 		}
-		if target&linker.attrTarget["Contract"] != 0 {
+		if target&linker.attrTarget["Service"] != 0 {
 			continue
 		}
-		linker.errorf(Pos(attr), "attr(%s) can't be used to contract:\n\tsee: %s",
+		linker.errorf(Pos(attr), "attr(%s) can't be used to service:\n\tsee: %s",
 			attr, Pos(attr.Type.Ref))
 	}
-	for _, method := range contract.Methods {
+	for _, method := range service.Methods {
 		method.Accept(linker)
 	}
-	return contract
+	return service
 }
 
 // VisitMethod 访问函数

@@ -85,7 +85,7 @@ type Parser struct {
 func (parser *Parser) Peek() *Token {
 	token, err := parser.Lexer.Peek()
 	if err != nil {
-		gserrors.Panic(err)
+		gserrors.Panic(err.Error())
 	}
 	return token
 }
@@ -94,14 +94,14 @@ func (parser *Parser) Peek() *Token {
 func (parser *Parser) Next() *Token {
 	token, err := parser.Lexer.Next()
 	if err != nil {
-		gserrors.Panic(err)
+		gserrors.Panic(err.Error())
 	}
 	return token
 }
 
 // errorf 格式化报错
 func (parser *Parser) errorf(position Position, template string, args ...interface{}) {
-	gserrors.Panicf(nil, fmt.Sprintf("parse: %s, error: %s", position.String(), fmt.Sprintf(template, args...)))
+	gserrors.Panicf("parse: %s, error: %s", position.String(), fmt.Sprintf(template, args...))
 }
 
 // expect 期望下一个Token的类型为目标rune expect,否则报错
@@ -190,8 +190,8 @@ func (parser *Parser) parse() (err error) {
 			parser.parseTable(false)
 		case KeyStruct: // struct 关键字
 			parser.parseTable(true)
-		case KeyContract: // contract 关键字
-			parser.parseContract()
+		case KeyService: // service 关键字
+			parser.parseService()
 		default: // 其余则报错
 			parser.errorf(token.Pos, "expect EOF")
 		}
@@ -301,7 +301,7 @@ func (parser *Parser) parseImports() {
 		parser.script.Imports["gslang"] == nil {
 		pkg, err := parser.compiler.Compile(GSLangPackage)
 		if err != nil {
-			gserrors.Panic(err)
+			gserrors.Panic(err.Error())
 		}
 		pos := Position{
 			Filename: parser.script.Name(),
@@ -341,7 +341,7 @@ func (parser *Parser) parseImport() *ast.PackageRef {
 	// 编译目标路径的包
 	pkg, err := parser.compiler.Compile(path)
 	if err != nil {
-		gserrors.Panic(err)
+		gserrors.Panic(err.Error())
 	}
 	// 将该包生成包引用节点并加入到代码节点的包引用列表中
 	ref, ok := parser.script.NewPackageRef(key, pkg)
@@ -567,20 +567,20 @@ func (parser *Parser) parseArg() ast.Expr {
 	}
 }
 
-// parseContract	分析协议(一组函数)
-func (parser *Parser) parseContract() {
-	// contract后第一个标识符为协议名字
+// parseService	分析协议(一组函数)
+func (parser *Parser) parseService() {
+	// service后第一个标识符为协议名字
 	name := parser.expect(TokenID)
-	contract := parser.script.NewService(name.Value.(string))
+	service := parser.script.NewService(name.Value.(string))
 	// 协议也认为是类型 代码包内不能有同名协议
-	if old, ok := parser.script.NewType(contract); !ok {
-		parser.errorf(name.Pos, "duplicate type name:\n\tsee: %s", Pos(old))
+	if old, ok := parser.script.NewType(service); !ok {
+		parser.errorf(name.Pos, "duplicate type name: %s in: %s", name.Value.(string), Pos(old))
 	}
 	// 附加位置信息到协议节点
-	attachPos(contract, name.Pos)
+	attachPos(service, name.Pos)
 	// 附加注释和属性
-	parser.attachComments(contract)
-	parser.attachAttrs(contract)
+	parser.attachAttrs(service)
+	parser.attachComments(service)
 	token := parser.Peek()
 	// 协议名后如果跟小括号则代表继承自某个协议类型
 	if token.Type == '(' {
@@ -591,12 +591,12 @@ func (parser *Parser) parseContract() {
 			// 分析类型引用 此处目标类型引用为某个协议类型
 			base := parser.parseTypeRef()
 			// 添加引用到协议的父类型列表
-			if old, ok := contract.NewBase(base); ok {
+			if old, ok := service.NewBase(base); ok {
 				// 分析注释并附加注释到 父类型引用节点
 				parser.parseComments()
 				parser.attachComments(base)
 			} else { // 不能重复继承相同协议
-				parser.errorf(Pos(base), "duplicate inherit from same contract:\n\tsee: %s", Pos(old))
+				parser.errorf(Pos(base), "duplicate inherit service: %s in: %s", base.Name(), Pos(old))
 			}
 			next := parser.Peek()
 			// ,分隔多个父协议
@@ -613,13 +613,13 @@ func (parser *Parser) parseContract() {
 	for {
 		// 分析属性
 		parser.parseAttrs()
-		token := parser.Peek()
+		token = parser.Peek()
 		if token.Type != TokenID {
 			break
 		}
 		// 取函数名字并在协议内新建函数节点
 		methodName := parser.Next()
-		method, ok := contract.NewMethod(methodName.Value.(string))
+		method, ok := service.NewMethod(methodName.Value.(string))
 		if !ok {
 			// 单个协议内不能有同名函数
 			parser.errorf(methodName.Pos, "duplicate method name:\n\tsee: %s", Pos(method))
@@ -667,7 +667,7 @@ func (parser *Parser) parseContract() {
 			for {
 				parser.parseAttrs()
 				paramType := parser.parseType()
-				next := parser.Peek()
+				next = parser.Peek()
 				if next.Type != ',' &&
 					next.Type != ')' &&
 					next.Type != TokenCOMMENT {
