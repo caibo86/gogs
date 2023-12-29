@@ -76,7 +76,7 @@ func (method *Method) NewParam(paramType Expr) *Param {
 type Contract struct {
 	BaseExpr                    // 内嵌基本表达式实现
 	Methods  map[string]*Method // 函数列表
-	Bases    []*TypeRef         // 基类列表,服务可以继承多个服务
+	Bases    []*TypeRef         // 基类列表,协议可以继承自多个协议
 }
 
 // NewService 在代码节点内新建协议

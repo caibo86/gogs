@@ -17,6 +17,7 @@ type Visitor interface {
 	VisitField(*Field) Node         // 访问结构体字段节点
 	VisitContract(*Contract) Node   // 访问服务节点
 	VisitMethod(*Method) Node       // 访问函数节点
+	VisitParam(*Param) Node         // 访问函数参数节点
 	VisitTypeRef(*TypeRef) Node     // 访问类型引用节点
 	VisitAttr(*Attr) Node           // 访问属性节点
 	VisitArray(*Array) Node         // 访问数组节点
@@ -73,6 +74,11 @@ func (contract *Contract) Accept(visitor Visitor) Node {
 // Accept 为函数节点实现Node接口
 func (method *Method) Accept(visitor Visitor) Node {
 	return visitor.VisitMethod(method)
+}
+
+// Accept 为函数参数实现Node接口
+func (param *Param) Accept(visitor Visitor) Node {
+	return visitor.VisitParam(param)
 }
 
 // Accept 为类型引用节点实现Node接口
