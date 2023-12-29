@@ -42,14 +42,35 @@ enum ErrCode {
 struct Table{
 }
 
+@gslang.AttrUsage(Target:gslang.AttrTarget.Struct)
+table Logo {
+    ID int32 = 1;
+    Name string= 2;
+    Color Color = 3;
+    B bool = 4;
+    F float32 = 5;
+    D float64 = 6;
+    Num1 byte = 7;
+    Num2 int8 = 8;
+    Num3 int16 = 9;
+    Num4 uint16 = 10;
+    Num5 int32 = 11;
+    Num6 uint32 = 12;
+    Num7 int64 = 13;
+    Num8 uint64 = 14;
+    Num9 uint8 = 15;
+}
+
 // 汽车
 // +k8s:deepcopy-gen=true
+@Logo(ID:100,Name:"logo",Color:Color.Blue,B:true,F:3.1e-3,D:-9.99,Num1:1,Num2:2,Num3:3,Num4:4,Num5:0xFF,Num6:0x12AB,Num7:7,Num8:8,Num9:9)
 struct Car {
     // 颜色
     VarEnum    Color                     = 1;
+    VarUint8  uint8                     = 2;
     VarString  string                    = 3;
     VarByte    byte                      = 5;
-    VarSbyte   sbyte                     = 6;
+    VarInt8   int8                     = 6;
     VarInt16   int16                     = 7;
     VarUint16  uint16                    = 8;
     VarInt32   int32                     = 9;// 整数
@@ -82,6 +103,9 @@ struct Car {
     VarStructArray1 [10]Student = 48;
     VarStructSlice []Table = 49;
     VarStructMap map[string]Table = 50;
+    VarData []byte = 51;
+    VarBytes bytes = 52;
+    VarArrayBytes [10]byte = 53;
 }
 
 // 最后的日志

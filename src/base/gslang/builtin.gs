@@ -1,6 +1,9 @@
 // 内置类型
 struct Byte{}
-struct Sbyte{}
+struct Bytes{}
+
+struct Int8{}
+struct Uint8{}
 
 struct Int16{}
 struct Uint16{}

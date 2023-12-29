@@ -9,6 +9,7 @@ package gslang
 
 import (
 	"gogs/base/gslang/ast"
+	log "gogs/base/logger"
 )
 
 // Enum 将Enum表达式内的EnumVal字典解析为map
@@ -84,6 +85,7 @@ func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int32 {
 	// 对属性求值
 	ea := &evalAttr{}
 	attr.Accept(ea)
+	log.Debugf("evalAttr: %v, result: %v", attr.Name(), ea.values)
 
 	// 只有Table才能被作为属性的类型引用
 	s, ok := attr.Type.Ref.(*ast.Table)

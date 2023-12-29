@@ -42,14 +42,31 @@ func Pos(node ast.Node) Position {
 	}
 }
 
-// attachComments 为节点增加额外的信息-注释列表
-func attachComments(node ast.Node, comments []*Token) {
+// AttachComments 为节点增加额外的信息-注释列表
+func AttachComments(node ast.Node, comments []*Token) {
+	if len(comments) == 0 {
+		return
+	}
+	if old := Comments(node); old != nil {
+		old = append(old, comments...)
+		node.NewExtra(commentExtra, old)
+		return
+	}
 	node.NewExtra(commentExtra, comments)
 }
 
 // Comments 返回节点的注释列表信息
 func Comments(node ast.Node) []*Token {
 	if comments, ok := node.Extra(commentExtra); ok {
+		return comments.([]*Token)
+	}
+	return nil
+}
+
+// DelComments 删除并返回节点的注释列表信息
+func DelComments(node ast.Node) []*Token {
+	if comments, ok := node.Extra(commentExtra); ok {
+		node.DelExtra(commentExtra)
 		return comments.([]*Token)
 	}
 	return nil
@@ -84,7 +101,7 @@ func (parser *Parser) Next() *Token {
 
 // errorf 格式化报错
 func (parser *Parser) errorf(position Position, template string, args ...interface{}) {
-	panic(gserrors.Newf(nil, fmt.Sprintf("parse:%s error:%s", position.String(), fmt.Sprintf(template, args...))))
+	panic(gserrors.Newf(nil, fmt.Sprintf("parse: %s, error: %s", position.String(), fmt.Sprintf(template, args...))))
 }
 
 // expect 期望下一个Token的类型为目标rune expect,否则报错
@@ -111,6 +128,7 @@ func (parser *Parser) parseTypeRef() *ast.TypeRef {
 	start := parser.expect(TokenID)
 	// 顺序 标识符 列表
 	nodes := []string{start.Value.(string)}
+	origins := []string{start.Origin}
 	for {
 		// 如果第偶数个Token不为. 则 认为标识符已到末尾
 		token := parser.Peek()
@@ -121,9 +139,10 @@ func (parser *Parser) parseTypeRef() *ast.TypeRef {
 		// 顺序 循环  添加到标识符列表
 		token = parser.expect(TokenID)
 		nodes = append(nodes, token.Value.(string))
+		origins = append(origins, token.Origin)
 	}
 	// 用标识符列表在代码节点内新建类型引用
-	ref := parser.script.NewTypeRef(nodes, strings.Join(nodes, "."))
+	ref := parser.script.NewTypeRef(nodes, strings.Join(origins, "."))
 	// 给节点附加位置信息
 	attachPos(ref, start.Pos)
 	return ref
@@ -155,12 +174,6 @@ func (compiler *Compiler) parse(pkg *ast.Package, path string) (*ast.Script, err
 
 // parse 分析器入口函数
 func (parser *Parser) parse() (err error) {
-	// 捕获错误 并返回该错误
-	defer func() {
-		if e := recover(); e != nil {
-			err = e.(error)
-		}
-	}()
 	// 先分析 代码内导入的其他包
 	parser.parseImports()
 	for {
@@ -186,7 +199,7 @@ func (parser *Parser) parse() (err error) {
 FINISH:
 	// 注释列表以额外信息的形式 添加到代码节点
 	// 剩余的注释列表及属性列表均附加到代码节点
-	attachComments(parser.script, parser.comments)
+	AttachComments(parser.script, parser.comments)
 	parser.script.AddAttrs(parser.attrs)
 	return
 }
@@ -203,7 +216,7 @@ func (parser *Parser) parseComments() {
 	}
 }
 
-// attachComments 将分析器保存的注释列表中符合条件的注释附加给对应节点
+// AttachComments 将分析器保存的注释列表中符合条件的注释附加给对应节点
 func (parser *Parser) attachComments(node ast.Node) {
 	// 节点位置
 	pos := Pos(node)
@@ -244,7 +257,7 @@ func (parser *Parser) attachComments(node ast.Node) {
 		revert = append(revert, selected[i])
 	}
 	// 将此结果注释列表附加给目标节点
-	attachComments(node, revert)
+	AttachComments(node, revert)
 }
 
 // parseImports 分析 当前代码 需要导入的 包
@@ -358,10 +371,11 @@ func (parser *Parser) parseAttrs() {
 		attr := parser.script.NewAttr(parser.parseTypeRef())
 		attachPos(attr, token.Pos)
 		token = parser.Peek()
-		if token.Type == '(' { // 如果后面跟了()则表示有参数列表 解析此参数列表附加到此属性
+		if token.Type == '(' {
+			// 如果后面跟了()则表示有参数列表 解析此参数列表附加到此属性
 			parser.Next()
-			// 分析参数列表附加到属性
-			attr.Args = parser.parseArgs()
+			// attr现在只支持命名参数
+			attr.Args = parser.parseNamedArgs()
 			parser.expect(')')
 		}
 		// 将属性添加到分析器的属性缓存列表
@@ -377,7 +391,54 @@ func (parser *Parser) parseAttrs() {
 func (parser *Parser) attachAttrs(node ast.Node) {
 	// 将分析器当前属性缓存列表中的所有属性附加到对应节点 并清空分析器属性缓存列表
 	node.AddAttrs(parser.attrs)
+	// 属性的注释列表附加到所属类型节点
+	for _, attr := range node.Attrs() {
+		comments := DelComments(attr)
+		if len(comments) > 0 {
+			AttachComments(node, comments)
+		}
+	}
 	parser.attrs = nil
+}
+
+// parseNamedArgs 分析命名参数列表
+func (parser *Parser) parseNamedArgs() ast.Expr {
+	// 参数列表的分析 总是从跳过 ( 的下一个Token开始
+	token := parser.Peek()
+	// 开始的第一个Token 为 ) 则表示一个空的参数列表 直接返回 nil
+	if token.Type == ')' {
+		return nil
+	}
+	// TokenLABEL 是 源文件中 如 lang: 格式的Token  (lang:"en",age:1)
+	if token.Type == TokenLABEL {
+		// 代码内新建一个命名参数列表
+		args := parser.script.NewNamedArgs()
+		attachPos(args, token.Pos)
+		parser.Next()
+		name := token
+		for {
+			if arg, ok := args.NewArg(name.Value.(string), parser.parseArg()); !ok {
+				// 命令参数列表内已存在同名的参数
+				parser.errorf(name.Pos, "duplicate arg name: %s in %s",
+					token.Value.(string), Pos(arg))
+			} else {
+				// 分析注释并添加到对应参数
+				parser.parseComments()
+				// parser.AttachComments(arg.Parent())
+			}
+			// 检查是否是参数分隔符逗号,不是则弹出循环 返回命名参数列表
+			token = parser.Peek()
+			if token.Type != ',' {
+				break
+			}
+			parser.Next()
+			// 期待一个TokenLABEL
+			name = parser.expect(TokenLABEL)
+		}
+		return args
+	}
+	parser.errorf(token.Pos, "named args must start with TokenLABEL")
+	return nil
 }
 
 // parseArgs 分析参数列表
@@ -396,13 +457,14 @@ func (parser *Parser) parseArgs() ast.Expr {
 		parser.Next()
 		name := token
 		for {
-			if arg, ok := args.NewArg(token.Value.(string), parser.parseArg()); !ok {
+			if arg, ok := args.NewArg(name.Value.(string), parser.parseArg()); !ok {
 				// 命令参数列表内已存在同名的参数
-				parser.errorf(name.Pos, "duplicate param assign: \n\tsee: %s", Pos(arg))
+				parser.errorf(name.Pos, "duplicate arg name: %s in %s",
+					token.Value.(string), Pos(arg))
 			} else {
 				// 分析注释并添加到对应参数
 				parser.parseComments()
-				// parser.attachComments(arg.Parent())
+				// parser.AttachComments(arg.Parent())
 			}
 			// 检查是否是参数分隔符逗号,不是则弹出循环 返回命名参数列表
 			token = parser.Peek()
@@ -423,7 +485,7 @@ func (parser *Parser) parseArgs() ast.Expr {
 		args.NewArg(parser.parseArg())
 		// 分析并附加注释到参数
 		parser.parseComments()
-		// parser.attachComments(arg.Parent())
+		// parser.AttachComments(arg.Parent())
 		token = parser.Peek()
 		// 参数分隔符
 		if token.Type != ',' {
@@ -444,37 +506,39 @@ func (parser *Parser) parseArg() ast.Expr {
 		switch token.Type {
 		case TokenINT: // 字面量整数值  100
 			parser.Next()
-			rhs = parser.script.NewInt(token.Value.(int64))
+			rhs = parser.script.NewInt(token.Value.(int64), token.Origin)
 		case TokenFLOAT: // 字面量浮点值 3.14
 			parser.Next()
-			rhs = parser.script.NewFloat(token.Value.(float64))
+			rhs = parser.script.NewFloat(token.Value.(float64), token.Origin)
 		case TokenSTRING: // 字面量字符串  "caibo"
 			parser.Next()
-			rhs = parser.script.NewString(token.Value.(string))
+			rhs = parser.script.NewString(token.Value.(string), token.Origin)
 		case TokenTrue: // 字面量布尔值真 true
 			parser.Next()
-			rhs = parser.script.NewBool(true)
+			rhs = parser.script.NewBool(true, token.Origin)
 		case TokenFalse: // 字面量布尔值假 false
 			parser.Next()
-			rhs = parser.script.NewBool(false)
+			rhs = parser.script.NewBool(false, token.Origin)
 		case '-': // 字面量 负整数 负浮点数
 			parser.Next()
 			next := parser.Next()
 			if next.Type == TokenINT {
-				rhs = parser.script.NewInt(-next.Value.(int64))
+				rhs = parser.script.NewInt(-next.Value.(int64), "-"+next.Origin)
 			} else if next.Type == TokenFLOAT {
-				rhs = parser.script.NewFloat(-next.Value.(float64))
+				rhs = parser.script.NewFloat(-next.Value.(float64), "-"+next.Origin)
+			} else {
+				parser.errorf(token.Pos, "unexpect token '-'")
 			}
-			parser.errorf(token.Pos, "unexpect token '-'")
 		case '+': // 字面量 正整数  正浮点数
 			parser.Next()
 			next := parser.Next()
 			if next.Type == TokenINT {
-				rhs = parser.script.NewInt(next.Value.(int64))
+				rhs = parser.script.NewInt(next.Value.(int64), "+"+next.Origin)
 			} else if next.Type == TokenFLOAT {
-				rhs = parser.script.NewFloat(next.Value.(float64))
+				rhs = parser.script.NewFloat(next.Value.(float64), "+"+next.Origin)
+			} else {
+				parser.errorf(token.Pos, "unexpect token '+'")
 			}
-			parser.errorf(token.Pos, "unexpect token '+'")
 		case TokenID: // 标识符 节点对象
 			rhs = parser.parseTypeRef()
 		default:
@@ -707,8 +771,8 @@ func (parser *Parser) parseType() ast.Expr {
 		expr = parser.script.NewMap(key, value)
 		attachPos(expr, token.Pos)
 		return expr
-	case KeyByte, KeySByte, KeyInt16, KeyUInt16, KeyInt32, KeyUInt32,
-		KeyInt64, KeyUInt64, KeyBool, KeyFloat32, KeyFloat64, KeyString:
+	case KeyByte, KeyBytes, KeyInt8, KeyUint8, KeyInt16, KeyUint16, KeyInt32, KeyUint32,
+		KeyInt64, KeyUint64, KeyBool, KeyFloat32, KeyFloat64, KeyString:
 		// gslang内置数据类型
 		parser.Next()
 		// 生成类型引用并返回
@@ -736,8 +800,8 @@ func (parser *Parser) parseTable(isStruct bool) {
 	}
 	// 附加位置 注释 属性
 	attachPos(table, name.Pos)
-	parser.attachComments(table)
 	parser.attachAttrs(table)
+	parser.attachComments(table)
 	if isStruct {
 		// 如果是结构体 生成一个属性
 		attr := parser.newGSLangAttr("Struct")
@@ -794,8 +858,8 @@ func (parser *Parser) parseEnum() {
 	}
 	// 附加位置 注释 属性
 	attachPos(enum, name.Pos)
-	parser.attachComments(enum)
 	parser.attachAttrs(enum)
+	parser.attachComments(enum)
 	parser.expect('{')
 	for { // 循环分析枚举的每个枚举值,其中枚举值可以为负值
 		// 分析属性
@@ -833,7 +897,7 @@ func (parser *Parser) parseEnum() {
 		// next = parser.Peek()
 		// if next.Type != ';' { // 枚举值之间用逗号分隔
 		// 	parser.parseComments()
-		// 	parser.attachComments(enumVal)
+		// 	parser.AttachComments(enumVal)
 		// 	break
 		// }
 		parser.expect(';')

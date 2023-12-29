@@ -20,7 +20,8 @@ func main() {
 	log.Init(
 		log.SetFilename("log/gsc.log"),
 		log.SetIsOpenFile(true),
-		log.SetIsAsync(true),
+		log.SetIsAsync(false),
+		// log.SetStacktrace(zap.PanicLevel),
 	)
 	// 程序完成后关闭全局日志服务
 	defer func() {
@@ -46,7 +47,7 @@ func main() {
 		log.Info("Compiling package: ", name)
 		_, err := compiler.Compile(name)
 		if err != nil {
-			log.Errorf("compile package %s failed\n\t%s", name, err.Error())
+			log.Errorf("compile package %s failed\n\t%s", name, err)
 			return
 		}
 	}

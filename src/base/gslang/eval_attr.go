@@ -35,26 +35,28 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 		for _, field := range table.Fields {
 			switch field.Type.(type) {
 			case *ast.Array, *ast.Slice, *ast.Map:
-				visitor.values[field.Name()] = nil
+				panic(gserrors.Newf(nil, "attr field should not be array, slice or map"))
 			case *ast.TypeRef:
 				ref := field.Type.(*ast.TypeRef).Ref
 				name := ref.Name()
 				switch name {
 				case "Byte":
 					visitor.values[field.Name()] = byte(0)
-				case "SByte":
+				case "Int8":
 					visitor.values[field.Name()] = int8(0)
+				case "Uint8":
+					visitor.values[field.Name()] = uint8(0)
 				case "Int16":
 					visitor.values[field.Name()] = int16(0)
-				case "UInt16":
+				case "Uint16":
 					visitor.values[field.Name()] = uint16(0)
 				case "Int32":
 					visitor.values[field.Name()] = int32(0)
-				case "UInt32":
+				case "Uint32":
 					visitor.values[field.Name()] = uint32(0)
 				case "Int64":
 					visitor.values[field.Name()] = int64(0)
-				case "UInt64":
+				case "Uint64":
 					visitor.values[field.Name()] = uint64(0)
 				case "Float32":
 					visitor.values[field.Name()] = float32(0)
@@ -65,61 +67,12 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 				case "Bool":
 					visitor.values[field.Name()] = false
 				default:
-					visitor.values[field.Name()] = nil
-				}
-			}
-		}
-	} else if uArgs, ok := args.(*ast.Args); ok {
-		for _, field := range table.Fields {
-			var item ast.Expr
-			if field.ID < uint16(len(uArgs.Items)) {
-				item = uArgs.Items[field.ID]
-			}
-			switch field.Type.(type) {
-			case *ast.Array, *ast.Slice, *ast.Map:
-				visitor.values[field.Name()] = nil
-			case *ast.TypeRef:
-				ref := field.Type.(*ast.TypeRef).Ref
-				name := ref.Name()
-				switch name {
-				case "Byte", "SByte", "Int16", "UInt16",
-					"Int32", "UInt32", "Int64", "UInt64":
-					if item == nil {
-						visitor.values[field.Name()] = int64(0)
-					} else {
-						i := item.(*ast.Int)
-						visitor.values[field.Name()] = i.Value
+					switch ref.(type) {
+					case *ast.Enum:
+						visitor.values[field.Name()] = int32(0)
+					default:
+						panic(gserrors.Newf(nil, "attr:%s filed should be inner type or enum", ref.Name()))
 					}
-				case "Float32":
-					if item == nil {
-						visitor.values[field.Name()] = float32(0)
-					} else {
-						i := item.(*ast.Float)
-						visitor.values[field.Name()] = float32(i.Value)
-					}
-				case "Float64":
-					if item == nil {
-						visitor.values[field.Name()] = float64(0)
-					} else {
-						i := item.(*ast.Float)
-						visitor.values[field.Name()] = i.Value
-					}
-				case "String":
-					if item == nil {
-						visitor.values[field.Name()] = float64(0)
-					} else {
-						i := item.(*ast.String)
-						visitor.values[field.Name()] = i.Value
-					}
-				case "Bool":
-					if item == nil {
-						visitor.values[field.Name()] = false
-					} else {
-						i := item.(*ast.Bool)
-						visitor.values[field.Name()] = i.Value
-					}
-				default:
-					//panic(gserrors.Newf(nil, "不支持的类型:%s", name))
 				}
 			}
 		}
@@ -130,18 +83,73 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 			item = nArgs.Items[fieldName]
 			switch field.Type.(type) {
 			case *ast.Array, *ast.Slice, *ast.Map:
-				visitor.values[field.Name()] = nil
+				panic(gserrors.Newf(nil, "attr field should not be array, slice or map"))
 			case *ast.TypeRef:
 				ref := field.Type.(*ast.TypeRef).Ref
 				name := ref.Name()
 				switch name {
-				case "Byte", "SByte", "Int16", "UInt16",
-					"Int32", "UInt32", "Int64", "UInt64":
+				case "Byte":
+					if item == nil {
+						visitor.values[field.Name()] = byte(0)
+					} else {
+						i := item.(*ast.Int)
+						visitor.values[field.Name()] = byte(i.Value)
+					}
+				case "Int8":
+					if item == nil {
+						visitor.values[field.Name()] = int8(0)
+					} else {
+						i := item.(*ast.Int)
+						visitor.values[field.Name()] = int8(i.Value)
+					}
+				case "Uint8":
+					if item == nil {
+						visitor.values[field.Name()] = uint8(0)
+					} else {
+						i := item.(*ast.Int)
+						visitor.values[field.Name()] = uint8(i.Value)
+					}
+				case "Int16":
+					if item == nil {
+						visitor.values[field.Name()] = int16(0)
+					} else {
+						i := item.(*ast.Int)
+						visitor.values[field.Name()] = int16(i.Value)
+					}
+				case "Uint16":
+					if item == nil {
+						visitor.values[field.Name()] = uint16(0)
+					} else {
+						i := item.(*ast.Int)
+						visitor.values[field.Name()] = uint16(i.Value)
+					}
+				case "Int32":
+					if item == nil {
+						visitor.values[field.Name()] = int32(0)
+					} else {
+						i := item.(*ast.Int)
+						visitor.values[field.Name()] = int32(i.Value)
+					}
+				case "Uint32":
+					if item == nil {
+						visitor.values[field.Name()] = uint32(0)
+					} else {
+						i := item.(*ast.Int)
+						visitor.values[field.Name()] = uint32(i.Value)
+					}
+				case "Int64":
 					if item == nil {
 						visitor.values[field.Name()] = int64(0)
 					} else {
 						i := item.(*ast.Int)
 						visitor.values[field.Name()] = i.Value
+					}
+				case "Uint64":
+					if item == nil {
+						visitor.values[field.Name()] = uint64(0)
+					} else {
+						i := item.(*ast.Int)
+						visitor.values[field.Name()] = uint64(i.Value)
 					}
 				case "Float32":
 					if item == nil {
@@ -159,7 +167,7 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 					}
 				case "String":
 					if item == nil {
-						visitor.values[field.Name()] = float64(0)
+						visitor.values[field.Name()] = ""
 					} else {
 						i := item.(*ast.String)
 						visitor.values[field.Name()] = i.Value
@@ -172,14 +180,23 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 						visitor.values[field.Name()] = i.Value
 					}
 				default:
-					//panic(gserrors.Newf(nil, "不支持的类型:%s", name))
+					switch ref.(type) {
+					case *ast.Enum:
+						if item == nil {
+							visitor.values[field.Name()] = int32(0)
+						} else {
+							i := item.(*ast.TypeRef)
+							visitor.values[field.Name()] = i.Ref.(*ast.EnumVal).Value
+						}
+					default:
+						panic(gserrors.Newf(nil, "attr:%s filed should be inner type or enum", ref.Name()))
+					}
 				}
 			}
 		}
 	} else {
-		panic(gserrors.Newf(nil, "attr args should be nil or ast.Args or ast.NamedArgs"))
+		panic(gserrors.Newf(nil, "attr args should be nil or ast.NamedArgs"))
 	}
-
 	return nil
 }
 

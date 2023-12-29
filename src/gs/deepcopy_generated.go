@@ -154,6 +154,11 @@ func (in *Car) DeepCopyInto(out *Car) {
 			(*out)[key] = outVal
 		}
 	}
+	if in.VarData != nil {
+		in, out := &in.VarData, &out.VarData
+		*out = make([]byte, len(*in))
+		copy(*out, *in)
+	}
 	if in.VarMap3 != nil {
 		in, out := &in.VarMap3, &out.VarMap3
 		*out = make(map[gss.Subject]*gss.Teacher, len(*in))

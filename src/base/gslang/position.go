@@ -26,7 +26,7 @@ func (pos Position) BaseName() string {
 
 // String 返回代码位置字符串
 func (pos Position) String() string {
-	return fmt.Sprintf("%s(%d:%d)", pos.Filename, pos.Line, pos.Column)
+	return fmt.Sprintf("file=%s line=%d column=%d", pos.Filename, pos.Line, pos.Column)
 }
 
 // Valid 返回代码位置是否有效

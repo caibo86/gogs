@@ -115,7 +115,11 @@ func (compiler *Compiler) Accept(visitor ast.Visitor) (err error) {
 func (compiler *Compiler) Compile(pkgName string) (pkg *ast.Package, err error) {
 	defer func() {
 		if e := recover(); e != nil {
-			err = e.(error)
+			if _, ok := e.(gserrors.GSError); ok {
+				err = e.(gserrors.GSError)
+			} else {
+				err = gserrors.New(e.(error))
+			}
 		}
 	}()
 	if loaded, ok := compiler.Loaded[pkgName]; ok {

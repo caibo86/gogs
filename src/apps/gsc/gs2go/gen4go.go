@@ -40,7 +40,9 @@ var packageMapping = map[string]string{
 // gslang内置类型对应的golang表示
 var keyMapping = map[string]string{
 	".gslang.Byte":    "byte",
-	".gslang.Sbyte":   "int8",
+	".gslang.Bytes":   "[]byte",
+	".gslang.Int8":    "int8",
+	".gslang.Uint8":   "uint8",
 	".gslang.Int16":   "int16",
 	".gslang.Uint16":  "uint16",
 	".gslang.Int32":   "int32",
@@ -52,7 +54,9 @@ var keyMapping = map[string]string{
 	".gslang.Bool":    "bool",
 	".gslang.String":  "string",
 	"Byte":            "byte",
-	"Sbyte":           "int8",
+	"Bytes":           "[]byte",
+	"Int8":            "int8",
+	"Uint8":           "uint8",
 	"Int16":           "int16",
 	"Uint16":          "uint16",
 	"Int32":           "int32",
@@ -68,7 +72,9 @@ var keyMapping = map[string]string{
 // gslang内置类型的默认值对应的golang表示
 var defaultVal = map[string]string{
 	".gslang.Byte":    "byte(0)",
-	".gslang.Sbyte":   "int8(0)",
+	".gslang.Bytes":   "[]byte(nil)",
+	".gslang.Int8":    "int8(0)",
+	".gslang.Uint8":   "uint8(0)",
 	".gslang.Int16":   "int16(0)",
 	".gslang.Uint16":  "uint16(0)",
 	".gslang.Int32":   "int32(0)",
@@ -81,27 +87,13 @@ var defaultVal = map[string]string{
 	".gslang.String":  "\"\"",
 }
 
-// gslang内置类型的零值对应的golang表示
-var zeroVal = map[string]string{
-	".gslang.Byte":    "0",
-	".gslang.Sbyte":   "0",
-	".gslang.Int16":   "0",
-	".gslang.Uint16":  "0",
-	".gslang.Int32":   "0",
-	".gslang.Uint32":  "0",
-	".gslang.Int64":   "0",
-	".gslang.Uint64":  "0",
-	".gslang.Float32": "0",
-	".gslang.Float64": "0",
-	".gslang.Bool":    "false",
-	".gslang.String":  "\"\"",
-}
-
 // writeMapping 写入方法映射
 var writeMapping = map[string]string{
 	"Bool":    "gsnet.WriteBool",
 	"Byte":    "gsnet.WriteByte",
-	"Sbyte":   "gsnet.WriteSbyte",
+	"Bytes":   "gsnet.WriteBytes",
+	"Int8":    "gsnet.WriteInt8",
+	"Uint8":   "gsnet.WriteUint8",
 	"Int16":   "gsnet.WriteInt16",
 	"Uint16":  "gsnet.WriteUint16",
 	"Int32":   "gsnet.WriteInt32",
@@ -117,7 +109,9 @@ var writeMapping = map[string]string{
 var readMapping = map[string]string{
 	"Bool":    "gsnet.ReadBool",
 	"Byte":    "gsnet.ReadByte",
-	"Sbyte":   "gsnet.ReadSbyte",
+	"Bytes":   "gsnet.ReadBytes",
+	"Int8":    "gsnet.ReadInt8",
+	"Uint8":   "gsnet.ReadUint8",
 	"Int16":   "gsnet.ReadInt16",
 	"Uint16":  "gsnet.ReadUint16",
 	"Int32":   "gsnet.ReadInt32",
@@ -133,7 +127,9 @@ var readMapping = map[string]string{
 var compareMapping = map[string]string{
 	"Bool":    `m.%s`,
 	"Byte":    `m.%s != 0`,
-	"Sbyte":   `m.%s != 0`,
+	"Bytes":   `len(m.%s) > 0`,
+	"Int8":    `m.%s != 0`,
+	"Uint8":   `m.%s != 0`,
 	"Int16":   `m.%s != 0`,
 	"Uint16":  `m.%s != 0`,
 	"Int32":   `m.%s != 0`,
@@ -199,7 +195,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 					n += 3
 				}`,
 				field.Name())
-		case "Byte", "Sbyte":
+		case "Byte", "Int8", "Uint8":
 			return fmt.Sprintf(
 				`if m.%s != 0 {
 					n += 3
@@ -224,6 +220,13 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 				}`,
 				field.Name())
 		case "String":
+			return fmt.Sprintf(
+				`l = len(m.%s)
+					if l > 0 {
+					n += 6 + l 
+				}`,
+				field.Name())
+		case "Bytes":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 					if l > 0 {
@@ -258,7 +261,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
 		}
 		switch ref.Ref.Name() {
-		case "Byte", "Sbyte", "Bool":
+		case "Byte", "Int8", "Uint8", "Bool":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 				if l > 0 {
@@ -326,7 +329,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 		var valStr string
 		ref := hash.Key.(*ast.TypeRef)
 		switch ref.Ref.Name() {
-		case "Byte", "Sbyte", "Bool":
+		case "Byte", "Int8", "Uint8", "Bool":
 			keyStr = "1"
 		case "Uint16", "Int16":
 			keyStr = "2"
@@ -346,7 +349,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 		}
 		ref = hash.Value.(*ast.TypeRef)
 		switch ref.Ref.Name() {
-		case "Byte", "Sbyte", "Bool":
+		case "Byte", "Int8", "Uint8", "Bool":
 			valStr = "1"
 		case "Uint16", "Int16":
 			valStr = "2"
@@ -432,10 +435,22 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 		} else {
 			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
 		}
+
 		var str string
 		var ok bool
 		if str, ok = writeMapping[ref.Ref.Name()]; ok {
-			str = fmt.Sprintf("i = %s(data, i, e)", str)
+			if isSlice && ref.Ref.Name() == "Byte" {
+				return fmt.Sprintf(
+					`if len(m.%s) > 0 {
+						i = gsnet.WriteFieldID(data, i , %d)
+						i = gsnet.WriteBytes(data, i, m.%s)
+					}`,
+					field.Name(),
+					field.ID,
+					field.Name())
+			} else {
+				str = fmt.Sprintf("i = %s(data, i, e)", str)
+			}
 		} else {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
@@ -577,7 +592,12 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 		var str string
 		var ok bool
 		if str, ok = readMapping[ref.Ref.Name()]; ok {
-			str = fmt.Sprintf("i, m.%s[j] = %s(data, i)", field.Name(), str)
+			if isSlice && ref.Ref.Name() == "Byte" {
+				return fmt.Sprintf(`i, m.%s = gsnet.ReadBytes(data, i)`,
+					field.Name())
+			} else {
+				str = fmt.Sprintf("i, m.%s[j] = %s(data, i)", field.Name(), str)
+			}
 		} else {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
@@ -816,50 +836,6 @@ func (gen *Gen4Go) defaultVal(expr ast.Expr) string {
 	case *ast.TypeRef:
 		// 内置类型
 		if val, ok := defaultVal[expr.Name()]; ok {
-			return val
-		}
-		ref := expr.(*ast.TypeRef)
-		// 枚举
-		if enum, ok := ref.Ref.(*ast.Enum); ok {
-			if _, ok := expr.Script().Imports[ref.NamePath[0]]; ok {
-				return fmt.Sprintf(
-					"%s.%s%s",
-					ref.NamePath[0],
-					enum,
-					enum.Default,
-				)
-			}
-			return fmt.Sprintf("%s%s", enum, enum.Default)
-		}
-		// 自定义类型
-		if _, ok := expr.Script().Imports[ref.NamePath[0]]; ok {
-			return fmt.Sprintf("%s.New%s()", ref.NamePath[0], strings.Title(ref.NamePath[1]))
-		}
-		return fmt.Sprintf("New%s()", strings.Title(ref.NamePath[0]))
-	case *ast.Array:
-		// 数组
-		array := expr.(*ast.Array)
-		var buff bytes.Buffer
-		if err := gen.tpl.ExecuteTemplate(&buff, "arrayInit", array); err != nil {
-			panic(err)
-		}
-		return buff.String()
-	case *ast.Slice:
-		return "nil"
-	case *ast.Map:
-		// 字典
-		return fmt.Sprintf("make(%s)", gen.typeName(expr))
-	}
-	panic(gserrors.Newf(nil, "not here"))
-	return "unknown"
-}
-
-// zeroVal 根据类型取其零值
-func (gen *Gen4Go) zeroVal(expr ast.Expr) string {
-	switch expr.(type) {
-	case *ast.TypeRef:
-		// 内置类型
-		if val, ok := zeroVal[expr.Name()]; ok {
 			return val
 		}
 		ref := expr.(*ast.TypeRef)

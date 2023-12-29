@@ -30,12 +30,14 @@ const (
 	TokenLABEL                         // TokenLABEL 标签
 	TokenArrowRight                    // TokenArrowRight ->
 	KeyByte                            // KeyByte byte
-	KeySByte                           // KeySByte sbyte
-	KeyUInt16                          // KeyUInt16 uint16
+	KeyBytes                           // KeyBytes bytes
+	KeyInt8                            // KeyInt8 int8
+	KeyUint8                           // KeyUInt8 uint8
+	KeyUint16                          // KeyUint16 uint16
 	KeyInt16                           // KeyInt16 int16
-	KeyUInt32                          // KeyUInt32 uint32
+	KeyUint32                          // KeyUint32 uint32
 	KeyInt32                           // KeyInt32 int32
-	KeyUInt64                          // KeyUInt64 uint64
+	KeyUint64                          // KeyUint64 uint64
 	KeyInt64                           // KeyInt64 int64
 	KeyFloat32                         // KeyFloat32 float32
 	KeyFloat64                         // KeyFloat64 float64
@@ -50,23 +52,25 @@ const (
 )
 
 var tokenName = map[rune]string{
-	TokenEOF:   "EOF",
-	TokenID:    "ID",
-	TokenINT:   "INT",
-	TokenFLOAT: "FLOAT",
-	// TokenTrue:
-	// TokenFalse:
+	TokenEOF:        "EOF",
+	TokenID:         "ID",
+	TokenINT:        "INT",
+	TokenFLOAT:      "FLOAT",
+	TokenTrue:       "TRUE",
+	TokenFalse:      "FALSE",
 	TokenSTRING:     "STRING",
 	TokenCOMMENT:    "COMMENT",
 	TokenLABEL:      "LABEL",
 	TokenArrowRight: "->",
 	KeyByte:         "byte",
-	KeySByte:        "sbyte",
-	KeyUInt16:       "uint16",
+	KeyBytes:        "bytes",
+	KeyInt8:         "int8",
+	KeyUint8:        "uint8",
+	KeyUint16:       "uint16",
 	KeyInt16:        "int16",
-	KeyUInt32:       "uint32",
+	KeyUint32:       "uint32",
 	KeyInt32:        "int32",
-	KeyUInt64:       "uint64",
+	KeyUint64:       "uint64",
 	KeyInt64:        "int64",
 	KeyFloat32:      "float32",
 	KeyFloat64:      "float64",
@@ -82,13 +86,15 @@ var tokenName = map[rune]string{
 
 var keyMap = map[string]rune{
 	"byte":     KeyByte,
-	"sbyte":    KeySByte,
+	"bytes":    KeyBytes,
+	"int8":     KeyInt8,
+	"uint8":    KeyUint8,
 	"int16":    KeyInt16,
-	"uint16":   KeyUInt16,
+	"uint16":   KeyUint16,
 	"int32":    KeyInt32,
-	"uint32":   KeyUInt32,
+	"uint32":   KeyUint32,
 	"int64":    KeyInt64,
-	"uint64":   KeyUInt64,
+	"uint64":   KeyUint64,
 	"float32":  KeyFloat32,
 	"float64":  KeyFloat64,
 	"string":   KeyString,
@@ -111,16 +117,18 @@ func TokenName(token rune) string {
 
 // Token 一个gslang符号对象
 type Token struct {
-	Type  rune        // 符号类型
-	Value interface{} // 符号值
-	Pos   Position    // 符号在代码中的位置
+	Type   rune        // 符号类型
+	Value  interface{} // 符号值
+	Pos    Position    // 符号在代码中的位置
+	Origin string      // 原始代码
 }
 
 // NewToken 新建一个符号对象
-func NewToken(t rune, val interface{}) *Token {
+func NewToken(t rune, val interface{}, origin string) *Token {
 	return &Token{
-		Type:  t,
-		Value: val,
+		Type:   t,
+		Value:  val,
+		Origin: origin,
 	}
 }
 
@@ -240,7 +248,7 @@ func (lexer *Lexer) next() (token *Token, err error) {
 	}
 	// 如果是TokenEOF 返回EOF Token
 	if lexer.curr == TokenEOF {
-		token = NewToken(TokenEOF, nil)
+		token = NewToken(TokenEOF, nil, "")
 		token.Pos = lexer.position
 		return
 	}
@@ -281,21 +289,21 @@ func (lexer *Lexer) next() (token *Token, err error) {
 			if lexer.curr == '/' || lexer.curr == '*' {
 				token, err = lexer.scanComment(lexer.curr)
 			} else { // 不是注释 则 以/后的那一个rune 作为类型返回 nil值的Token
-				token = NewToken(lexer.curr, nil)
+				token = NewToken(lexer.curr, nil, string(lexer.curr))
 			}
 		}
 	case lexer.curr == '-': // 如果是- 则判断是不是->
 		err = lexer.nextChar()
 		if err == nil {
 			if lexer.curr == '>' {
-				token = NewToken(TokenArrowRight, nil)
+				token = NewToken(TokenArrowRight, nil, "->")
 				err = lexer.nextChar()
 			} else {
-				token = NewToken('-', nil)
+				token = NewToken('-', nil, "-")
 			}
 		}
 	default: // 其他情况返回 rune 本身作为类型 值为nil 的Token
-		token = NewToken(lexer.curr, nil)
+		token = NewToken(lexer.curr, nil, string(lexer.curr))
 		lexer.curr = TokenEOF
 	}
 	if err == nil {
@@ -315,7 +323,8 @@ func (lexer *Lexer) scanID() (token *Token, err error) {
 		}
 	}
 	// 返回一个TokenID 类Token
-	token = NewToken(TokenID, buff.String())
+	val := buff.String()
+	token = NewToken(TokenID, val, val)
 	return
 }
 
@@ -353,7 +362,7 @@ func (lexer *Lexer) scanNum() (*Token, error) {
 			if err != nil {
 				return nil, lexer.newError(err.Error())
 			}
-			return NewToken(TokenINT, val), nil
+			return NewToken(TokenINT, val, buff.String()), nil
 		}
 	}
 	lexer.scanMantissa(&buff)
@@ -366,14 +375,14 @@ func (lexer *Lexer) scanNum() (*Token, error) {
 		if err != nil {
 			return nil, lexer.newError(err.Error())
 		}
-		return NewToken(TokenFLOAT, val), nil
+		return NewToken(TokenFLOAT, val, buff.String()), nil
 	}
 	// 返回整数
 	val, err := strconv.ParseInt(buff.String(), 0, 64)
 	if err != nil {
 		return nil, lexer.newError(err.Error())
 	}
-	return NewToken(TokenINT, val), nil
+	return NewToken(TokenINT, val, buff.String()), nil
 }
 
 // scanMantissa 扫描尾数　只要是连续0-9数字就合法
@@ -436,7 +445,7 @@ func (lexer *Lexer) scanString(quote rune) (token *Token, err error) {
 		return nil, err
 	}
 	// 返回TokenSTRING类Token
-	token = NewToken(TokenSTRING, buff.String())
+	token = NewToken(TokenSTRING, buff.String(), string(quote)+buff.String()+string(quote))
 	return
 }
 
@@ -479,7 +488,7 @@ func (lexer *Lexer) scanComment(ch rune) (*Token, error) {
 			}
 		}
 		// 返回TokenCOMMENT　Token
-		return NewToken(TokenCOMMENT, buff.String()), nil
+		return NewToken(TokenCOMMENT, buff.String(), buff.String()), nil
 	}
 	err := lexer.nextChar()
 	if err != nil {
@@ -510,7 +519,7 @@ func (lexer *Lexer) scanComment(ch rune) (*Token, error) {
 		// 合法的rune均保存为注释内容
 		buff.WriteRune(ch0)
 	}
-	return NewToken(TokenCOMMENT, buff.String()), nil
+	return NewToken(TokenCOMMENT, buff.String(), buff.String()), nil
 }
 
 // Peek 返回分析器当前的token 如果为nil则获取下一个Token保存并返回

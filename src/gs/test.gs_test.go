@@ -21,7 +21,7 @@ var car = &Car{
 	VarString:  "我这个是中文和English混合的string",
 	VarBool:    true,
 	VarByte:    'C',
-	VarSbyte:   'B',
+	VarUint8:   'B',
 	VarInt16:   math.MaxInt16,
 	VarUint16:  math.MaxUint16,
 	VarInt32:   math.MaxInt32,
@@ -103,7 +103,7 @@ func TestGSLangMarshal(t *testing.T) {
 		So(newCar.VarString, ShouldEqual, "我这个是中文和English混合的string")
 		So(newCar.VarBool, ShouldEqual, true)
 		So(newCar.VarByte, ShouldEqual, 'C')
-		So(newCar.VarSbyte, ShouldEqual, 'B')
+		So(newCar.VarUint8, ShouldEqual, 'B')
 		So(newCar.VarInt16, ShouldEqual, math.MaxInt16)
 		So(newCar.VarUint16, ShouldEqual, math.MaxUint16)
 		So(newCar.VarInt32, ShouldEqual, math.MaxInt32)
@@ -182,7 +182,7 @@ func BenchmarkCar_CopyByMarshal(b *testing.B) {
 
 func TestPB(t *testing.T) {
 	pbCar := &pb.Car{
-		//VarStructs: make([]*pb.Student, 3),
+		// VarStructs: make([]*pb.Student, 3),
 		VarMap1: make(map[string]*pb.Student, 3),
 	}
 	pbCar.VarMap1["成都"] = nil
@@ -234,4 +234,24 @@ func TestDeepCopy(t *testing.T) {
 		fmt.Println("newCar:", newCar.VarStructArray1[0])
 		fmt.Println("newCar1:", newCar1.VarStructArray1[0])
 	})
+}
+
+func BenchmarkCar_MarshalBytes(b *testing.B) {
+	data := "sdnhfdsfhjiupwefhniuweqsdnhfdsfhjiupwefhniuweqfhnniwuehfwehfweiofhewiopfhweiofnjkdsnfjkdsnfjksdnfdjkshfndsjfhwuifhwefhweifhuwehfnewui12983217sdnhfdsfhjiupwefhniuweqfhnniwuehfwehfweiofhewiopfhweiofnjkdsnfjkdsnfjksdnfdjkshfndsjfhwuifhwefhweifhuwehfnewui129832173892176321876381270632188fjiewnfuiwenc82u3739823193892176321876381270632188fjiewnfuiwenc82u373982319fhnniwuehfwehfweiofhewiopfhweiofnjkdsnfjkdsnfjksdnfdjkshfndsjfhwuifhwefhweifhuwehfnewui129832173892176321876381270632188fjiewnfuiwenc82u373982319-42-0=40-32843290u432=094u3294234n3i2u4n32uinfds8fdfekwi9mfmew98fuy328374234j2m8f9ewhf78ehdfuydshfdusfhdsuiohf78023y378473204h432u8hfd9uerhfuehf7reh79823"
+	car := &Car{
+		VarBytes: []byte(data),
+	}
+	for i := 0; i < b.N; i++ {
+		car.Marshal()
+	}
+}
+
+func BenchmarkCar_MarshalByteSlice(b *testing.B) {
+	data := "sdnhfdsfhjiupwefhniuweqsdnhfdsfhjiupwefhniuweqfhnniwuehfwehfweiofhewiopfhweiofnjkdsnfjkdsnfjksdnfdjkshfndsjfhwuifhwefhweifhuwehfnewui12983217sdnhfdsfhjiupwefhniuweqfhnniwuehfwehfweiofhewiopfhweiofnjkdsnfjkdsnfjksdnfdjkshfndsjfhwuifhwefhweifhuwehfnewui129832173892176321876381270632188fjiewnfuiwenc82u3739823193892176321876381270632188fjiewnfuiwenc82u373982319fhnniwuehfwehfweiofhewiopfhweiofnjkdsnfjkdsnfjksdnfdjkshfndsjfhwuifhwefhweifhuwehfnewui129832173892176321876381270632188fjiewnfuiwenc82u373982319-42-0=40-32843290u432=094u3294234n3i2u4n32uinfds8fdfekwi9mfmew98fuy328374234j2m8f9ewhf78ehdfuydshfdusfhdsuiohf78023y378473204h432u8hfd9uerhfuehf7reh79823"
+	car := &Car{
+		VarData: []byte(data),
+	}
+	for i := 0; i < b.N; i++ {
+		car.Marshal()
+	}
 }

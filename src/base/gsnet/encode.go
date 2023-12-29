@@ -34,9 +34,15 @@ func WriteByte(data []byte, i int, v byte) int {
 	return i + 1
 }
 
-// WriteSbyte 写入一个有符号字节
-func WriteSbyte(data []byte, i int, v int8) int {
+// WriteInt8 写入一个有符号8位整数
+func WriteInt8(data []byte, i int, v int8) int {
 	data[i] = byte(v)
+	return i + 1
+}
+
+// WriteUint8 写入一个无符号8位整数
+func WriteUint8(data []byte, i int, v uint8) int {
+	data[i] = v
 	return i + 1
 }
 
@@ -150,9 +156,14 @@ func ReadByte(data []byte, i int) (int, byte) {
 	return i + 1, data[i]
 }
 
-// ReadSbyte 读取一个有符号字节
-func ReadSbyte(data []byte, i int) (int, int8) {
+// ReadInt8 读取一个有符号8位整数
+func ReadInt8(data []byte, i int) (int, int8) {
 	return i + 1, int8(data[i])
+}
+
+// ReadUint8 读取一个无符号8位整数
+func ReadUint8(data []byte, i int) (int, uint8) {
+	return i + 1, data[i]
 }
 
 // ReadUint16 读取一个无符号16位整数
