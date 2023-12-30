@@ -2,7 +2,7 @@
 src/apps/log/
 src/base/logger/log/
 src/vendor/
-bin/
+bin/*
 log/
 pkg/
 

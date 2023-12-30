@@ -5,7 +5,7 @@
 // @time      : 2023/12/16 下午1:41
 // -------------------------------------------
 
-//go:build !windows
+//go:build windows
 
 package logger
 
@@ -13,20 +13,21 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"syscall"
 	"time"
+
+	"golang.org/x/sys/windows"
 )
 
 func redirectStdErrLog() error {
 	panicFile := strings.Replace(global.fileName, ".log", ".panic", -1)
-	fd, err := os.OpenFile(panicFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	file, err := os.OpenFile(panicFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
-	err = syscall.Dup2(int(fd.Fd()), int(os.Stderr.Fd()))
-	if err != nil {
+	if err := windows.SetStdHandle(windows.STD_ERROR_HANDLE, windows.Handle(file.Fd())); err != nil {
 		return err
 	}
+	os.Stderr = file
 	Debug("redirect str err log success")
 	// 保活文件 避免删除
 	go func() {
@@ -69,12 +70,5 @@ func CheckStdErrLogFile() {
 	if !os.IsNotExist(err) {
 		return
 	}
-	fd, err := os.OpenFile(panicFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		return
-	}
-	err = syscall.Dup2(int(fd.Fd()), int(os.Stderr.Fd()))
-	if err != nil {
-		return
-	}
+	_ = redirectStdErrLog()
 }
