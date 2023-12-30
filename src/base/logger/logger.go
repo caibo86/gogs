@@ -8,11 +8,13 @@
 package logger
 
 import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"gogs/base/gserrors"
 	"sync"
 	"time"
+
+	"gogs/base/gserrors"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var global *Logger
@@ -70,7 +72,8 @@ func Init(options ...Option) {
 func Close() error {
 	if global != nil {
 		err := global.Close()
-		if err.Error() == "sync /dev/stdout: invalid argument" {
+		if err.Error() == "sync /dev/stdout: invalid argument" ||
+			err.Error() == "sync /dev/stdout: The handle is invalid." {
 			return nil
 		}
 		return err

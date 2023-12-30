@@ -9,6 +9,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 
 	"gogs/base/gserrors"
 	"gogs/base/gslang"
@@ -31,6 +32,7 @@ func main() {
 			log.Errorf(e.(error).Error())
 		}
 		if err := log.Close(); err != nil {
+			fmt.Println(err.Error())
 			gserrors.Panic(err.Error())
 		}
 	}()
