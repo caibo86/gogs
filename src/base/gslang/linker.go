@@ -328,7 +328,7 @@ func (linker *serviceLinker) unwind(service *ast.Service, stack []*ast.Service) 
 	var buff bytes.Buffer
 	// 在协议栈中查找是否存在递归继承 如果有则报错
 	for _, s := range stack {
-		if s == s || buff.Len() != 0 {
+		if s == service || buff.Len() != 0 {
 			buff.WriteString(fmt.Sprintf("\t%s inheri\n", s))
 		}
 	}
@@ -342,7 +342,7 @@ func (linker *serviceLinker) unwind(service *ast.Service, stack []*ast.Service) 
 		s, ok := base.Ref.(*ast.Service)
 		if !ok { // 检查父协议的类型是否正确
 			linker.errorf(Pos(base),
-				"service(%s) inherit type is not service:\n\tsee: %s", service,
+				"service(%s) inherit type is not service see: %s", service,
 				Pos(base.Ref))
 		}
 		// 将所有父协议压栈
@@ -356,23 +356,23 @@ func (linker *serviceLinker) unwind(service *ast.Service, stack []*ast.Service) 
 			clone := &ast.Method{}
 			*clone = *method
 			// hash id 碰撞检测
-			if _, ok := s.MethodIDs[clone.ID]; ok {
-				linker.errorf(Pos(s),
+			if _, ok := service.MethodIDs[clone.ID]; ok {
+				linker.errorf(Pos(service),
 					"method id hash collision: %s see: %s",
 					clone,
 					Pos(clone))
 			}
-			if old, ok := s.Methods[clone.Name()]; ok {
+			if old, ok := service.Methods[clone.Name()]; ok {
 				// 不允许有重名函数
-				linker.errorf(Pos(s),
-					"duplicate method name: %s\n\tsee: %s\n\t see: %s",
+				linker.errorf(Pos(service),
+					"duplicate method name: %s see: %s see: %s",
 					clone,
 					Pos(old),
 					Pos(clone))
 			}
-			method.SetParent(s)
-			s.Methods[clone.Name()] = clone
-			s.MethodIDs[clone.ID] = struct{}{}
+			method.SetParent(service)
+			service.Methods[clone.Name()] = clone
+			service.MethodIDs[clone.ID] = struct{}{}
 		}
 	}
 	// 标记当前协议已经展开
