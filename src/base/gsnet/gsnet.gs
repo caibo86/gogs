@@ -19,7 +19,7 @@ struct Message {
 struct Call {
     ID uint16 = 1;
     Service  uint16 = 2;
-    Method uint16 = 3;
+    Method uint32 = 3;
     Params []bytes = 4; // 序列化后的入参
 }
 

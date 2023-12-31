@@ -622,8 +622,12 @@ func (parser *Parser) parseService() {
 		methodName := parser.Next()
 		method, ok := service.NewMethod(methodName.Value.(string))
 		if !ok {
-			// 单个协议内不能有同名函数
-			parser.errorf(methodName.Pos, "duplicate method name:\n\tsee: %s", Pos(method))
+			if method != nil {
+				// 单个协议内不能有同名函数
+				parser.errorf(methodName.Pos, "duplicate method name see: %s", Pos(method))
+			} else {
+				parser.errorf(methodName.Pos, "hash collision, change name for method")
+			}
 		}
 		// 附加位置
 		attachPos(method, methodName.Pos)

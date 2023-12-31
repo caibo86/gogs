@@ -320,64 +320,63 @@ func (linker *serviceLinker) VisitService(service *ast.Service) ast.Node {
 }
 
 // unwind 展开协议 协议展开后 每一个协议都持有所有父协议的函数 并重新分配 ID
-func (linker *serviceLinker) unwind(expr *ast.Service, stack []*ast.Service) []*ast.Service {
+func (linker *serviceLinker) unwind(service *ast.Service, stack []*ast.Service) []*ast.Service {
 	// 如果协议有已经展开的额外信息 则直接返回协议栈
-	if _, ok := expr.Extra("unwind"); ok {
+	if _, ok := service.Extra("unwind"); ok {
 		return stack
 	}
 	var buff bytes.Buffer
 	// 在协议栈中查找是否存在递归继承 如果有则报错
-	for _, service := range stack {
-		if service == expr || buff.Len() != 0 {
-			buff.WriteString(fmt.Sprintf("\t%s inheri\n", service))
+	for _, s := range stack {
+		if s == s || buff.Len() != 0 {
+			buff.WriteString(fmt.Sprintf("\t%s inheri\n", s))
 		}
 	}
 	if buff.Len() != 0 {
-		linker.errorf(Pos(expr), "circular inherit:\n%s\t%s", buff.String(), expr)
+		linker.errorf(Pos(service), "circular inherit:\n%s\t%s", buff.String(), service)
 	}
 	// 将该协议添加到栈尾
-	stack = append(stack, expr)
-	// 用于保存当前协议的父协议们的函数总数
-	modify := uint32(0)
+	stack = append(stack, service)
 	// 检查协议的父协议 并展开
-	for _, base := range expr.Bases {
-		service, ok := base.Ref.(*ast.Service)
+	for _, base := range service.Bases {
+		s, ok := base.Ref.(*ast.Service)
 		if !ok { // 检查父协议的类型是否正确
 			linker.errorf(Pos(base),
-				"service(%s) inherit type is not service:\n\tsee: %s", expr,
+				"service(%s) inherit type is not service:\n\tsee: %s", service,
 				Pos(base.Ref))
 		}
 		// 将所有父协议压栈
-		stack = linker.unwind(service, stack)
-		// 统计父协议函数总数
-		modify = modify + uint32(len(service.Methods))
+		stack = linker.unwind(s, stack)
 	}
-	// 处理协议的函数ID 加上父协议的函数总数
-	for _, method := range expr.Methods {
-		method.ID = method.ID + modify
-	}
+
 	// 将父协议的函数列表复制到当前协议
-	modify = uint32(0)
-	for _, base := range expr.Bases {
-		service := base.Ref.(*ast.Service)
-		for _, method := range service.Methods {
+	for _, base := range service.Bases {
+		s := base.Ref.(*ast.Service)
+		for _, method := range s.Methods {
 			clone := &ast.Method{}
 			*clone = *method
-			clone.ID = clone.ID + modify
-			if old, ok := expr.Methods[clone.Name()]; ok { // 不允许有重名函数
-				linker.errorf(Pos(expr),
+			// hash id 碰撞检测
+			if _, ok := s.MethodIDs[clone.ID]; ok {
+				linker.errorf(Pos(s),
+					"method id hash collision: %s see: %s",
+					clone,
+					Pos(clone))
+			}
+			if old, ok := s.Methods[clone.Name()]; ok {
+				// 不允许有重名函数
+				linker.errorf(Pos(s),
 					"duplicate method name: %s\n\tsee: %s\n\t see: %s",
 					clone,
 					Pos(old),
 					Pos(clone))
 			}
-			method.SetParent(expr)
-			expr.Methods[clone.Name()] = clone
+			method.SetParent(s)
+			s.Methods[clone.Name()] = clone
+			s.MethodIDs[clone.ID] = struct{}{}
 		}
-		modify = modify + uint32(len(service.Methods))
 	}
 	// 标记当前协议已经展开
-	expr.NewExtra("unwind", true)
+	service.NewExtra("unwind", true)
 	// 丢弃栈尾元素
 	stack = stack[:len(stack)-1]
 	return stack
