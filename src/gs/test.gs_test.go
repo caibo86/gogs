@@ -71,6 +71,7 @@ var car = &Car{
 	VarMap3: map[gss.Subject]*gss.Teacher{gss.SubjectBiology: {ID: 1, Name: "石老师", Age: 15},
 		gss.SubjectChemistry: {ID: 2, Name: "李老师", Age: 25},
 		gss.SubjectChinese:   nil},
+	VarSliceBytes: [][]byte{[]byte("abcdef"), []byte("ffff123456"), []byte("这是中文不是英文^&%&^%")},
 }
 
 var pbCar = &pb.Car{
@@ -232,6 +233,9 @@ func TestGSLangMarshal(t *testing.T) {
 		So(newCar.VarMap3[gss.SubjectChemistry].Name, ShouldEqual, "李老师")
 		So(newCar.VarMap3[gss.SubjectChemistry].Age, ShouldEqual, 25)
 		So(newCar.VarMap3[gss.SubjectChinese], ShouldBeNil)
+		So(newCar.VarSliceBytes[0], ShouldResemble, []byte("abcdef"))
+		So(newCar.VarSliceBytes[1], ShouldResemble, []byte("ffff123456"))
+		So(newCar.VarSliceBytes[2], ShouldResemble, []byte("这是中文不是英文^&%&^%"))
 	})
 }
 

@@ -294,8 +294,6 @@ func New{{$Table}}() *{{$Table}} {
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var rpcConfig = config.GetRPCConfig()
-
 // {{$Service}}TypeName a unique name of the service
 const {{$Service}}TypeName = "{{.Path}}"
 
@@ -309,7 +307,7 @@ type {{$Service}}Builder struct {
 }
 
 // New{{$Service}}Builder creating a new {{$Service}}Builder
-func New{{$Service}}Builder(localServiceBuilder func(service gsdock.IService)(I{{$Service}},error)) gsdock.ITypeBuilder {
+func New{{$Service}}Builder(localServiceBuilder func(service gsdock.IService)(I{{$Service}}, error)) gsdock.ITypeBuilder {
     return &{{$Service}}Builder{
         localServiceBuilder:localServiceBuilder,
     }
@@ -324,15 +322,15 @@ func (builder *{{$Service}}Builder) String() string {
 func (builder *{{$Service}}Builder) NewService(
 	name string, id gsdock.ID, context interface{}) (gsdock.IService, error) {
     c := &{{$Service}}Service{
-        id:id,
-        name:name,
-        typename:builder.String(),
-        context:context,
-        timeout:rpcConfig.Timeout,
+        id: id,
+        name: name,
+        typename: builder.String(),
+        context: context,
+        timeout: config.GetRPCConfig().Timeout,
     }
     var err error
-    c.I{{$Service}},err = builder.localServiceBuilder(c)
-    return c,err
+    c.I{{$Service}}, err = builder.localServiceBuilder(c)
+    return c, err
 }
 
 // NewRemoteService creating a new {{$Service}} RemoteService
@@ -340,13 +338,13 @@ func (builder *{{$Service}}Builder) NewRemoteService(
 	remote gsdock.IRemote, name string, lid gsdock.ID, 
 	rid gsdock.ID, context interface{}) gsdock.IRemoteService {
     return &{{$Service}}RemoteService{
-        name:name,
-        remote:remote,
+        name: name,
+        remote: remote,
         context: context,
-        lid :lid,
-        rid :rid,
-        typename :builder.String(),
-        timeout:rpcConfig.Timeout,
+        lid: lid,
+        rid: rid,
+        typename: builder.String(),
+        timeout: config.GetRPCConfig().Timeout,
     }
 }
 
@@ -386,102 +384,81 @@ func (service *{{$Service}}Service) Context() interface{} {
     return service.context
 }
 
-// Call service call method
+// Call the specified method of the service
 func (service *{{$Service}}Service) Call(call *gsnet.Call) (callReturn *gsnet.Return, err error) {
     defer func(){
         if e := recover(); e != nil {
             err = gserrors.New(e.(error).Error())
         }
+		if err != nil {
+			log.Error("{{$Service}}Service#Call err: %s", err.Error())
+		}
     }()
-    switch call.Method {  
-
-		{{range .Methods}}
+    switch call.Method { {{range .Methods}}
    		case {{.ID}}:  {{$Name := symbol .Name}}
         if len(call.Params) != {{.InputParams}} {
-            err = gserrors.NewfWith(gsdock.ErrRPC,"{{$Service}}::{{$Name}} expect {{.InputParams}} params but got :%d",len(call.Params))
+            err = gserrors.NewfWith(gsdock.ErrRPC, "{{$Service}}::{{$Name}} expect {{.InputParams}} params but got :%d", len(call.Params))
             return
         }
-		{{range .Params}}	var param{{.ID}} {{typeName .Type}}
-        param{{.ID}}, err = {{unmarshalType .Type}}(call.Params[{{.ID}}].Content)
+		{{range .Params}} var param{{.ID}} {{typeName .Type}}
+		param{{.ID}}, err = {{unmarshalType .Type}}(call.Params[{{.ID}}])
 		if err != nil {
 			return 
 		}
-       	{{end}}
-
-		{{range .Return}}	var ret{{.ID}} {{typeName .Type}}
-		{{end}}
-        {{returnArgs .}} service.I{{$Service}}.{{$Name}}{{callArgs .Params}}
+		{{end}} {{range .Return}} var ret{{.ID}} {{typeName .Type}}
+		{{end}} {{returnArgs .}} service.I{{$Service}}.{{$Name}}{{callParams .Params}}
         if err != nil {
             return
         }
-        {{if .Return}}
-        callReturn = &gsnet.Return{
-            ID : call.ID,
-            Service:call.Service,
+        {{if .Return}} callReturn = &gsnet.Return{
+            ID: call.ID,
+            Service: call.Service,
         }
-		
-        {{range .Return}}
-        data{{.ID}} := {{marshalType .Type}}(ret{{.ID}})
-        if err != nil {
-            return
-        }
-        callReturn.Params = append(callReturn.Params,&gsnet.Param{Data:data{{.ID}}})
-        {{end}}
-
-		{{end}}
-        
-		return
-    	{{end}}
+        {{range .Return}} data{{.ID}} := {{marshalType .Type}}(ret{{.ID}})
+        callReturn.Params = append(callReturn.Params, data{{.ID}})
+        {{end}}{{end}}return{{end}}
 	}
-    err = gserrors.NewfWith(gsdock.ErrRPC,"unknown {{$Service}}#%d method",call.Method)
+    err = gserrors.NewfWith(gsdock.ErrRPC, "unknown {{$Service}}Service#%d method", call.Method)
     return
 }
-
 
 {{range .Methods}} {{$Name := symbol .Name}}
 // {{$Name}} method of service {{$Service}}
 func (service *{{$Service}}Service){{$Name}}{{params .Params}}{{returnParams .Return}}{
     call := &gsnet.Call{
-        Service:uint16(service.id),
-        Method:{{.ID}},
+        Service: uint16(service.id),
+        Method: {{.ID}},
     }
-{{range .Params}}    var param{{.ID}} bytes.Buffer
-    err = {{marshalType .Type}}(&param{{.ID}},arg{{.ID}})
-    if err != nil {
-        return
-    }
-    call.Params = append(call.Params,&gsnet.Param{Content:param{{.ID}}.Bytes()})
+{{range .Params}} param{{.ID}} := {{marshalType .Type}}(arg{{.ID}})
+    call.Params = append(call.Params, param{{.ID}})
     {{end}}
-    {{if .Return}}
-    future := make(chan *gsnet.Return,1)
+	{{if .Return}} future := make(chan *gsnet.Return,1)
     go func(){
-        var callReturn *gsnet.Return
-        callReturn,err = service.Call(call)
-        if err == nil {
+        callReturn, err1 := service.Call(call)
+        if err1 == nil {
             future <- callReturn
         }
     }()
     select {
         case callReturn := <- future:
             if len(callReturn.Params) != {{.ReturnParams}} {
-                err = gserrors.NewfWith(gsdock.ErrRPC,"{{$Service}}#{{$Name}} expect {{.ReturnParams}} return params but got :%d",len(callReturn.Params))
+                err = gserrors.NewfWith(gsdock.ErrRPC,"{{$Service}}Service#{{$Name}} expect {{.ReturnParams}} return params but got :%d",len(callReturn.Params))
                 return
             }
-            {{range .Return}}
-            ret{{.ID}},err = {{unmarshalType .Type}}(callReturn.Params[{{.ID}}].Data)
+            {{range .Return}} ret{{.ID}}, err = {{unmarshalType .Type}}(callReturn.Params[{{.ID}}])
             if err != nil {
-                err = gserrors.NewWith(err,"read {{$Service}}#{{$Name}} return{{.ID}}")
+                err = gserrors.NewWith(err, "unmarshal {{$Service}}Service#{{$Name}} return{{.ID}} {{typeName .Type}} err")
                 return
             }
-            {{end}}
-        case <- time.After(service.timeout):
+            {{end}}case <- time.After(service.timeout):
             err = gsdock.ErrTimeout
             return
     }
     {{else}}
-    go func(){ service.Call(call) }()
-    {{end}}
-    return
+    go func(){ 
+		_, _ = service.Call(call) 
+	}()
+    {{end}}return
 }
 {{end}}
 
@@ -541,15 +518,12 @@ func (service *{{$Service}}RemoteService) Call(call *gsnet.Call) (callReturn *gs
             err = gserrors.New(e.(error).Error())
         }
     }()
-    switch call.Method {
-    {{range .Methods}}
-    {{$Name := .Name}}
-    case {{.ID}}:
-        {{if .Return}}
-        var future gsdock.Future
-        future,err = service.remote.Wait(service,call,service.timeout)
+    switch call.Method { 
+	{{range .Methods}} {{$Name := .Name}} case {{.ID}}:
+        {{if .Return}} var future gsdock.Future
+        future, err = service.remote.Wait(service, call, service.timeout)
         if err != nil {
-            err = gserrors.NewWith(err,"call {{$Service}}#{{$Name}} error")
+            err = gserrors.NewWith(err, "call {{$Service}}RemoteService#{{$Name}} err")
             return
         }
         result := <-future
@@ -557,56 +531,38 @@ func (service *{{$Service}}RemoteService) Call(call *gsnet.Call) (callReturn *gs
             err = gsdock.ErrTimeout
             return
         }
-
-        callReturn =result.CallReturn
-
+        callReturn = result.CallReturn
         if len(callReturn.Params) != {{.ReturnParams}} {
-            err = gserrors.NewfWith(gsdock.ErrRPC,"{{$Service}}#{{$Name}} expect {{.ReturnParams}} return params but got :%d",len(callReturn.Params))
+            err = gserrors.NewfWith(gsdock.ErrRPC, "{{$Service}}RemoteService#{{$Name}} expect {{.ReturnParams}} return params but got :%d", len(callReturn.Params))
             return
         }
-
         return
-        {{else}}
-        err = service.remote.Post(service,call)
+        {{else}} err = service.remote.Post(service,call)
         if err != nil {
-            err = gserrors.NewWith(err,"post {{$Service}}#{{$Name}} error")
+            err = gserrors.NewWith(err, "post {{$Service}}RemoteService#{{$Name}} err")
             return
         }
-        return
-        {{end}}
-    	{{end}}
+        return {{end}}{{end}}
     }
-
-    err = gserrors.NewfWith(gsdock.ErrRPC,"unknown {{$Service}}#%d method",call.Method)
-
+    err = gserrors.NewfWith(gsdock.ErrRPC, "unknown {{$Service}}RemoteService#%d method", call.Method)
     return
 }
 
 {{range .Methods}}
-
 {{$Name := symbol .Name}}
-
 // {{$Name}} methods of remote service
 func (service *{{$Service}}RemoteService){{$Name}}{{params .Params}}{{returnParams .Return}}{
     call := &gsnet.Call{
-        Service:uint16(service.rid),
-        Method:{{.ID}},
+        Service: uint16(service.rid),
+        Method: {{.ID}},
     }
-
-    {{range .Params}}
-    var param{{.ID}} bytes.Buffer
-    err = {{marshalType .Type}}(&param{{.ID}},arg{{.ID}})
-    if err != nil {
-        return
-    }
-    call.Params = append(call.Params,&gsnet.Param{Content:param{{.ID}}.Bytes()})
+    {{range .Params}} param{{.ID}} := {{marshalType .Type}}(arg{{.ID}})
+    call.Params = append(call.Params, param{{.ID}})
     {{end}}
-
-    {{if .Return}}
-    var future gsdock.Future
-    future,err = service.remote.Wait(service,call,service.timeout)
+    {{if .Return}} var future gsdock.Future
+    future,err = service.remote.Wait(service, call, service.timeout)
     if err != nil {
-        err = gserrors.NewWith(err,"call {{$Service}}#{{$Name}} error")
+        err = gserrors.NewWith(err, "call {{$Service}}RemoteService#{{$Name}} err")
         return
     }
     result := <-future
@@ -614,37 +570,24 @@ func (service *{{$Service}}RemoteService){{$Name}}{{params .Params}}{{returnPara
         err = gsdock.ErrTimeout
         return
     }
-
-    callReturn :=result.CallReturn
-
+    callReturn := result.CallReturn
     if len(callReturn.Params) != {{.ReturnParams}} {
-        err = gserrors.NewfWith(gsdock.ErrRPC,"{{$Service}}#{{$Name}} expect {{.ReturnParams}} return params but got :%d",len(callReturn.Params))
+        err = gserrors.NewfWith(gsdock.ErrRPC, "{{$Service}}RemoteService#{{$Name}} expect {{.ReturnParams}} return params but got :%d", len(callReturn.Params))
         return
     }
-
-    {{range .Return}}
-
-
-    ret{{.ID}},err = {{unmarshalType .Type}}(callReturn.Params[{{.ID}}].Data)
+    {{range .Return}} ret{{.ID}}, err = {{unmarshalType .Type}}(callReturn.Params[{{.ID}}])
     if err != nil {
-        err = gserrors.NewWith(err,"read {{$Service}}#{{$Name}} return{{.ID}}")
+        err = gserrors.NewWith(err, "unmarshal {{$Service}}RemoteService#{{$Name}} return{{.ID}} {{typeName .Type}} err")
         return
     }
-    {{end}}
-    {{else}}
-    err = service.remote.Post(service,call)
+	{{end}} {{else}} err = service.remote.Post(service, call)
     if err != nil {
-        err = gserrors.NewWith(err,"post {{$Service}}#{{$Name}} error")
+        err = gserrors.NewWith(err, "post {{$Service}}RemoteService#{{$Name}} error")
         return
     }
-    {{end}}
-
-    return
-
+	{{end}} return
 }
 {{end}}
-
-
 
 {{end}}
 `

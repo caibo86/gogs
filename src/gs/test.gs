@@ -100,9 +100,12 @@ struct Car {
 	VarBytes        bytes                       = 52;
 	VarArrayBytes   [10]byte                    = 53;
 	VarMap3         map[gss.Subject]gss.Teacher = 1000; // 这是一个学科老师映射
+	VarSliceBytes []bytes = 54;
 }
 
 // 游戏服
 service GameServer {
-     GetServerTime() -> (int64);
+     HeartBeat();
+     GetServerTime() -> (int64, ErrCode);
+     GetCarInfo(carID int32, student Student) -> (Car, gss.Teacher, ErrCode);
 }

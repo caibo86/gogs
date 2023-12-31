@@ -194,7 +194,7 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"params":              gen.params,
 		"returnParams":        gen.returnParams,
 		"returnErr":           gen.returnErr,
-		"callArgs":            gen.callArgs,
+		"callParams":          gen.callParams,
 		"returnArgs":          gen.returnArgs,
 		"readType":            gen.readType,
 		"writeType":           gen.writeType,
@@ -327,6 +327,16 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 				}`,
 				field.Name())
 		case "String":
+			return fmt.Sprintf(
+				`if len(m.%s) > 0 {
+					n += 6
+					for _, s := range m.%s {
+						l = len(s)
+						n += 4 + l
+					}
+				}`,
+				field.Name(), field.Name())
+		case "Bytes":
 			return fmt.Sprintf(
 				`if len(m.%s) > 0 {
 					n += 6
@@ -1061,15 +1071,15 @@ func (gen *Gen4Go) returnParams(params []*ast.Param) string {
 	return buff.String()
 }
 
-// callArgs 根据参数生成函数的调用参数列表
-func (gen *Gen4Go) callArgs(params []*ast.Param) string {
+// callParams 根据参数生成函数的调用参数列表
+func (gen *Gen4Go) callParams(params []*ast.Param) string {
 	if len(params) == 0 {
 		return "()"
 	}
 	var buff bytes.Buffer
-	buff.WriteString("(arg0")
+	buff.WriteString("(param0")
 	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(",arg%d", i))
+		buff.WriteString(fmt.Sprintf(",param%d", i))
 	}
 	buff.WriteString(")")
 	return buff.String()
@@ -1232,8 +1242,10 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 			t.Accept(gen)
 		}
 	}
+	var hasService bool
 	for _, t := range script.Types {
 		if _, ok := t.(*ast.Service); ok {
+			hasService = true
 			t.Accept(gen)
 		}
 	}
@@ -1264,6 +1276,11 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 		if script.Package().Name() == "base/gsdock" {
 			codes = strings.Replace(codes, "gsdock.", "", -1)
 		}
+		// service类型会用到logger
+		if hasService {
+			buff.WriteString(fmt.Sprintf("import log \"%s/base/logger\"\n", moduleName))
+		}
+
 		// 如果代码中有特定packageMapping中的包名 则引入对应的包
 		for key, value := range packageMapping {
 			if strings.Contains(codes, key) {
@@ -1326,14 +1343,6 @@ func (gen *Gen4Go) VisitTable(table *ast.Table) ast.Node {
 
 // VisitService 访问协议
 func (gen *Gen4Go) VisitService(service *ast.Service) ast.Node {
-	log.Debugf("%v", service.Name())
-	log.Debugf("%v", service.Path())
-	log.Debugf("%v", service.Methods)
-	log.Debugf("%v", service.Bases)
-	for _, method := range service.Methods {
-		log.Debugf("%v", method.Return)
-		log.Debugf("%v", method.Params)
-	}
 	if err := gen.tpl.ExecuteTemplate(&gen.buff, "service", service); err != nil {
 		gserrors.Panic(err.Error())
 	}

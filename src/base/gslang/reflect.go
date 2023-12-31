@@ -85,7 +85,9 @@ func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int32 {
 	// 对属性求值
 	ea := &evalAttr{}
 	attr.Accept(ea)
-	log.Debugf("evalAttr: %v, result: %v", attr.Name(), ea.values)
+	if attr.Name() != ".gslang.Struct" && attr.Name() != ".gslang.Error" && attr.Name() != ".Struct" {
+		log.Debugf("evalAttr: %v for %s, result: %v", attr.Name(), attr.Parent(), ea.values)
+	}
 
 	// 只有Table才能被作为属性的类型引用
 	s, ok := attr.Type.Ref.(*ast.Table)

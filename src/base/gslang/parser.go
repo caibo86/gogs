@@ -317,6 +317,7 @@ func (parser *Parser) parseImports() {
 		}
 		attachPos(ref, pos)
 	}
+
 }
 
 // parserImport 分析导入单个包引用

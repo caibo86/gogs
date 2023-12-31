@@ -33,6 +33,7 @@ type IConfig interface {
 
 // Manager 全局配置管理器
 type Manager struct {
+	keys      []string
 	configMap map[string]IConfig
 }
 
@@ -58,9 +59,19 @@ func (m *Manager) String() string {
 	return string(data)
 }
 
+// CheckConfig 检查配置是否完整
+func (m *Manager) CheckConfig() {
+	for _, key := range m.keys {
+		if _, ok := m.configMap[key]; !ok {
+			gserrors.Panicf("config %s not set", key)
+		}
+	}
+}
+
 // With 设置需要使用的配置
 func With(keys ...string) {
-	for _, key := range keys {
+	manager.keys = keys
+	for _, key := range manager.keys {
 		switch key {
 		case KeyEtcd:
 			manager.AddConfig(NewEtcdConfig())
@@ -122,5 +133,6 @@ func ParseGlobalConfig(content string) error {
 			return err
 		}
 	}
+	manager.CheckConfig()
 	return nil
 }

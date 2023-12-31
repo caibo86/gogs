@@ -15,22 +15,17 @@ struct Message {
     Data bytes = 2;
 }
 
-// 序列化之后的参数
-struct Param {
-    Data bytes = 1;
-}
-
 // 一次调用
 struct Call {
     ID uint16 = 1;
     Service  uint16 = 2;
     Method uint16 = 3;
-    Params []Param = 4;
+    Params []bytes = 4; // 序列化后的入参
 }
 
 // 返回
 struct Return {
     ID uint16 = 1;
     Service  uint16 = 2;
-    Params []Param = 3;
+    Params []bytes = 3; // 序列化后的返回值
 }
