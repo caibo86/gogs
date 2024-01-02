@@ -22,5 +22,5 @@ struct Teacher {
 
 service MapServer {
     GetMapName(id int32, subject Subject, gss.Teacher, Teacher) -> (string, gss.Teacher, Teacher);
-    //UpdatePen(gsss.PenType, gsss.Pen) -> (gsss.PenType, gsss.Pen);
+    UpdatePen(gsss.PenType, gsss.Pen) -> (gsss.PenType, gsss.Pen);
 }

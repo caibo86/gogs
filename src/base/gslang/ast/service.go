@@ -194,7 +194,6 @@ func (service *Service) CopyMethod(src *Method) (*Method, error) {
 	for name, pkgRef := range src.script.Imports {
 		var found bool
 		for _, self := range service.Script().Imports {
-			fmt.Println("self.Ref", self.Ref.Package().Name())
 			if self.Ref == pkgRef.Ref {
 				found = true
 				break
@@ -203,12 +202,9 @@ func (service *Service) CopyMethod(src *Method) (*Method, error) {
 		if found {
 			continue
 		}
-		fmt.Println("当前包列表", service.Script().Imports)
-		fmt.Println("需要引入包", name, pkgRef.Ref.Package().Name())
 		_, ok := service.Script().NewPackageRef(name, pkgRef.Ref)
 		if !ok {
-			fmt.Println("未出去了吗")
-			return nil, errors.New("duplicate package name when import package by copy method, set alias for package")
+			return nil, fmt.Errorf("duplicate package name when import %s by method copy, manual import it and set alias", name)
 		}
 	}
 	// 新建协议

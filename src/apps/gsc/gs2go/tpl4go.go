@@ -169,7 +169,7 @@ func (m *{{$Struct}})Size() int {
 	n := 1
 	var l int 
 	_ = l
-	{{range .Fields}}// {{.Name}} {{.Type.OriginName}}
+	{{range .Fields}}// {{.Name}} {{typeName .Type}}
 	{{calTypeSize .}}
 	{{end}}return n
 }
@@ -194,7 +194,7 @@ func (m *{{$Struct}})MarshalToSizedBuffer(data []byte) int {
 	// flag
 	data[0] = 0xFE
 	i := 1
-	{{range .Fields}}// {{.Name}} {{.Type.OriginName}}
+	{{range .Fields}}// {{.Name}} {{typeName .Type}}
 	{{writeType .}}
 	{{end}}
 	return i
