@@ -104,12 +104,9 @@ struct Car {
 }
 
 // 游戏服
-service GameServer(MapServer) {
+service GameServer(gss.MapServer) {
      HeartBeat();
      GetServerTime() -> (int64, ErrCode);
      GetCarInfo(carID int32, student Student) -> (Car, gss.Teacher, ErrCode);
 }
 
-service MapServer {
-    GetMapName(id int32) -> (string, ErrCode);
-}

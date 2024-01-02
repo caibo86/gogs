@@ -116,7 +116,6 @@ func (service *Service) NewMethod(name string) (*Method, bool) {
 	if _, ok = service.MethodIDs[methodID]; ok {
 		return nil, false
 	}
-	service.MethodIDs[methodID] = struct{}{}
 	// 新建协议
 	method = &Method{
 		ID: methodID,
@@ -127,5 +126,55 @@ func (service *Service) NewMethod(name string) (*Method, bool) {
 	method.SetParent(service)
 	// 将方法加入到协议的方法列表
 	service.Methods[name] = method
+	service.MethodIDs[methodID] = struct{}{}
+	return method, true
+}
+
+// CopyMethod 复制一个方法到本协议下
+func (service *Service) CopyMethod(src *Method) (*Method, bool) {
+	// 检查是否已经存在此方法
+	_, ok := service.Methods[src.Name()]
+	if ok {
+		return nil, false
+	}
+	if _, ok = service.MethodIDs[src.ID]; ok {
+		return nil, false
+	}
+	// 新建协议
+	method := &Method{
+		ID: src.ID,
+	}
+	// 初始化协议
+	method.Init(src.name, service.Script())
+	// 设置方法的父节点为此协议节点
+	method.SetParent(service)
+	// 将方法加入到协议的方法列表
+	service.Methods[method.Name()] = method
+	service.MethodIDs[method.ID] = struct{}{}
+	// 检查是否把对应的包引用添加进来
+	for name, pkgRef := range src.script.Imports {
+		if _, ok = service.Script().Imports[name]; !ok {
+			service.Script().NewPackageRef(name, pkgRef.Ref)
+		}
+	}
+
+	for _, param := range src.Params {
+		r := param.Type.(*TypeRef)
+		namePath := r.NamePath
+		if len(r.NamePath) == 1 && src.Package() != service.Package() {
+			namePath = append([]string{src.Package().Name()}, r.NamePath[0])
+		}
+		ref := service.Script().NewTypeRef(namePath, "")
+		method.NewParam(ref)
+	}
+	for _, param := range src.Return {
+		r := param.Type.(*TypeRef)
+		namePath := r.NamePath
+		if len(r.NamePath) == 1 && src.Package() != service.Package() {
+			namePath = append([]string{src.Package().Name()}, r.NamePath[0])
+		}
+		ref := service.Script().NewTypeRef(namePath, "")
+		method.NewReturn(ref)
+	}
 	return method, true
 }

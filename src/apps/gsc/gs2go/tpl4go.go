@@ -542,8 +542,8 @@ func (service *{{$Service}}RemoteService) Call(call *gsnet.Call) (callReturn *gs
             err = gserrors.NewWith(err, "post {{$Service}}RemoteService#{{$Name}} err")
             return
         }
-        return {{end}}{{end}}
-    }
+        return 
+		{{end}}{{end}} }
     err = gserrors.NewfWith(gsdock.ErrRPC, "unknown {{$Service}}RemoteService#%d method", call.Method)
     return
 }

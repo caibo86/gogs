@@ -36,6 +36,9 @@ func (compiler *Compiler) link(pkg *ast.Package) {
 	}
 	// 协议展开 每一个协议都包含自己所有父协议的所有函数 并按全局编号
 	pkg.Accept(linker3)
+
+	// 协议展开后可能有新的类型引用 需要重新连接
+	pkg.Accept(linker)
 }
 
 // Linker 连接器 此连接器是将所有的类型引用连接到对应的类型
@@ -283,9 +286,9 @@ func (linker *Linker) VisitTypeRef(ref *ast.TypeRef) ast.Node {
 				}
 			}
 		}
+		// 以上情况均不符合则报错
+		linker.errorf(Pos(ref), "unknown type(%s)", ref)
 	}
-	// 以上情况均不符合则报错
-	linker.errorf(Pos(ref), "unknown type(%s)", ref)
 	return ref
 }
 
@@ -353,26 +356,27 @@ func (linker *serviceLinker) unwind(service *ast.Service, stack []*ast.Service) 
 	for _, base := range service.Bases {
 		s := base.Ref.(*ast.Service)
 		for _, method := range s.Methods {
-			clone := &ast.Method{}
-			*clone = *method
-			// hash id 碰撞检测
-			if _, ok := service.MethodIDs[clone.ID]; ok {
-				linker.errorf(Pos(service),
-					"method id hash collision: %s see: %s",
-					clone,
-					Pos(clone))
-			}
-			if old, ok := service.Methods[clone.Name()]; ok {
-				// 不允许有重名函数
-				linker.errorf(Pos(service),
-					"duplicate method name: %s see: %s see: %s",
-					clone,
-					Pos(old),
-					Pos(clone))
-			}
-			method.SetParent(service)
-			service.Methods[clone.Name()] = clone
-			service.MethodIDs[clone.ID] = struct{}{}
+			// clone := &ast.Method{}
+			// *clone = *method
+			// // hash id 碰撞检测
+			// if _, ok := service.MethodIDs[clone.ID]; ok {
+			// 	linker.errorf(Pos(service),
+			// 		"method id hash collision: %s see: %s",
+			// 		clone,
+			// 		Pos(clone))
+			// }
+			// if old, ok := service.Methods[clone.Name()]; ok {
+			// 	// 不允许有重名函数
+			// 	linker.errorf(Pos(service),
+			// 		"duplicate method name: %s see: %s see: %s",
+			// 		clone,
+			// 		Pos(old),
+			// 		Pos(clone))
+			// }
+			// method.SetParent(service)
+			// service.Methods[clone.Name()] = clone
+			// service.MethodIDs[clone.ID] = struct{}{}
+			service.CopyMethod(method)
 		}
 	}
 	// 标记当前协议已经展开

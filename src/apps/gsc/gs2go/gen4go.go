@@ -950,6 +950,7 @@ func (gen *Gen4Go) unmarshalType(expr ast.Expr) string {
 			return f
 		}
 		// 自定义类型
+
 		if _, ok := expr.Script().Imports[ref.NamePath[0]]; ok {
 			return fmt.Sprintf(
 				"%s.Unmarshal%s",
