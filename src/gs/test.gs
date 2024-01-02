@@ -35,6 +35,12 @@ struct Student {
 	Age   int32  = 300; // 年龄
 }
 
+@gslang.AttrUsage(Target:gslang.AttrTarget.Service)
+table ServiceAttr {
+    ID int32 = 1;
+    Name string = 2;
+}
+
 struct Table {
 }
 
@@ -104,9 +110,13 @@ struct Car {
 }
 
 // 游戏服
-service GameServer(gss.MapServer) {
-     HeartBeat();
-     GetServerTime() -> (int64, ErrCode);
-     GetCarInfo(carID int32, student Student) -> (Car, gss.Teacher, ErrCode);
+@ServiceAttr(ID:100,Name:"game") // 哈哈
+service GameServer(gss.MapServer) { // 无聊
+    // 获取服务器时间
+    GetServerTime(int32) -> (int64, ErrCode); // 单位是毫秒
+    // 这个注释去哪里了
+    GetCarInfo(carID int32, student Student) -> (Car, gss.Teacher, ErrCode); // 获取汽车信息
+    // 心跳第一个注释
+    HeartBeat(); // 心跳第二个注释
 }
 

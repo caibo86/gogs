@@ -595,7 +595,7 @@ func (parser *Parser) parseService() {
 			if old, ok := service.NewBase(base); ok {
 				// 分析注释并附加注释到 父类型引用节点
 				parser.parseComments()
-				parser.attachComments(base)
+				// parser.attachComments(base)
 			} else { // 不能重复继承相同协议
 				parser.errorf(Pos(base), "duplicate inherit service: %s in: %s", base.Name(), Pos(old))
 			}
@@ -652,7 +652,7 @@ func (parser *Parser) parseService() {
 				// 附加位置信息 注释及属性
 				attachPos(param, Pos(param.Type))
 				parser.parseComments()
-				parser.attachComments(param)
+				// parser.attachComments(param)
 				parser.attachAttrs(param)
 				next = parser.Peek()
 				// 多个输入参数以逗号间隔
@@ -682,7 +682,7 @@ func (parser *Parser) parseService() {
 				param := method.NewReturn(paramType)
 				attachPos(param, Pos(param.Type))
 				parser.parseComments()
-				parser.attachComments(param)
+				// parser.attachComments(param)
 				parser.attachAttrs(param)
 				next = parser.Peek()
 				if next.Type == ',' {

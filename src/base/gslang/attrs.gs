@@ -7,7 +7,7 @@ enum AttrTarget {
     Enum = 16;
     EnumVal = 32;
     Field = 64;
-    Contract = 128;
+    Service = 128;
     Method = 256;
     Return = 512;
     Param = 1024;

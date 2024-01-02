@@ -10,6 +10,7 @@ package ast
 import (
 	"fmt"
 	"gogs/base/misc"
+	"strings"
 )
 
 // Param 参数表达式
@@ -25,6 +26,37 @@ type Method struct {
 	ID       uint32   // 方法ID
 	Return   []*Param // 返回参数列表
 	Params   []*Param // 输入参数列表
+}
+
+func (method *Method) OriginFirst() string {
+	var params string
+	for i, param := range method.Params {
+		if i == len(method.Params)-1 {
+			params += param.Type.OriginName()
+		} else {
+			params += param.Type.OriginName() + ", "
+		}
+	}
+	ret := fmt.Sprintf("%s(%s)", method.Name(), params)
+	if len(method.Return) == 0 {
+		ret += ";"
+	}
+	return ret
+}
+
+func (method *Method) OriginSecond() string {
+	if len(method.Return) == 0 {
+		return ""
+	}
+	var params string
+	for i, param := range method.Return {
+		if i == len(method.Return)-1 {
+			params += param.Type.OriginName()
+		} else {
+			params += param.Type.OriginName() + ", "
+		}
+	}
+	return fmt.Sprintf("-> (%s); ", params)
 }
 
 // InputParams 方法输入参数个数
@@ -75,10 +107,13 @@ func (method *Method) NewParam(paramType Expr) *Param {
 
 // Service 协议,表达式
 type Service struct {
-	BaseExpr                      // 内嵌基本表达式实现
-	Methods   map[string]*Method  // 方法列表
-	MethodIDs map[uint32]struct{} // 已使用的方法ID列表
-	Bases     []*TypeRef          // 基类列表,协议可以继承自多个协议
+	BaseExpr                            // 内嵌基本表达式实现
+	Methods         map[string]*Method  // 方法列表
+	MethodList      []*Method           // 方法列表,避免map遍历时顺序不一致
+	MethodIDs       map[uint32]struct{} // 已使用的方法ID列表
+	Bases           []*TypeRef          // 基类列表,协议可以继承自多个协议
+	MaxMethodFirst  int                 // 方法名第一截最大长度
+	MaxMethodSecond int                 // 方法名第二截最大长度
 }
 
 // NewService 在代码节点内新建协议
@@ -90,6 +125,18 @@ func (script *Script) NewService(name string) *Service {
 	// 设置协议节点为给定的名字 设置所属代码节点
 	service.Init(name, script)
 	return service
+}
+
+// OriginName 获取协议的原始代码名字,包含基类
+func (service *Service) OriginName() string {
+	if len(service.Bases) == 0 {
+		return service.Name()
+	}
+	bases := make([]string, len(service.Bases))
+	for i, base := range service.Bases {
+		bases[i] = base.OriginName()
+	}
+	return fmt.Sprintf("%s(%s)", service.Name(), strings.Join(bases, ", "))
 }
 
 // NewBase 为此协议添加一个基类
@@ -127,6 +174,8 @@ func (service *Service) NewMethod(name string) (*Method, bool) {
 	// 将方法加入到协议的方法列表
 	service.Methods[name] = method
 	service.MethodIDs[methodID] = struct{}{}
+	service.MethodList = append(service.MethodList, method)
+
 	return method, true
 }
 
@@ -177,4 +226,16 @@ func (service *Service) CopyMethod(src *Method) (*Method, bool) {
 		method.NewReturn(ref)
 	}
 	return method, true
+}
+
+// CalMethodLength 计算方法名长度,用于格式化gs文件
+func (service *Service) CalMethodLength() {
+	for _, method := range service.MethodList {
+		if len(method.OriginFirst()) > service.MaxMethodFirst {
+			service.MaxMethodFirst = len(method.OriginFirst())
+		}
+		if len(method.OriginSecond()) > service.MaxMethodSecond {
+			service.MaxMethodSecond = len(method.OriginSecond())
+		}
+	}
 }

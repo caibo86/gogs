@@ -139,5 +139,25 @@ func formatScript(script *ast.Script) {
 			buff.WriteString(fmt.Sprintf("}\n\n"))
 		}
 	}
+	// format service
+	for _, t := range script.Types {
+		if service, ok := t.(*ast.Service); ok {
+			service.CalMethodLength()
+			printComments(&buff, service)
+			printAttrs(&buff, service)
+			buff.WriteString(fmt.Sprintf("service %s {\n", service.OriginName()))
+			for _, method := range service.MethodList {
+				tmp := "\t%" +
+					fmt.Sprintf("-%d", service.MaxMethodFirst) +
+					"s %" +
+					fmt.Sprintf("-%d", service.MaxMethodSecond) +
+					"s"
+				buff.WriteString(fmt.Sprintf(tmp, method.OriginFirst(), method.OriginSecond()))
+				printCommentsToLine(&buff, method)
+				buff.WriteString("\n")
+			}
+			buff.WriteString(fmt.Sprintf("}\n\n"))
+		}
+	}
 	writeFormatFile(script, buff.Bytes())
 }
