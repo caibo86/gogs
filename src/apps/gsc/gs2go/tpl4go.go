@@ -12,7 +12,6 @@ var tpl4go = `
 
 {{define "imports"}}
 import(
-	"math/bits"
     {{range $index, $element := .}} {{$index}} "{{$element.Name}}"
     {{end}}
 )
@@ -396,6 +395,7 @@ func (service *{{$Service}}Service) Call(call *gsnet.Call) (callReturn *gsnet.Re
     }()
     switch call.Method { {{range .Methods}}
    		case {{.ID}}:  {{$Name := symbol .Name}}
+		// {{$Name}}
         if len(call.Params) != {{.InputParams}} {
             err = gserrors.NewfWith(gsdock.ErrRPC, "{{$Service}}::{{$Name}} expect {{.InputParams}} params but got :%d", len(call.Params))
             return
@@ -520,6 +520,7 @@ func (service *{{$Service}}RemoteService) Call(call *gsnet.Call) (callReturn *gs
     }()
     switch call.Method { 
 	{{range .Methods}} {{$Name := .Name}} case {{.ID}}:
+		// {{$Name}}
         {{if .Return}} var future gsdock.Future
         future, err = service.remote.Wait(service, call, service.timeout)
         if err != nil {

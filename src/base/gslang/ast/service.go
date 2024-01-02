@@ -8,6 +8,7 @@
 package ast
 
 import (
+	"errors"
 	"fmt"
 	"gogs/base/misc"
 	"strings"
@@ -180,14 +181,35 @@ func (service *Service) NewMethod(name string) (*Method, bool) {
 }
 
 // CopyMethod 复制一个方法到本协议下
-func (service *Service) CopyMethod(src *Method) (*Method, bool) {
+func (service *Service) CopyMethod(src *Method) (*Method, error) {
 	// 检查是否已经存在此方法
-	_, ok := service.Methods[src.Name()]
+	old, ok := service.Methods[src.Name()]
 	if ok {
-		return nil, false
+		return old, errors.New("duplicate method name")
 	}
 	if _, ok = service.MethodIDs[src.ID]; ok {
-		return nil, false
+		return nil, errors.New("service method hash collision")
+	}
+	// 检查是否把对应的包引用添加进来
+	for name, pkgRef := range src.script.Imports {
+		var found bool
+		for _, self := range service.Script().Imports {
+			fmt.Println("self.Ref", self.Ref.Package().Name())
+			if self.Ref == pkgRef.Ref {
+				found = true
+				break
+			}
+		}
+		if found {
+			continue
+		}
+		fmt.Println("当前包列表", service.Script().Imports)
+		fmt.Println("需要引入包", name, pkgRef.Ref.Package().Name())
+		_, ok := service.Script().NewPackageRef(name, pkgRef.Ref)
+		if !ok {
+			fmt.Println("未出去了吗")
+			return nil, errors.New("duplicate package name when import package by copy method, set alias for package")
+		}
 	}
 	// 新建协议
 	method := &Method{
@@ -200,18 +222,21 @@ func (service *Service) CopyMethod(src *Method) (*Method, bool) {
 	// 将方法加入到协议的方法列表
 	service.Methods[method.Name()] = method
 	service.MethodIDs[method.ID] = struct{}{}
-	// 检查是否把对应的包引用添加进来
-	for name, pkgRef := range src.script.Imports {
-		if _, ok = service.Script().Imports[name]; !ok {
-			service.Script().NewPackageRef(name, pkgRef.Ref)
-		}
-	}
 
 	for _, param := range src.Params {
 		r := param.Type.(*TypeRef)
 		namePath := r.NamePath
 		if len(r.NamePath) == 1 && src.Package() != service.Package() {
+			// 如果是非本包的类型且不带包名,则需要加上包名
 			namePath = append([]string{src.Package().Name()}, r.NamePath[0])
+		} else if len(r.NamePath) == 2 {
+			// 如果是非本包的类型且带包名,则需要检查是否需要更换包别名
+			for _, pkgRef := range service.Script().Imports {
+				if pkgRef.Ref.Package() == r.Ref.Package() {
+					namePath = append([]string{pkgRef.Name()}, r.NamePath[1])
+					break
+				}
+			}
 		}
 		ref := service.Script().NewTypeRef(namePath, "")
 		method.NewParam(ref)
@@ -220,12 +245,21 @@ func (service *Service) CopyMethod(src *Method) (*Method, bool) {
 		r := param.Type.(*TypeRef)
 		namePath := r.NamePath
 		if len(r.NamePath) == 1 && src.Package() != service.Package() {
+			// 如果是非本包的类型且不带包名,则需要加上包名
 			namePath = append([]string{src.Package().Name()}, r.NamePath[0])
+		} else if len(r.NamePath) == 2 {
+			// 如果是非本包的类型且带包名,则需要检查是否需要更换包别名
+			for _, pkgRef := range service.Script().Imports {
+				if pkgRef.Ref.Package() == r.Ref.Package() {
+					namePath = append([]string{pkgRef.Name()}, r.NamePath[1])
+					break
+				}
+			}
 		}
 		ref := service.Script().NewTypeRef(namePath, "")
 		method.NewReturn(ref)
 	}
-	return method, true
+	return method, nil
 }
 
 // CalMethodLength 计算方法名长度,用于格式化gs文件

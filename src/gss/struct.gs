@@ -1,4 +1,5 @@
 import "gsss"
+import "base/gss"
 
 enum Subject {
     Math = 1;
@@ -16,9 +17,10 @@ struct Teacher {
     ID   int64 = 1;
     Name string = 2;
     Age  int32 = 3;
+    Teacher gss.Teacher = 4;
 }
 
 service MapServer {
-    GetMapName(id int32, subject Subject) -> (string, Teacher);
-    UpdatePen(gsss.PenType, gsss.Pen) -> (gsss.PenType, gsss.Pen);
+    GetMapName(id int32, subject Subject, gss.Teacher, Teacher) -> (string, gss.Teacher, Teacher);
+    //UpdatePen(gsss.PenType, gsss.Pen) -> (gsss.PenType, gsss.Pen);
 }

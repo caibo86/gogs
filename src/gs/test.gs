@@ -1,4 +1,7 @@
-import "gss"
+import (
+    "gss"
+    abc "base/gss"
+)
 
 // 前面的注释
 // 最后的日志

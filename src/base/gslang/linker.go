@@ -356,27 +356,23 @@ func (linker *serviceLinker) unwind(service *ast.Service, stack []*ast.Service) 
 	for _, base := range service.Bases {
 		s := base.Ref.(*ast.Service)
 		for _, method := range s.Methods {
-			// clone := &ast.Method{}
-			// *clone = *method
-			// // hash id 碰撞检测
-			// if _, ok := service.MethodIDs[clone.ID]; ok {
-			// 	linker.errorf(Pos(service),
-			// 		"method id hash collision: %s see: %s",
-			// 		clone,
-			// 		Pos(clone))
-			// }
-			// if old, ok := service.Methods[clone.Name()]; ok {
-			// 	// 不允许有重名函数
-			// 	linker.errorf(Pos(service),
-			// 		"duplicate method name: %s see: %s see: %s",
-			// 		clone,
-			// 		Pos(old),
-			// 		Pos(clone))
-			// }
-			// method.SetParent(service)
-			// service.Methods[clone.Name()] = clone
-			// service.MethodIDs[clone.ID] = struct{}{}
-			service.CopyMethod(method)
+			old, err := service.CopyMethod(method)
+			if err != nil {
+				if old != nil {
+					linker.errorf(Pos(service),
+						"%s\n method: %s see: %s see: %s",
+						err.Error(),
+						method.Name(),
+						Pos(old),
+						Pos(method))
+				} else {
+					linker.errorf(Pos(service),
+						"%s\n method :%s see: %s",
+						err.Error(),
+						method.Name(),
+						Pos(method))
+				}
+			}
 		}
 	}
 	// 标记当前协议已经展开

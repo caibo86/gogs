@@ -1294,10 +1294,16 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 			}
 			// 如果代码中有对应的包名 则引入对应的包 并取别名为 包引用的名字
 			if strings.Contains(codes, ref.Name()) {
+				if ref.Name() == filepath.Base(ref.Ref.Name()) {
+					buff.WriteString(fmt.Sprintf("import  \"%s/%s\"\n",
+						moduleName, ref.Ref))
+				} else {
+					buff.WriteString(fmt.Sprintf("import %s \"%s/%s\"\n",
+						ref.Name(), moduleName, ref.Ref))
+				}
 				// buff.WriteString(fmt.Sprintf("import %s \"%s/%s\"\n",
 				// 	ref.Name(), moduleName, ref.Ref))
-				buff.WriteString(fmt.Sprintf("import \"%s/%s\"\n",
-					moduleName, ref.Ref))
+
 			}
 		}
 		// 将代码生成器的buff附加到此buff后
