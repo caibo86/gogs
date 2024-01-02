@@ -15,6 +15,7 @@ import (
 	"gogs/base/gslang/ast"
 	log "gogs/base/logger"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -74,16 +75,20 @@ func writeFormatFile(script *ast.Script, bytes []byte) {
 func formatScript(script *ast.Script) {
 	// format gs file
 	var buff bytes.Buffer
+
 	// format imports
-	var hasImports bool
-	for _, ref := range script.Imports {
-		if ref.Name() != "gslang" {
-			hasImports = true
-			buff.WriteString(fmt.Sprintf("import \"%s\"\n", ref.Ref))
+	if len(script.Imports) > 0 {
+		buff.WriteString("import (\n")
+		for _, ref := range script.Imports {
+			if ref.Name() != "gslang" {
+				if ref.Name() == filepath.Base(ref.Ref.Name()) {
+					buff.WriteString(fmt.Sprintf("\t\"%s\"\n", ref.Ref))
+				} else {
+					buff.WriteString(fmt.Sprintf("\t%s \"%s\"\n", ref.Name(), ref.Ref))
+				}
+			}
 		}
-	}
-	if hasImports {
-		buff.WriteString("\n")
+		buff.WriteString(")\n\n")
 	}
 	// format script comments
 	if printComments(&buff, script) {
