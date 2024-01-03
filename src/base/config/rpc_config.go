@@ -16,6 +16,8 @@ type RPCConfig struct {
 	ClusterSessionCache     int   `yaml:"clusterSessionCache"`     // 集群会话消息发送缓存大小
 	ClusterSessionHeartbeat int   `yaml:"clusterSessionHeartbeat"` // 集群会话心跳间隔,单位秒
 	ClientSessionCache      int   `yaml:"clientSessionCache"`      // 客户端会话消息发送缓存大小
+	ClusterCerInterval      int   `yaml:"clusterCerInterval"`      // 集群证书更新间隔,单位秒
+	ClusterCerMax           int   `yaml:"clusterCerMax"`           // 集群单次证书更新最大数量
 }
 
 // NewRPCConfig 创建RPC配置
@@ -27,6 +29,8 @@ func NewRPCConfig() *RPCConfig {
 		ClusterSessionCache:     4096,
 		ClusterSessionHeartbeat: 30,
 		ClientSessionCache:      64,
+		ClusterCerInterval:      2,
+		ClusterCerMax:           128,
 	}
 	return c
 }
@@ -67,4 +71,12 @@ func ClusterSessionHeartbeat() time.Duration {
 
 func ClientSessionCache() int {
 	return GetRPCConfig().ClientSessionCache
+}
+
+func ClusterCerInterval() time.Duration {
+	return time.Duration(GetRPCConfig().ClusterCerInterval) * time.Second
+}
+
+func ClusterCerMax() int {
+	return GetRPCConfig().ClusterCerMax
 }

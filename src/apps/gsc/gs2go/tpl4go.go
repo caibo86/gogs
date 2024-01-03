@@ -429,7 +429,7 @@ func (service *{{$Service}}Service) Call(call *gsnet.Call) (callReturn *gsnet.Re
 			log.Error("{{$Service}}Service#Call err: %s", err.Error())
 		}
     }()
-    switch call.Method { {{range .Methods}}
+    switch call.MethodID { {{range .Methods}}
    		case {{.ID}}:  {{$Name := symbol .Name}}
 		// {{$Name}}
         if len(call.Params) != {{.InputParams}} {
@@ -448,13 +448,13 @@ func (service *{{$Service}}Service) Call(call *gsnet.Call) (callReturn *gsnet.Re
         }
         {{if .Return}} callReturn = &gsnet.Return{
             ID: call.ID,
-            Service: call.Service,
+            ServiceID: call.ServiceID,
         }
         {{range .Return}} data{{.ID}} := {{marshalType .Type}}(ret{{.ID}})
         callReturn.Params = append(callReturn.Params, data{{.ID}})
         {{end}}{{end}}return{{end}}
 	}
-    err = gserrors.NewfWith(gsdock.ErrRPC, "unknown {{$Service}}Service#%d method", call.Method)
+    err = gserrors.NewfWith(gsdock.ErrRPC, "unknown {{$Service}}Service#%d method", call.MethodID)
     return
 }
 
@@ -462,8 +462,8 @@ func (service *{{$Service}}Service) Call(call *gsnet.Call) (callReturn *gsnet.Re
 // {{$Name}} method of service {{$Service}}
 func (service *{{$Service}}Service){{$Name}}{{params .Params}}{{returnParams .Return}}{
     call := &gsnet.Call{
-        Service: uint16(service.id),
-        Method: {{.ID}},
+        ServiceID: uint32(service.id),
+        MethodID: {{.ID}},
     }
 {{range .Params}} param{{.ID}} := {{marshalType .Type}}(arg{{.ID}})
     call.Params = append(call.Params, param{{.ID}})
@@ -554,7 +554,7 @@ func (service *{{$Service}}RemoteService) Call(call *gsnet.Call) (callReturn *gs
             err = gserrors.New(e.(error).Error())
         }
     }()
-    switch call.Method { 
+    switch call.MethodID { 
 	{{range .Methods}} {{$Name := .Name}} case {{.ID}}:
 		// {{$Name}}
         {{if .Return}} var future gsdock.Future
@@ -581,7 +581,7 @@ func (service *{{$Service}}RemoteService) Call(call *gsnet.Call) (callReturn *gs
         }
         return 
 		{{end}}{{end}} }
-    err = gserrors.NewfWith(gsdock.ErrRPC, "unknown {{$Service}}RemoteService#%d method", call.Method)
+    err = gserrors.NewfWith(gsdock.ErrRPC, "unknown {{$Service}}RemoteService#%d method", call.MethodID)
     return
 }
 
@@ -590,8 +590,8 @@ func (service *{{$Service}}RemoteService) Call(call *gsnet.Call) (callReturn *gs
 // {{$Name}} methods of remote service
 func (service *{{$Service}}RemoteService){{$Name}}{{params .Params}}{{returnParams .Return}}{
     call := &gsnet.Call{
-        Service: uint16(service.rid),
-        Method: {{.ID}},
+        ServiceID: uint32(service.rid),
+        MethodID: {{.ID}},
     }
     {{range .Params}} param{{.ID}} := {{marshalType .Type}}(arg{{.ID}})
     call.Params = append(call.Params, param{{.ID}})

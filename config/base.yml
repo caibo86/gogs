@@ -20,3 +20,4 @@ rpc:
   clusterSessionCache: 4096 # 集群session发送缓存大小
   clusterSessionHeartbeat: 5 # 集群session检查心跳间隔秒
   clientSessionCache: 64 # 客户端session发送缓存大小
+  clusterCerInterval: 2 # 集群证书更新间隔秒

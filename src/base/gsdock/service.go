@@ -19,6 +19,7 @@ type ID uint32
 // IService 服务
 type IService interface {
 	fmt.Stringer
+	Name() string                                 // 获取服务名称
 	Type() string                                 // 获取服务类型
 	ID() ID                                       // 服务ID
 	Call(call *gsnet.Call) (*gsnet.Return, error) // 调用服务
@@ -30,7 +31,7 @@ type IRemote interface {
 	Post(service IService, call *gsnet.Call) error                                  // 通知消息
 	Wait(service IService, call *gsnet.Call, timeout time.Duration) (Future, error) // 请求消息
 	Write(msg *gsnet.Message) error                                                 // 写入消息
-	Session() gsnet.ISession                                                        // 句柄对应的通道
+	Session() gsnet.ISession                                                        // 句柄对应的会话
 	Close()                                                                         // 关闭
 }
 
