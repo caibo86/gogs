@@ -30,7 +30,7 @@ type IRemote interface {
 	Post(service IService, call *gsnet.Call) error                                  // 通知消息
 	Wait(service IService, call *gsnet.Call, timeout time.Duration) (Future, error) // 请求消息
 	Write(msg *gsnet.Message) error                                                 // 写入消息
-	Channel() gsnet.IChannel                                                        // 句柄对应的通道
+	Session() gsnet.ISession                                                        // 句柄对应的通道
 	Close()                                                                         // 关闭
 }
 

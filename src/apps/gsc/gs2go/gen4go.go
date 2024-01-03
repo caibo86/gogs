@@ -34,6 +34,7 @@ var packageMapping = map[string]string{
 	"fmt.":      `import "fmt"`,
 	"time.":     `import "time"`,
 	"bits.":     `import "math/bits"`,
+	"io":        `import "io"`,
 }
 
 // gslang内置类型对应的golang表示

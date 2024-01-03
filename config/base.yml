@@ -15,3 +15,8 @@ log:
 
 rpc:
   timeout: 5 # rpc超时时间秒
+  listenRetryInterval: 5 # rpc监听重试时间秒
+  gateSessionCache: 4096 # 网关session发送缓存大小
+  clusterSessionCache: 4096 # 集群session发送缓存大小
+  clusterSessionHeartbeat: 5 # 集群session检查心跳间隔秒
+  clientSessionCache: 64 # 客户端session发送缓存大小

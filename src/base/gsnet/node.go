@@ -8,58 +8,71 @@
 package gsnet
 
 import (
-	"errors"
 	"fmt"
 	"gogs/base/gserrors"
 	log "gogs/base/logger"
 	"sync"
 )
 
-var (
-	ErrNode = errors.New("cluster node error") // 集群节点错误
+// DriverType 驱动类型
+type DriverType int32
+
+const (
+	DriverTypeCluster DriverType = 1
+	DriverTypeClient  DriverType = 2
+	DriverTypeGate    DriverType = 3
 )
 
-// IChannel 通道接口
-type IChannel interface {
+// ProtocolType 协议类型
+type ProtocolType int32
+
+const (
+	ProtocolTCP       ProtocolType = 1
+	ProtocolWebsocket ProtocolType = 2
+)
+
+// ISession 会话接口
+type ISession interface {
 	fmt.Stringer
 	Write(*Message) error
-	Status() Status         // 状态
-	Protocol() string       // 协议
-	Close()                 // 关闭通道
-	Handle() IChannelHandle // 通道句柄
-	Name() string           // 通道标识符
+	Status() SessionStatus    // 状态
+	DriverType() DriverType   // 驱动类型
+	Close()                   // 关闭会话
+	Handler() ISessionHandler // 会话句柄
+	Name() string             // 会话标识符
+	RemoteAddr() string       // 远程地址
 }
 
-// IChannelHandle 通道句柄
-type IChannelHandle interface {
-	Read(IChannel, *Message) // 从通道读取一个消息,实现请注意线程安全
-	StatusChanged(Status)    // 通知一个新的通道状态
+// ISessionHandler 会话处理器
+type ISessionHandler interface {
+	Read(ISession, *Message)     // 从会话读取一个消息,实现请注意线程安全
+	StatusChanged(SessionStatus) // 通知一个新的会话状态
 }
 
-// ChannelHandleBuilder 通道句柄建造者,指定通道生成通道句柄
-type ChannelHandleBuilder func(IChannel) (IChannelHandle, error)
+// SessionHandlerBuilder 会话句柄建造者,指定会话生成会话句柄
+type SessionHandlerBuilder func(ISession) (ISessionHandler, error)
 
 // IDriver 传输层协议提供者 驱动 一种Driver对应于一个协议名
 type IDriver interface {
 	fmt.Stringer
-	Protocol() string                          // 驱动协议名
-	GetChannel(string) (IChannel, bool)        // 通过名字获取通道
-	NewChannel(string, byte) (IChannel, error) // 创建通道
-	DelChannel(IChannel)                       // 删除指定的通道
-	SetBuilder(ChannelHandleBuilder)           // 设置通道句柄建造者
-	Close()                                    // 关闭驱动
+	Type() DriverType                                    // 驱动类型
+	GetSession(string) (ISession, bool)                  // 通过名字获取会话
+	NewSession(string, ConnectionType) (ISession, error) // 创建会话
+	DelSession(ISession)                                 // 删除指定的会话
+	SetBuilder(SessionHandlerBuilder)                    // 设置会话句柄建造者
+	Close()                                              // 关闭驱动
 }
 
 // Node 集群节点
 type Node struct {
 	sync.RWMutex
-	drivers map[string]IDriver // 按协议索引的驱动集合
+	drivers map[DriverType]IDriver // 按协议索引的驱动集合
 }
 
 // NewNode 新建集群节点
 func NewNode() *Node {
 	return &Node{
-		drivers: make(map[string]IDriver),
+		drivers: make(map[DriverType]IDriver),
 	}
 }
 
@@ -74,41 +87,41 @@ func (node *Node) Close() {
 func (node *Node) NewDriver(driver IDriver) error {
 	node.Lock()
 	defer node.Unlock()
-	protocol := driver.Protocol()
-	if _, ok := node.drivers[protocol]; ok {
-		// 同个节点下不能有相同协议的驱动
-		return gserrors.Newf("duplicate driver support: %s", protocol)
+	driverType := driver.Type()
+	if _, ok := node.drivers[driverType]; ok {
+		// 同个节点下单个类型的驱动只能有一个
+		return gserrors.Newf("duplicate driver type support: %s", driverType)
 	}
-	node.drivers[protocol] = driver
+	node.drivers[driverType] = driver
 	return nil
 }
 
-// GetChannel 在节点注册的指定协议驱动中查找指定名字的通道
-func (node *Node) GetChannel(protocol string, name string) (IChannel, bool) {
+// GetSession 获取指定类型驱动中指定名字的会话
+func (node *Node) GetSession(driverType DriverType, name string) (ISession, bool) {
 	node.RLock()
 	defer node.RUnlock()
-	if driver, ok := node.drivers[protocol]; ok {
-		return driver.GetChannel(name)
+	if driver, ok := node.drivers[driverType]; ok {
+		return driver.GetSession(name)
 	}
-	log.Warnf("get channel failed: driver protocol not found: %s", protocol)
+	log.Warnf("get channel failed: driver type not found: %s", driverType)
 	return nil, false
 }
 
-// NewChannel 在节点内指定协议的驱动上新建指定名字的通道
-func (node *Node) NewChannel(protocol string, name string, connectionType byte) (IChannel, error) {
+// NewSession 在指定类型驱动上新建指定名字的会话
+func (node *Node) NewSession(driverType DriverType, name string, ct ConnectionType) (ISession, error) {
 	node.RLock()
 	defer node.RUnlock()
-	if driver, ok := node.drivers[protocol]; ok {
-		return driver.NewChannel(name, connectionType)
+	if driver, ok := node.drivers[driverType]; ok {
+		return driver.NewSession(name, ct)
 	}
-	return nil, gserrors.Newf("new channel failed: driver protocol not found: %s", protocol)
+	return nil, gserrors.Newf("new channel failed: driver type not found: %s", driverType)
 }
 
-// DelChannel 在节点内指定协议的驱动上删除指定名字的通道
-func (node *Node) DelChannel(channel IChannel) {
+// DelSession 在指定类型驱动上删除指定名字的会话
+func (node *Node) DelSession(channel ISession) {
 	node.RLock()
 	defer node.RUnlock()
-	if driver, ok := node.drivers[channel.Protocol()]; ok {
-		driver.DelChannel(channel)
+	if driver, ok := node.drivers[channel.DriverType()]; ok {
+		driver.DelSession(channel)
 	}
 }

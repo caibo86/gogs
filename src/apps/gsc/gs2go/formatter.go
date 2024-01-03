@@ -76,8 +76,16 @@ func formatScript(script *ast.Script) {
 	// format gs file
 	var buff bytes.Buffer
 
+	count := 0
+	for _, ref := range script.Imports {
+		if ref.Name() != "gslang" {
+			count++
+			break
+		}
+	}
+
 	// format imports
-	if len(script.Imports) > 0 {
+	if count > 0 {
 		buff.WriteString("import (\n")
 		for _, ref := range script.Imports {
 			if ref.Name() != "gslang" {

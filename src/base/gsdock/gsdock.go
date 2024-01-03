@@ -6,3 +6,13 @@
 // -------------------------------------------
 
 package gsdock
+
+import (
+	"sync"
+)
+
+// GSDock 集群服务节点
+type GSDock struct {
+	sync.WaitGroup
+	*RPC
+}

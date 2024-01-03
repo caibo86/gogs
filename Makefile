@@ -45,3 +45,6 @@ g:
 
 f:
 	clang-format -i src/gs/test.gs
+
+mod:
+	cd ./src && go mod tidy && go mod vendor
