@@ -20,7 +20,7 @@ const ignoreErr = "sync /dev/stdout: invalid argument"
 
 func main() {
 	log.Init(
-		log.SetFilename("log/gsc.log"),
+		log.SetFilename("log/gs2go.log"),
 		log.SetIsOpenFile(true),
 		log.SetIsAsync(false),
 		// log.SetStacktrace(zap.PanicLevel),

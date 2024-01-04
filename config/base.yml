@@ -5,14 +5,6 @@ baseETCD: &baseETCD
   addr: ["127.0.0.1:2379"] # etcd服务器地址
   ttl: 5 # etcd超时时间秒
 
-log:
-  level: -1 # 日志级别 -1:debug,0:info,1:warn,2:error,4:panic,5:fatal
-  maxSize: 128 # 单个文件最大M
-  isOpenConsole: true # 是否标准输出
-  isOpenErrorFile: false # 是否打开单独的错误日志文件
-  isOpenFile: true # 是否打开文件日志
-  isAsync: false # 是否使用异步日志
-
 rpc:
   timeout: 5 # rpc超时时间秒
   listenRetryInterval: 5 # rpc监听重试时间秒

@@ -22,7 +22,7 @@ type ActorSystem struct {
 	*RPC                                    // RPC管理器
 	name         string                     // 名字
 	host         *Host                      // 集群服务器
-	builders     map[string]IServiceBuilder // 服务建造者集合
+	builders     map[string]IServiceBuilder // 服务构造器集合
 	actors       map[string]IActor          // 角色集合
 	actorLock    sync.RWMutex               // 角色集合读写锁
 	neighbors    map[string]IActorSystem    // 邻居角色系统集合
@@ -44,7 +44,7 @@ func NewActorSystem(name string, builders map[string]IServiceBuilder, localAddr 
 		groupLocks: make([]sync.Mutex, config.ActorGroups()),
 		db:         db,
 	}
-	// 注册服务建造者,本地IActorSystem服务即返回自身
+	// 注册服务构造器,本地IActorSystem服务即返回自身
 	_, err := system.host.RegisterBuilder(NewActorSystemBuilder(func(service IService) (IActorSystem, error) {
 		return system, nil
 	}))

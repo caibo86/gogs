@@ -1,9 +1,5 @@
 etcd:
   <<: *baseETCD
-  depList:
-    - GAME_CONFIG
-    - MONGO
-    - GATE
 
 log:
   level: -1 # 日志级别 -1:debug,0:info,1:warn,2:error,4:panic,5:fatal
@@ -13,6 +9,10 @@ log:
   isOpenFile: true # 是否打开文件日志
   isAsync: false # 是否使用异步日志
 
-game:
-  logPath: ./log/game_${SERVER_ID}.log
-  dbName: game_${SERVER_ID}
+gate:
+  logPath: ./log/gate_${SERVER_ID}.log # 日志路径
+  addr: 0.0.0.0 # 对外通信地址
+  port: 9100 # 对外通信端口
+  innerAddr: 127.0.0.1 # 内部通信地址
+  innerPort: 9101 # 内部通信端口
+  protocol: 1 # 1:tcp,2:websocket

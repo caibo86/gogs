@@ -20,7 +20,7 @@ type ClientDriver struct {
 	remoteAddr            string                    // 远程地址
 	userSessions          map[string]*ClientSession // 用户会话
 	mutexGroup            []sync.Mutex              // 会话互斥锁列表
-	sessionHandlerBuilder SessionHandlerBuilder     // 会话处理器建造者
+	sessionHandlerBuilder SessionHandlerBuilder     // 会话处理器构造器
 	name                  string                    // 驱动名字
 	protocol              ProtocolType              // 协议类型
 }
@@ -98,7 +98,7 @@ func (driver *ClientDriver) DelSession(session ISession) {
 	}
 }
 
-// SetBuilder 设置会话处理器建造者
+// SetBuilder 设置会话处理器构造器
 func (driver *ClientDriver) SetBuilder(builder SessionHandlerBuilder) {
 	driver.sessionHandlerBuilder = builder
 }

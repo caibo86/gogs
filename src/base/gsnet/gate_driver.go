@@ -33,7 +33,7 @@ type GateDriver struct {
 	localAddr             string                  // 本地地址
 	remotes               map[string]*GateSession // 远程会话
 	mutexGroup            []sync.Mutex            // 会话互斥锁列表
-	sessionHandlerBuilder SessionHandlerBuilder   // 会话处理器建造者
+	sessionHandlerBuilder SessionHandlerBuilder   // 会话处理器构造器
 	name                  string                  // 驱动名字
 	protocol              ProtocolType            // 协议类型
 }
@@ -66,7 +66,7 @@ func (driver *GateDriver) Name() string {
 	return driver.name
 }
 
-// SetBuilder 设置会话处理器建造者
+// SetBuilder 设置会话处理器构造器
 func (driver *GateDriver) SetBuilder(builder SessionHandlerBuilder) {
 	driver.sessionHandlerBuilder = builder
 }

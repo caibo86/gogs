@@ -28,7 +28,7 @@ gsc:
 t:
 	@rm -f src/base/gslang/*.gs.go
 	@cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/gsc/gs2go
-	GOPATH=$(GOPATH) gs2go --module gogs gs base/gsnet
+	GOPATH=$(GOPATH) gs2go --module gogs gs base/gsnet idl
 
 getdeepcopy:
 	cd src/cmd/gengo/examples/deepcopy-gen && go build . && cp deepcopy-gen $(GOPATH)/bin
@@ -48,3 +48,15 @@ f:
 
 mod:
 	cd ./src && go mod tidy && go mod vendor
+
+gate:
+	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/gate_main
+
+game:
+	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/game_main
+
+login:
+	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/login_main
+
+etcd:
+	sh ./src/scripts/init_config_in_etcd.sh

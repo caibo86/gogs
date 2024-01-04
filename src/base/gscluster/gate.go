@@ -32,7 +32,6 @@ type Gate struct {
 func NewGate(name, localAddr, hostAddr string, builder IServiceBuilder, protocol gsnet.ProtocolType) (*Gate, error) {
 	gate := &Gate{
 		name:        name,
-		host:        NewHost(hostAddr),
 		gameServers: make(map[ID]IService),
 		remotes:     make(map[int64]*GateRemote),
 		builder:     builder,
@@ -47,7 +46,7 @@ func NewGate(name, localAddr, hostAddr string, builder IServiceBuilder, protocol
 	if err != nil {
 		return nil, err
 	}
-	// 参数为nil,表示只能建造远程服务
+	// 参数为nil,表示只能构造远程服务
 	gameServerBuilder := NewGameServerBuilder(nil)
 	_, err = gate.host.RegisterBuilder(gameServerBuilder)
 	if err != nil {

@@ -79,6 +79,14 @@ func With(keys ...string) {
 			manager.AddConfig(NewLogConfig())
 		case KeyRPC:
 			manager.AddConfig(NewRPCConfig())
+		case KeyGate:
+			manager.AddConfig(NewGateConfig())
+		case KeyGame:
+			manager.AddConfig(NewGameConfig())
+		case KeyLogin:
+			manager.AddConfig(NewLoginConfig())
+		case KeyMap:
+			manager.AddConfig(NewMapConfig())
 		default:
 			gserrors.Panicf("unknown config type:%s", key)
 		}

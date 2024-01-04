@@ -48,7 +48,7 @@ type ISessionHandler interface {
 	SessionStatusChanged(SessionStatus) // 会话状态变化
 }
 
-// SessionHandlerBuilder 会话句柄建造者,指定会话生成会话句柄
+// SessionHandlerBuilder 会话句柄构造器,指定会话生成会话句柄
 type SessionHandlerBuilder func(ISession) (ISessionHandler, error)
 
 // IDriver 传输层协议提供者 驱动 一种Driver对应于一个协议名
@@ -57,7 +57,7 @@ type IDriver interface {
 	GetSession(string) (ISession, bool)                  // 通过名字获取会话
 	NewSession(string, ConnectionType) (ISession, error) // 创建会话
 	DelSession(ISession)                                 // 删除指定的会话
-	SetBuilder(SessionHandlerBuilder)                    // 设置会话句柄建造者
+	SetBuilder(SessionHandlerBuilder)                    // 设置会话句柄构造器
 	Close()                                              // 关闭驱动
 }
 

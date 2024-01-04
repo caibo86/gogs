@@ -25,7 +25,7 @@ type ClusterDriver struct {
 	localAddr             string                     // 本地地址
 	remotes               map[string]*ClusterSession // 远程会话
 	mutexGroup            []sync.Mutex               // 会话互斥锁列表
-	sessionHandlerBuilder SessionHandlerBuilder      // 会话处理器建造者
+	sessionHandlerBuilder SessionHandlerBuilder      // 会话处理器构造器
 	name                  string                     // 驱动名字
 }
 
@@ -47,7 +47,7 @@ func (driver *ClusterDriver) String() string {
 	return driver.name
 }
 
-// SetBuilder 设置会话处理器建造者
+// SetBuilder 设置会话处理器构造器
 func (driver *ClusterDriver) SetBuilder(builder SessionHandlerBuilder) {
 	driver.sessionHandlerBuilder = builder
 }
@@ -154,7 +154,7 @@ func (driver *ClusterDriver) handleAccept(conn net.Conn) {
 		return
 	}
 	// 第一个必须是握手消息
-	if msg.Type != MessageTypeWhoAmI {
+	if msg.Type != MessageTypeHandshake {
 		log.Errorf("cluster driver: %s remote: %s except WhoAmI message, but got: %s", driver, conn.RemoteAddr(), msg.Type)
 		_ = conn.Close()
 		return

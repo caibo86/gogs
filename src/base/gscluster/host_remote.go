@@ -30,11 +30,6 @@ func NewClusterRemote(host *Host, session gsnet.ISession) *ClusterRemote {
 	}
 }
 
-// String implements fmt.Stringer
-func (remote *ClusterRemote) String() string {
-	return remote.session.String()
-}
-
 // Name 其实就是session的名字
 func (remote *ClusterRemote) Name() string {
 	return remote.session.Name()

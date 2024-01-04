@@ -25,7 +25,7 @@ type Game struct {
 	host         *Host                      // 集群服务器
 	db           *mongodb.MongoClient       // mongodb
 	gateServers  map[string]IGateServer     // 网关服务集合
-	builders     map[string]IServiceBuilder // 服务建造者集合
+	builders     map[string]IServiceBuilder // 服务构造器集合
 	idgen        uint32                     // service id generator
 	tUser        string                     // 玩家类型
 	serverID     int64                      // 服务器ID
@@ -50,7 +50,7 @@ func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAd
 		serverID:    id,
 		serverName:  name,
 	}
-	// 注册GameServer服务建造者
+	// 注册GameServer服务构造器
 	_, err = game.host.RegisterBuilder(NewGameServerBuilder(func(service IService) (IGameServer, error) {
 		return game, nil
 	}))
@@ -62,7 +62,7 @@ func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAd
 	if err != nil {
 		return nil, err
 	}
-	// 注册GateServer服务建造者,只能建造GateServerRemoteService
+	// 注册GateServer服务构造器,只能构造GateServerRemoteService
 	_, err = game.host.RegisterBuilder(NewGateServerBuilder(nil))
 	// 监听GateServer类型服务
 	listener := func(service IService, status gsnet.ServiceStatus) bool {

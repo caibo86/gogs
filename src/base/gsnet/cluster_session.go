@@ -165,7 +165,7 @@ func (session *ClusterSession) outConnect() {
 	stream := NewStream(conn, conn)
 	// 发送握手消息
 	msg := NewMessage()
-	msg.Type = MessageTypeWhoAmI
+	msg.Type = MessageTypeHandshake
 	msg.Data = []byte(conn.LocalAddr().String())
 	// 发送
 	err = WriteMessage(stream, msg)

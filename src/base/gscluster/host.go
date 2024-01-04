@@ -28,8 +28,8 @@ type Host struct {
 	neighbors               map[string]*Neighbor            // 集群中的邻居集合,通过Session.Name索引
 	localServiceMutex       sync.RWMutex                    // 本地服务集合 读写锁
 	localServices           map[ID]IService                 // 本地服务集合,通过ID索引
-	builderMutex            sync.RWMutex                    // 服务建造者集合 读写锁
-	builders                map[string]IServiceBuilder      // 服务建造者集合,通过ServiceType索引
+	builderMutex            sync.RWMutex                    // 服务构造器集合 读写锁
+	builders                map[string]IServiceBuilder      // 服务构造器集合,通过ServiceType索引
 	localServiceEvents      chan *eventServiceStatusChanged // 本地服务状态变更事件通道
 	registryExit            chan struct{}                   // 关闭服务注册的信号
 }
@@ -61,7 +61,7 @@ func NewHost(localAddr string) *Host {
 				break
 			}
 		}
-		log.Debug("Host cer exit")
+		log.Debug("Host service registry ticker exit")
 		host.wg.Done()
 	}()
 	return host
@@ -234,7 +234,7 @@ func (host *Host) handleCall(call *gsnet.Call) (*gsnet.Return, error) {
 	return nil, gserrors.Newf("local service not found: %d", call.ServiceID)
 }
 
-// RegisterBuilder 注册服务建造者
+// RegisterBuilder 注册服务构造器
 func (host *Host) RegisterBuilder(builder IServiceBuilder) (IServiceBuilder, error) {
 	host.builderMutex.Lock()
 	defer host.builderMutex.Unlock()
@@ -245,7 +245,7 @@ func (host *Host) RegisterBuilder(builder IServiceBuilder) (IServiceBuilder, err
 	return builder, nil
 }
 
-// UnregisterBuilder 注销服务建造者
+// UnregisterBuilder 注销服务构造器
 func (host *Host) UnregisterBuilder(serviceType string) IServiceBuilder {
 	host.builderMutex.Lock()
 	defer host.builderMutex.Unlock()
@@ -297,7 +297,7 @@ func (host *Host) NewService(serviceType string, name string, context interface{
 		status:  gsnet.ServiceStatusOnline,
 	}
 	host.ServiceStatusChanged(service, gsnet.ServiceStatusOnline)
-	log.Infof("new local service id: %s name: %s type: %s", service.ID(), service.Name(), service.Type())
+	log.Infof("new local service id: %d name: %s type: %s", service.ID(), service.Name(), service.Type())
 	return service, nil
 }
 
