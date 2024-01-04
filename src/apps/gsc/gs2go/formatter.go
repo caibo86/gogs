@@ -63,7 +63,7 @@ func writeFormatFile(script *ast.Script, bytes []byte) {
 		gserrors.Panic("compile must bind file path to script")
 	}
 	// 写入文件名为 源文件名+.gss
-	fullPath += ".gss"
+	// fullPath += ".gss"
 	err := os.WriteFile(fullPath, bytes, 0644)
 	if err != nil {
 		gserrors.Panic(err.Error())

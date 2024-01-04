@@ -1,17 +1,17 @@
 // 会话状态
 enum SessionStatus {
-	Closed       = 1;
-	Connecting   = 2;
-	Disconnected = 3;
-	InConnected  = 4;
-	OutConnected = 5;
+	Closed       = 1; 
+	Connecting   = 2; 
+	Disconnected = 3; 
+	InConnected  = 4; 
+	OutConnected = 5; 
 }
 
 // 服务状态
 enum ServiceStatus {
-	Online      = 1;
-	Offline     = 2;
-	Unreachable = 3;
+	Online      = 1; 
+	Offline     = 2; 
+	Unreachable = 3; 
 }
 
 // 消息类型
@@ -26,7 +26,7 @@ enum MessageType {
 
 // 服务注册
 struct ServiceRegistry {
-	Add         bool   = 1;
+	Add         bool   = 1; 
 	ServiceID   uint32 = 2; // 服务类型名字
 	ServiceType string = 3; // 服务名字
 	ServiceName string = 4; // 服务ID
@@ -34,13 +34,13 @@ struct ServiceRegistry {
 
 // 服务注册列表
 struct ServiceRegistryData {
-	Data []ServiceRegistry = 1;
+	Data []ServiceRegistry = 1; 
 }
 
 // 消息
 struct Message {
-	Type MessageType = 1;
-	Data bytes       = 2;
+	Type MessageType = 1; 
+	Data bytes       = 2; 
 }
 
 // 一次调用

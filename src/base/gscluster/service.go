@@ -40,8 +40,8 @@ type IRemoteService interface {
 	Remote() IRemote // 获取Remote
 }
 
-// ITypeBuilder 服务类型builder
-type ITypeBuilder interface {
+// IServiceBuilder 服务类型builder
+type IServiceBuilder interface {
 	ServiceType() string                                                                              // 服务类型,service.typename
 	NewService(name string, id ID, context interface{}) (IService, error)                             // 新建本地服务
 	NewRemoteService(remote IRemote, name string, lid ID, rid ID, context interface{}) IRemoteService // 新建远程服务

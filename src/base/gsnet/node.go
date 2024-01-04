@@ -8,7 +8,6 @@
 package gsnet
 
 import (
-	"fmt"
 	"gogs/base/gserrors"
 	log "gogs/base/logger"
 	"sync"
@@ -21,6 +20,7 @@ const (
 	DriverTypeCluster DriverType = 1
 	DriverTypeClient  DriverType = 2
 	DriverTypeGate    DriverType = 3
+	DriverTypeActor   DriverType = 4
 )
 
 // ProtocolType 协议类型
@@ -33,7 +33,6 @@ const (
 
 // ISession 会话接口
 type ISession interface {
-	fmt.Stringer
 	Write(*Message) error
 	Status() SessionStatus    // 状态
 	DriverType() DriverType   // 驱动类型
@@ -54,7 +53,6 @@ type SessionHandlerBuilder func(ISession) (ISessionHandler, error)
 
 // IDriver 传输层协议提供者 驱动 一种Driver对应于一个协议名
 type IDriver interface {
-	fmt.Stringer
 	Type() DriverType                                    // 驱动类型
 	GetSession(string) (ISession, bool)                  // 通过名字获取会话
 	NewSession(string, ConnectionType) (ISession, error) // 创建会话

@@ -1,26 +1,29 @@
-import "gsss"
-import "base/gss"
+import (
+	"base/gss"
+	"gsss"
+)
 
 enum Subject {
-    Math = 1;
-    English = 2;
-    Chinese = 3;
-    Physics = 4;
-    Chemistry = 5;
-    Biology = 6;
-    History = 7;
-    Geography = 8;
-    Politics = 9;
+	Math      = 1; 
+	English   = 2; 
+	Chinese   = 3; 
+	Physics   = 4; 
+	Chemistry = 5; 
+	Biology   = 6; 
+	History   = 7; 
+	Geography = 8; 
+	Politics  = 9; 
 }
 
 struct Teacher {
-    ID   int64 = 1;
-    Name string = 2;
-    Age  int32 = 3;
-    Teacher gss.Teacher = 4;
+	ID      int64       = 1; 
+	Name    string      = 2; 
+	Age     int32       = 3; 
+	Teacher gss.Teacher = 4; 
 }
 
 service MapServer {
-    GetMapName(id int32, subject Subject, gss.Teacher, Teacher) -> (string, gss.Teacher, Teacher);
-    UpdatePen(gsss.PenType, gsss.Pen) -> (gsss.PenType, gsss.Pen);
+	GetMapName(int32, Subject, gss.Teacher, Teacher) -> (string, gss.Teacher, Teacher); 
+	UpdatePen(gsss.PenType, gsss.Pen)                -> (gsss.PenType, gsss.Pen);       
 }
+

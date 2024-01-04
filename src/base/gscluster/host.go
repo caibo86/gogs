@@ -29,7 +29,7 @@ type Host struct {
 	localServiceMutex       sync.RWMutex                    // 本地服务集合 读写锁
 	localServices           map[ID]IService                 // 本地服务集合,通过ID索引
 	builderMutex            sync.RWMutex                    // 服务建造者集合 读写锁
-	builders                map[string]ITypeBuilder         // 服务建造者集合,通过ServiceType索引
+	builders                map[string]IServiceBuilder      // 服务建造者集合,通过ServiceType索引
 	localServiceEvents      chan *eventServiceStatusChanged // 本地服务状态变更事件通道
 	registryExit            chan struct{}                   // 关闭服务注册的信号
 }
@@ -42,7 +42,7 @@ func NewHost(localAddr string) *Host {
 		Node:                   gsnet.NewNode(),
 		localServices:          make(map[ID]IService),
 		neighbors:              make(map[string]*Neighbor),
-		builders:               make(map[string]ITypeBuilder),
+		builders:               make(map[string]IServiceBuilder),
 		localServiceEvents:     make(chan *eventServiceStatusChanged),
 		registryExit:           make(chan struct{}, 1),
 	}
@@ -235,7 +235,7 @@ func (host *Host) handleCall(call *gsnet.Call) (*gsnet.Return, error) {
 }
 
 // RegisterBuilder 注册服务建造者
-func (host *Host) RegisterBuilder(builder ITypeBuilder) (ITypeBuilder, error) {
+func (host *Host) RegisterBuilder(builder IServiceBuilder) (IServiceBuilder, error) {
 	host.builderMutex.Lock()
 	defer host.builderMutex.Unlock()
 	if _, ok := host.builders[builder.ServiceType()]; ok {
@@ -246,7 +246,7 @@ func (host *Host) RegisterBuilder(builder ITypeBuilder) (ITypeBuilder, error) {
 }
 
 // UnregisterBuilder 注销服务建造者
-func (host *Host) UnregisterBuilder(serviceType string) ITypeBuilder {
+func (host *Host) UnregisterBuilder(serviceType string) IServiceBuilder {
 	host.builderMutex.Lock()
 	defer host.builderMutex.Unlock()
 	builder := host.builders[serviceType]

@@ -18,7 +18,7 @@ type RPCConfig struct {
 	ClientSessionCache      int   `yaml:"clientSessionCache"`      // 客户端会话消息发送缓存大小
 	ClusterRegistryInterval int   `yaml:"clusterRegistryInterval"` // 集群服务注册时间间隔,单位秒
 	ClusterRegistryMax      int   `yaml:"clusterRegistryMax"`      // 集群单次注册服务的最大数量
-	UserGroups              int   `yaml:"userGroups"`              // 用户散列分组数量
+	ActorGroups             int   `yaml:"actorGroups"`             // 用户散列分组数量
 }
 
 // NewRPCConfig 创建RPC配置
@@ -32,7 +32,7 @@ func NewRPCConfig() *RPCConfig {
 		ClientSessionCache:      64,
 		ClusterRegistryInterval: 2,
 		ClusterRegistryMax:      128,
-		UserGroups:              128,
+		ActorGroups:             128,
 	}
 	return c
 }
@@ -83,6 +83,6 @@ func ClusterRegistryMax() int {
 	return GetRPCConfig().ClusterRegistryMax
 }
 
-func UserGroups() int {
-	return GetRPCConfig().UserGroups
+func ActorGroups() int {
+	return GetRPCConfig().ActorGroups
 }

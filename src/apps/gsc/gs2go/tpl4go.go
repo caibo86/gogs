@@ -342,7 +342,7 @@ type {{$Service}}Builder struct {
 }
 
 // New{{$Service}}Builder creating a new {{$Service}}Builder
-func New{{$Service}}Builder(localServiceBuilder func(service gscluster.IService)(I{{$Service}}, error)) gscluster.ITypeBuilder {
+func New{{$Service}}Builder(localServiceBuilder func(service gscluster.IService)(I{{$Service}}, error)) gscluster.IServiceBuilder {
     return &{{$Service}}Builder{
         localServiceBuilder:localServiceBuilder,
     }

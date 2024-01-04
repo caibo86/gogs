@@ -24,12 +24,12 @@ type Gate struct {
 	host         *Host                 // 集群服务器
 	gameServers  map[ID]IService       // Game以GameServer形式,保存在Gate
 	remotes      map[int64]*GateRemote // GateRemote列表,通过UserID索引
-	builder      ITypeBuilder
+	builder      IServiceBuilder
 	idgen        int64 // session id generator
 }
 
 // NewGate 新建网关 localAddr本地对客户端监听地址,hostAddr集群节点地址
-func NewGate(name, localAddr, hostAddr string, builder ITypeBuilder, protocol gsnet.ProtocolType) (*Gate, error) {
+func NewGate(name, localAddr, hostAddr string, builder IServiceBuilder, protocol gsnet.ProtocolType) (*Gate, error) {
 	gate := &Gate{
 		name:        name,
 		host:        NewHost(hostAddr),
