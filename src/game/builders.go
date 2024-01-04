@@ -21,6 +21,6 @@ func init() {
 
 func RegisterBuilders() {
 	builders["Player"] = idl.NewPlayerBuilder(func(service gscluster.IService) (idl.IPlayer, error) {
-		return model.NewUser(service.Context().(*gscluster.User)), nil
+		return model.NewUser(service.Context().(*gscluster.User))
 	})
 }

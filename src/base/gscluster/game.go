@@ -12,7 +12,6 @@ import (
 	"gogs/base/gserrors"
 	"gogs/base/gsnet"
 	log "gogs/base/logger"
-	"gogs/base/mongodb"
 	"sync"
 	"sync/atomic"
 )
@@ -23,7 +22,6 @@ type Game struct {
 	sync.RWMutex                            // 读写锁
 	ActorSystem  *ActorSystem               // 角色系统
 	host         *Host                      // 集群服务器
-	db           *mongodb.MongoClient       // mongodb
 	gateServers  map[string]IGateServer     // 网关服务集合
 	builders     map[string]IServiceBuilder // 服务构造器集合
 	idgen        uint32                     // service id generator
@@ -33,9 +31,9 @@ type Game struct {
 }
 
 // NewGame 新建游戏服务器
-func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAddr string, db *mongodb.MongoClient) (
+func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAddr string) (
 	*Game, error) {
-	actorSystem, err := NewActorSystem(name, builders, localAddr, db)
+	actorSystem, err := NewActorSystem(name, builders, localAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +41,6 @@ func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAd
 		RPC:         NewRPC(),
 		ActorSystem: actorSystem,
 		host:        actorSystem.host,
-		db:          db,
 		gateServers: make(map[string]IGateServer),
 		builders:    builders,
 		tUser:       "User",
@@ -92,10 +89,7 @@ func (game *Game) Shutdown() {
 	log.Info("Game:ActorSystem closing...")
 	game.ActorSystem.Close()
 	log.Info("Game:DB closing...")
-	err := game.db.Disconnect()
-	if err != nil {
-		log.Errorf("mongodb disconnect err: %s", err)
-	}
+
 	log.Info("Game shutdown finished.")
 }
 

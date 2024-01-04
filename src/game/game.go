@@ -10,6 +10,7 @@ package game
 import (
 	"gogs/base/config"
 	"gogs/base/etcd"
+	"gogs/base/gscluster"
 	"gogs/base/gserrors"
 	log "gogs/base/logger"
 	"gogs/game/model"
@@ -49,9 +50,20 @@ func Main() {
 		_ = log.Close()
 	}()
 	model.InitMongoDB(config.ServerID)
+	RegisterBuilders()
+	server, err := gscluster.NewGame(
+		config.ServerID,
+		config.ServerType,
+		builders,
+		"localhost:9102",
+	)
+	if err != nil {
+		gserrors.Panicf("new game err:%s", err)
+	}
 
 	// 处理系统信号
 	ProcessSignal()
 	<-exitChan
+	server.Shutdown()
 	model.CloseMongoDB()
 }

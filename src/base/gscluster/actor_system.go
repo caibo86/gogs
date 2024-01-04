@@ -33,7 +33,7 @@ type ActorSystem struct {
 }
 
 // NewActorSystem 新建角色系统
-func NewActorSystem(name string, builders map[string]IServiceBuilder, localAddr string, db *mongodb.MongoClient) (*ActorSystem, error) {
+func NewActorSystem(name string, builders map[string]IServiceBuilder, localAddr string) (*ActorSystem, error) {
 	system := &ActorSystem{
 		RPC:        NewRPC(),
 		name:       name,
@@ -42,7 +42,6 @@ func NewActorSystem(name string, builders map[string]IServiceBuilder, localAddr 
 		actors:     make(map[string]IActor),
 		neighbors:  make(map[string]IActorSystem),
 		groupLocks: make([]sync.Mutex, config.ActorGroups()),
-		db:         db,
 	}
 	// 注册服务构造器,本地IActorSystem服务即返回自身
 	_, err := system.host.RegisterBuilder(NewActorSystemBuilder(func(service IService) (IActorSystem, error) {

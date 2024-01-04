@@ -21,7 +21,7 @@ const (
 
 // GateRemote 网关远程代理
 // Gate和GateSession的中间层,每一个GateSession都有一个GateRemote
-// 实现了IRemote和gsnet.ISessionHandler接口
+// 实现了 IRemote 和 gsnet.ISessionHandler 接口
 type GateRemote struct {
 	gate       *Gate    // 所属网关
 	host       *Host    // 网关挂载的集群服务器
