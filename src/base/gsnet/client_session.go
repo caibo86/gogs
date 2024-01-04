@@ -120,7 +120,7 @@ func (session *ClientSession) disconnect() {
 			session.key = nil
 			session.exit = nil
 			session.status = SessionStatusDisconnected
-			session.handler.StatusChanged(session.status)
+			session.handler.SessionStatusChanged(session.status)
 		}
 	})
 }
@@ -143,7 +143,7 @@ func (session *ClientSession) outConnection(key []byte, conn net.Conn, websocket
 			session.key = key
 			session.status = SessionStatusOutConnected
 			session.exit = make(chan struct{})
-			session.handler.StatusChanged(session.status)
+			session.handler.SessionStatusChanged(session.status)
 			exit = session.exit
 		}
 	})
@@ -157,7 +157,7 @@ func (session *ClientSession) connect() {
 		if session.status == SessionStatusDisconnected {
 			ok = true
 			session.status = SessionStatusConnecting
-			session.handler.StatusChanged(session.status)
+			session.handler.SessionStatusChanged(session.status)
 		}
 	})
 	if !ok {

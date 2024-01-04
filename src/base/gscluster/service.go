@@ -5,10 +5,9 @@
 // @time      : 2023/12/29 下午6:23
 // -------------------------------------------
 
-package gsdock
+package gscluster
 
 import (
-	"fmt"
 	"gogs/base/gsnet"
 	"time"
 )
@@ -18,9 +17,8 @@ type ID uint32
 
 // IService 服务
 type IService interface {
-	fmt.Stringer
-	Name() string                                 // 获取服务名称
 	Type() string                                 // 获取服务类型
+	Name() string                                 // 获取服务名称
 	ID() ID                                       // 服务ID
 	Call(call *gsnet.Call) (*gsnet.Return, error) // 调用服务
 	Context() interface{}                         // 服务上下文
@@ -44,7 +42,7 @@ type IRemoteService interface {
 
 // ITypeBuilder 服务类型builder
 type ITypeBuilder interface {
-	fmt.Stringer
+	ServiceType() string                                                                              // 服务类型,service.typename
 	NewService(name string, id ID, context interface{}) (IService, error)                             // 新建本地服务
 	NewRemoteService(remote IRemote, name string, lid ID, rid ID, context interface{}) IRemoteService // 新建远程服务
 }

@@ -11,7 +11,7 @@ package config
 const (
 	KeyEtcd = "etcd" // etcd配置
 	KeyLog  = "log"  // 日志配置
-	KeyRPC  = "rpc"  // dock配置
+	KeyRPC  = "rpc"  // rpc host配置
 )
 
 type Option func(*Manager)

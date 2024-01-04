@@ -90,7 +90,7 @@ func (driver *GateDriver) GetSession(name string) (ISession, bool) {
 }
 
 // NewSession 仅实现IDriver接口,GateDriver不支持手动创建会话
-func (driver *GateDriver) NewSession(name string, connectionType byte) (ISession, error) {
+func (driver *GateDriver) NewSession(name string, connectionType ConnectionType) (ISession, error) {
 	return nil, gserrors.Newf("gate driver: %s not support manual new channel", driver)
 }
 

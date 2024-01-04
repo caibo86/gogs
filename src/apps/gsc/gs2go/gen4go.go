@@ -26,15 +26,15 @@ var moduleName string
 
 // 包名映射的引入包的go代码
 var packageMapping = map[string]string{
-	"gsnet.":    `import "gogs/base/gsnet"`,
-	"gserrors.": `import "gogs/base/gserrors"`,
-	"gsdock.":   `import "gogs/base/gsdock"`,
-	"config.":   `import "gogs/base/config"`,
-	"bytes.":    `import "bytes"`,
-	"fmt.":      `import "fmt"`,
-	"time.":     `import "time"`,
-	"bits.":     `import "math/bits"`,
-	"io":        `import "io"`,
+	"gsnet.":     `import "gogs/base/gsnet"`,
+	"gserrors.":  `import "gogs/base/gserrors"`,
+	"gscluster.": `import "gogs/base/gscluster"`,
+	"config.":    `import "gogs/base/config"`,
+	"bytes.":     `import "bytes"`,
+	"fmt.":       `import "fmt"`,
+	"time.":      `import "time"`,
+	"bits.":      `import "math/bits"`,
+	"io":         `import "io"`,
 }
 
 // gslang内置类型对应的golang表示
@@ -1275,8 +1275,8 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 		if script.Package().Name() == "base/gsnet" {
 			codes = strings.Replace(codes, "gsnet.", "", -1)
 		}
-		if script.Package().Name() == "base/gsdock" {
-			codes = strings.Replace(codes, "gsdock.", "", -1)
+		if script.Package().Name() == "base/gscluster" {
+			codes = strings.Replace(codes, "gscluster.", "", -1)
 		}
 		// service类型会用到logger
 		if hasService {

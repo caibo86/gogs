@@ -338,28 +338,28 @@ type I{{$Service}} interface {
 
 //{{$Service}}Builder service builder used for building {{$Service}} service
 type {{$Service}}Builder struct {
-    localServiceBuilder func(service gsdock.IService) (I{{$Service}},error)
+    localServiceBuilder func(service gscluster.IService) (I{{$Service}},error)
 }
 
 // New{{$Service}}Builder creating a new {{$Service}}Builder
-func New{{$Service}}Builder(localServiceBuilder func(service gsdock.IService)(I{{$Service}}, error)) gsdock.ITypeBuilder {
+func New{{$Service}}Builder(localServiceBuilder func(service gscluster.IService)(I{{$Service}}, error)) gscluster.ITypeBuilder {
     return &{{$Service}}Builder{
         localServiceBuilder:localServiceBuilder,
     }
 }
 
-// String implementing fmt.Stringer
-func (builder *{{$Service}}Builder) String() string {
+// ServiceType type of service that can be built by this builder
+func (builder *{{$Service}}Builder) ServiceType() string {
     return "{{.Path}}"
 }
 
 // NewService creating a new {{$Service}} Service
 func (builder *{{$Service}}Builder) NewService(
-	name string, id gsdock.ID, context interface{}) (gsdock.IService, error) {
+	name string, id gscluster.ID, context interface{}) (gscluster.IService, error) {
     c := &{{$Service}}Service{
         id: id,
         name: name,
-        typename: builder.String(),
+        typename: builder.ServiceType(),
         context: context,
         timeout: config.RPCTimeout(),
     }
@@ -370,15 +370,15 @@ func (builder *{{$Service}}Builder) NewService(
 
 // NewRemoteService creating a new {{$Service}} RemoteService
 func (builder *{{$Service}}Builder) NewRemoteService(
-	remote gsdock.IRemote, name string, lid gsdock.ID, 
-	rid gsdock.ID, context interface{}) gsdock.IRemoteService {
+	remote gscluster.IRemote, name string, lid gscluster.ID, 
+	rid gscluster.ID, context interface{}) gscluster.IRemoteService {
     return &{{$Service}}RemoteService{
         name: name,
         remote: remote,
         context: context,
         lid: lid,
         rid: rid,
-        typename: builder.String(),
+        typename: builder.ServiceType(),
         timeout: config.RPCTimeout(),
     }
 }
@@ -387,7 +387,7 @@ func (builder *{{$Service}}Builder) NewRemoteService(
 // {{$Service}}Service a local service inherited {{$Service}}
 type {{$Service}}Service struct {
     I{{$Service}}
-    id gsdock.ID
+    id gscluster.ID
     name string
     typename string
     timeout time.Duration
@@ -405,7 +405,7 @@ func (service *{{$Service}}Service) Name() string {
 }
 
 // ID service id 
-func (service *{{$Service}}Service) ID() gsdock.ID {
+func (service *{{$Service}}Service) ID() gscluster.ID {
     return service.id
 }
 
@@ -433,7 +433,7 @@ func (service *{{$Service}}Service) Call(call *gsnet.Call) (callReturn *gsnet.Re
    		case {{.ID}}:  {{$Name := symbol .Name}}
 		// {{$Name}}
         if len(call.Params) != {{.InputParams}} {
-            err = gserrors.NewfWith(gsdock.ErrRPC, "{{$Service}}::{{$Name}} expect {{.InputParams}} params but got :%d", len(call.Params))
+            err = gserrors.NewfWith(gscluster.ErrRPC, "{{$Service}}::{{$Name}} expect {{.InputParams}} params but got :%d", len(call.Params))
             return
         }
 		{{range .Params}} var param{{.ID}} {{typeName .Type}}
@@ -454,7 +454,7 @@ func (service *{{$Service}}Service) Call(call *gsnet.Call) (callReturn *gsnet.Re
         callReturn.Params = append(callReturn.Params, data{{.ID}})
         {{end}}{{end}}return{{end}}
 	}
-    err = gserrors.NewfWith(gsdock.ErrRPC, "unknown {{$Service}}Service#%d method", call.MethodID)
+    err = gserrors.NewfWith(gscluster.ErrRPC, "unknown {{$Service}}Service#%d method", call.MethodID)
     return
 }
 
@@ -478,7 +478,7 @@ func (service *{{$Service}}Service){{$Name}}{{params .Params}}{{returnParams .Re
     select {
         case callReturn := <- future:
             if len(callReturn.Params) != {{.ReturnParams}} {
-                err = gserrors.NewfWith(gsdock.ErrRPC,"{{$Service}}Service#{{$Name}} expect {{.ReturnParams}} return params but got :%d",len(callReturn.Params))
+                err = gserrors.NewfWith(gscluster.ErrRPC,"{{$Service}}Service#{{$Name}} expect {{.ReturnParams}} return params but got :%d",len(callReturn.Params))
                 return
             }
             {{range .Return}} ret{{.ID}}, err = {{unmarshalType .Type}}(callReturn.Params[{{.ID}}])
@@ -487,7 +487,7 @@ func (service *{{$Service}}Service){{$Name}}{{params .Params}}{{returnParams .Re
                 return
             }
             {{end}}case <- time.After(service.timeout):
-            err = gsdock.ErrTimeout
+            err = gscluster.ErrTimeout
             return
     }
     {{else}}
@@ -500,11 +500,11 @@ func (service *{{$Service}}Service){{$Name}}{{params .Params}}{{returnParams .Re
 
 
 
-// {{$Service}}RemoteService a remote service inherited gsdock.IRemote
+// {{$Service}}RemoteService a remote service inherited gscluster.IRemote
 type {{$Service}}RemoteService struct {
-    remote gsdock.IRemote
-    rid gsdock.ID // remote id
-    lid gsdock.ID // local id
+    remote gscluster.IRemote
+    rid gscluster.ID // remote id
+    lid gscluster.ID // local id
     name string
     typename string
     context interface{}
@@ -522,17 +522,17 @@ func (service *{{$Service}}RemoteService) Name() string {
 }
 
 // ID remote service local id
-func (service *{{$Service}}RemoteService) ID() gsdock.ID {
+func (service *{{$Service}}RemoteService) ID() gscluster.ID {
     return service.lid
 }
 
 // RemoteID remote service remote id
-func (service *{{$Service}}RemoteService) RemoteID() gsdock.ID {
+func (service *{{$Service}}RemoteService) RemoteID() gscluster.ID {
     return service.rid
 }
 
 // Remote remote service IRemote
-func (service *{{$Service}}RemoteService) Remote() gsdock.IRemote {
+func (service *{{$Service}}RemoteService) Remote() gscluster.IRemote {
     return service.remote
 }
 
@@ -557,7 +557,7 @@ func (service *{{$Service}}RemoteService) Call(call *gsnet.Call) (callReturn *gs
     switch call.MethodID { 
 	{{range .Methods}} {{$Name := .Name}} case {{.ID}}:
 		// {{$Name}}
-        {{if .Return}} var future gsdock.Future
+        {{if .Return}} var future gscluster.Future
         future, err = service.remote.Wait(service, call, service.timeout)
         if err != nil {
             err = gserrors.NewWith(err, "call {{$Service}}RemoteService#{{$Name}} err")
@@ -565,12 +565,12 @@ func (service *{{$Service}}RemoteService) Call(call *gsnet.Call) (callReturn *gs
         }
         result := <-future
         if result.Timeout {
-            err = gsdock.ErrTimeout
+            err = gscluster.ErrTimeout
             return
         }
         callReturn = result.CallReturn
         if len(callReturn.Params) != {{.ReturnParams}} {
-            err = gserrors.NewfWith(gsdock.ErrRPC, "{{$Service}}RemoteService#{{$Name}} expect {{.ReturnParams}} return params but got :%d", len(callReturn.Params))
+            err = gserrors.NewfWith(gscluster.ErrRPC, "{{$Service}}RemoteService#{{$Name}} expect {{.ReturnParams}} return params but got :%d", len(callReturn.Params))
             return
         }
         return
@@ -581,7 +581,7 @@ func (service *{{$Service}}RemoteService) Call(call *gsnet.Call) (callReturn *gs
         }
         return 
 		{{end}}{{end}} }
-    err = gserrors.NewfWith(gsdock.ErrRPC, "unknown {{$Service}}RemoteService#%d method", call.MethodID)
+    err = gserrors.NewfWith(gscluster.ErrRPC, "unknown {{$Service}}RemoteService#%d method", call.MethodID)
     return
 }
 
@@ -596,7 +596,7 @@ func (service *{{$Service}}RemoteService){{$Name}}{{params .Params}}{{returnPara
     {{range .Params}} param{{.ID}} := {{marshalType .Type}}(arg{{.ID}})
     call.Params = append(call.Params, param{{.ID}})
     {{end}}
-    {{if .Return}} var future gsdock.Future
+    {{if .Return}} var future gscluster.Future
     future,err = service.remote.Wait(service, call, service.timeout)
     if err != nil {
         err = gserrors.NewWith(err, "call {{$Service}}RemoteService#{{$Name}} err")
@@ -604,12 +604,12 @@ func (service *{{$Service}}RemoteService){{$Name}}{{params .Params}}{{returnPara
     }
     result := <-future
     if result.Timeout {
-        err = gsdock.ErrTimeout
+        err = gscluster.ErrTimeout
         return
     }
     callReturn := result.CallReturn
     if len(callReturn.Params) != {{.ReturnParams}} {
-        err = gserrors.NewfWith(gsdock.ErrRPC, "{{$Service}}RemoteService#{{$Name}} expect {{.ReturnParams}} return params but got :%d", len(callReturn.Params))
+        err = gserrors.NewfWith(gscluster.ErrRPC, "{{$Service}}RemoteService#{{$Name}} expect {{.ReturnParams}} return params but got :%d", len(callReturn.Params))
         return
     }
     {{range .Return}} ret{{.ID}}, err = {{unmarshalType .Type}}(callReturn.Params[{{.ID}}])

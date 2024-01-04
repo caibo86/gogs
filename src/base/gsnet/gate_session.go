@@ -58,7 +58,7 @@ func (driver *GateDriver) newGateSession(key []byte, conn net.Conn, websocketCon
 	driver.remotes[remoteAddr] = session
 	driver.Unlock()
 	// 通知处理器,会话状态变更
-	session.handler.StatusChanged(session.status)
+	session.handler.SessionStatusChanged(session.status)
 	return session, nil
 }
 
@@ -86,7 +86,7 @@ func (session *GateSession) Close() {
 	// 取消注册
 	session.driver.DelSession(session)
 	// 通知处理器,会话状态变更
-	session.handler.StatusChanged(session.status)
+	session.handler.SessionStatusChanged(session.status)
 }
 
 // Handler 获取会话处理器
@@ -115,7 +115,7 @@ func (session *GateSession) Status() SessionStatus {
 // changeStatus 修改会话状态
 func (session *GateSession) changeStatus(status SessionStatus) {
 	session.status = status
-	session.handler.StatusChanged(status)
+	session.handler.SessionStatusChanged(status)
 }
 
 // DriverType 获取会话所属驱动类型

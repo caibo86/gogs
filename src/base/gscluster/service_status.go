@@ -5,7 +5,7 @@
 // @time      : 2024/1/3 下午11:40
 // -------------------------------------------
 
-package gsdock
+package gscluster
 
 import "gogs/base/gsnet"
 

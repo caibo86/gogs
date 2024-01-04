@@ -135,7 +135,7 @@ func (session *ClusterSession) Status() SessionStatus {
 // changeStatus 修改会话状态
 func (session *ClusterSession) changeStatus(status SessionStatus) {
 	session.status = status
-	session.handler.StatusChanged(status)
+	session.handler.SessionStatusChanged(status)
 	log.Debugf("cluster session: %s status changed: %s", session, status)
 }
 

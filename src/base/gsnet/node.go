@@ -45,8 +45,8 @@ type ISession interface {
 
 // ISessionHandler 会话处理器
 type ISessionHandler interface {
-	Read(ISession, *Message)     // 从会话读取一个消息,实现请注意线程安全
-	StatusChanged(SessionStatus) // 通知一个新的会话状态
+	Read(ISession, *Message)            // 从会话读取一个消息,实现请注意线程安全
+	SessionStatusChanged(SessionStatus) // 会话状态变化
 }
 
 // SessionHandlerBuilder 会话句柄建造者,指定会话生成会话句柄
