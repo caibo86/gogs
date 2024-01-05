@@ -14,7 +14,7 @@ import (
 
 // TunnelRemote game和GateServerRemoteService的中间层
 // 用于game调用client的接口
-// 通过gate转发
+// 通过GateServer的Tunnel接口将消息发送给client
 type TunnelRemote struct {
 	game       *Game
 	userID     int64

@@ -128,7 +128,7 @@ func (remote *GateRemote) handleCall(data []byte) {
 		var callReturn *gsnet.Return
 		callReturn, err = remote.service.Call(call)
 		if err != nil {
-			log.Warnf("handle rpc call id: %d serviceID: %d methodID: %d from %s err: %s",
+			log.Warnf("handle rpc call userID: %d serviceID: %d methodID: %d from %s err: %s",
 				call.ID, call.ServiceID, call.MethodID, remote.session, err)
 			return
 		}
@@ -142,7 +142,7 @@ func (remote *GateRemote) handleCall(data []byte) {
 		}
 		err = remote.session.Write(msg)
 		if err != nil {
-			log.Warnf("handle rpc call id: %d serviceID: %d methodID: %d from %s err: %s",
+			log.Warnf("handle rpc call userID: %d serviceID: %d methodID: %d from %s err: %s",
 				call.ID, call.ServiceID, call.MethodID, remote.session, err)
 			return
 		}

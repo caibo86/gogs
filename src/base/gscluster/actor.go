@@ -68,7 +68,7 @@ func NewActorName(url string) (*ActorName, error) {
 	}
 	id, err := strconv.ParseInt(match[3], 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("actor name: %s regex match result id must be int64", url)
+		return nil, fmt.Errorf("actor name: %s regex match result userID must be int64", url)
 	}
 	return &ActorName{
 		SystemName: match[1],

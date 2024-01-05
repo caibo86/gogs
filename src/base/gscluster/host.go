@@ -297,7 +297,7 @@ func (host *Host) NewService(serviceType string, name string, context interface{
 		status:  gsnet.ServiceStatusOnline,
 	}
 	host.ServiceStatusChanged(service, gsnet.ServiceStatusOnline)
-	log.Infof("new local service id: %d name: %s type: %s", service.ID(), service.Name(), service.Type())
+	log.Infof("new local service userID: %d name: %s type: %s", service.ID(), service.Name(), service.Type())
 	return service, nil
 }
 

@@ -27,7 +27,7 @@ type ActorSystem struct {
 	actorLock    sync.RWMutex               // 角色集合读写锁
 	neighbors    map[string]IActorSystem    // 邻居角色系统集合
 	neighborLock sync.RWMutex               // 邻居角色系统集合读写锁
-	idgen        uint32                     // id generator
+	idgen        uint32                     // userID generator
 	groupLocks   []sync.Mutex               // 分组锁
 	db           *mongodb.MongoClient       // 数据库
 }
@@ -59,11 +59,11 @@ func NewActorSystem(name string, builders map[string]IServiceBuilder, localAddr 
 		defer system.neighborLock.Unlock()
 		if status == gsnet.ServiceStatusOnline {
 			system.neighbors[service.Name()] = service.(IActorSystem)
-			log.Infof("neighbor actor system online name: %s type: %s id: %d",
+			log.Infof("neighbor actor system online name: %s type: %s userID: %d",
 				service.Name(), service.Type(), service.ID())
 		} else {
 			delete(system.neighbors, service.Name())
-			log.Infof("neighbor actor system offline name: %s type: %s id: %d",
+			log.Infof("neighbor actor system offline name: %s type: %s userID: %d",
 				service.Name(), service.Type(), service.ID())
 		}
 		return true

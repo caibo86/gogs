@@ -18,16 +18,16 @@ import (
 
 // Game 游戏服务器
 type Game struct {
-	*RPC                                    // RPC管理器
-	sync.RWMutex                            // 读写锁
-	ActorSystem  *ActorSystem               // 角色系统
-	host         *Host                      // 集群服务器
-	gateServers  map[string]IGateServer     // 网关服务集合
-	builders     map[string]IServiceBuilder // 服务构造器集合
-	idgen        uint32                     // service id generator
-	tUser        string                     // 玩家类型
-	serverID     int64                      // 服务器ID
-	serverName   string                     // 服务器名字
+	*RPC                                       // RPC管理器
+	sync.RWMutex                               // 读写锁
+	ActorSystem     *ActorSystem               // 角色系统
+	host            *Host                      // 集群服务器
+	gateServers     map[string]IGateServer     // 网关服务集合
+	builders        map[string]IServiceBuilder // 服务构造器集合
+	idgen           uint32                     // service userID generator
+	UserServiceName string                     // 实际提供API服务的本地服务名字
+	serverID        int64                      // 服务器ID
+	serverName      string                     // 服务器名字
 }
 
 // NewGame 新建游戏服务器
@@ -38,14 +38,14 @@ func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAd
 		return nil, err
 	}
 	game := &Game{
-		RPC:         NewRPC(),
-		ActorSystem: actorSystem,
-		host:        actorSystem.host,
-		gateServers: make(map[string]IGateServer),
-		builders:    builders,
-		tUser:       "User",
-		serverID:    id,
-		serverName:  name,
+		RPC:             NewRPC(),
+		ActorSystem:     actorSystem,
+		host:            actorSystem.host,
+		gateServers:     make(map[string]IGateServer),
+		builders:        builders,
+		UserServiceName: "GameAPI",
+		serverID:        id,
+		serverName:      name,
 	}
 	// 注册GameServer服务构造器
 	_, err = game.host.RegisterBuilder(NewGameServerBuilder(func(service IService) (IGameServer, error) {
@@ -67,11 +67,11 @@ func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAd
 		defer game.Unlock()
 		if status == gsnet.ServiceStatusOnline {
 			game.gateServers[service.Name()] = service.(IGateServer)
-			log.Infof("gate server online name: %s type: %s id: %d",
+			log.Infof("gate server online name: %s type: %s userID: %d",
 				service.Name(), service.Type(), service.ID())
 		} else {
 			delete(game.gateServers, service.Name())
-			log.Infof("gate server offline name: %s type: %s id: %d",
+			log.Infof("gate server offline name: %s type: %s userID: %d",
 				service.Name(), service.Type(), service.ID())
 		}
 		log.Debugf("current gate servers: %v", game.gateServers)
@@ -114,39 +114,39 @@ func (game *Game) Login(msg *RProxyMsg) (int64, Err, error) {
 	clientType := "client"
 	builder, ok := game.builders[clientType]
 	if !ok {
-		return 0, ErrUnknownService, gserrors.Newf("unregister client type builder: %s", clientType)
+		return 0, ErrUnknownService, gserrors.Newf("unable to find client type builder: %s", clientType)
 	}
 	// 角色名字
 	name := ActorName{
 		SystemName: game.ActorSystem.name,
-		Type:       game.tUser,
+		Type:       game.UserServiceName,
 		ID:         msg.UserID,
 	}
-	// 用户对象
-	var user *User
+	// 客户端代理
+	var clientAgent *ClientAgent
 	// 在角色系统查找是否已经存在角色
 	actor, ok := game.ActorSystem.GetActor(name.String())
 	if !ok {
-		user = NewUser(msg.SessionID, msg.UserID)
+		clientAgent = NewClientAgent(msg.SessionID, msg.UserID)
 		var err error
-		actor, err = game.ActorSystem.NewActor(name, user)
+		actor, err = game.ActorSystem.NewActor(name, clientAgent)
 		if actor == nil {
 			log.Errorf("new actor: %s err: %s", name, err)
 			return 0, ErrActorName, err
 		}
 	} else {
-		user = actor.Context().(*User)
-		user.sessionID = msg.SessionID
+		clientAgent = actor.Context().(*ClientAgent)
+		clientAgent.sessionID = msg.SessionID
 	}
 	game.Lock()
 	defer game.Unlock()
-	remoteService := builder.NewRemoteService(newTunnelRemote(game, user.id, gateServer),
+	remoteService := builder.NewRemoteService(newTunnelRemote(game, clientAgent.userID, gateServer),
 		actor.Name(),
 		game.newServiceID(),
 		0,
 		nil)
-	user.SetClient(remoteService)
-	return user.ID(), ErrOK, nil
+	clientAgent.SetClientService(remoteService)
+	return clientAgent.UserID(), ErrOK, nil
 }
 
 // Logout 登出

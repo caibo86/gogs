@@ -25,7 +25,7 @@ type Gate struct {
 	gameServers  map[ID]IService       // Game以GameServer形式,保存在Gate
 	remotes      map[int64]*GateRemote // GateRemote列表,通过UserID索引
 	builder      IServiceBuilder
-	idgen        int64 // session id generator
+	idgen        int64 // session userID generator
 }
 
 // NewGate 新建网关 localAddr本地对客户端监听地址,hostAddr集群节点地址
@@ -58,12 +58,12 @@ func NewGate(name, localAddr, hostAddr string, builder IServiceBuilder, protocol
 		defer gate.Unlock()
 		if status == gsnet.ServiceStatusOnline {
 			gate.gameServers[service.ID()] = service
-			log.Infof("register service name: %s type: %s local id: %d remote id: %d",
+			log.Infof("register service name: %s type: %s local userID: %d remote userID: %d",
 				service.Name(), service.Type(), service.ID(), service.(IRemoteService).RemoteID())
 			log.Infof("proxy service list: %v", gate.gameServers)
 		} else {
 			delete(gate.gameServers, service.ID())
-			log.Infof("unregister service name: %s type: %s local id: %d remote id: %d",
+			log.Infof("unregister service name: %s type: %s local userID: %d remote userID: %d",
 				service.Name(), service.Type(), service.ID(), service.(IRemoteService).RemoteID())
 		}
 		return true

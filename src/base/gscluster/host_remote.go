@@ -93,11 +93,11 @@ func (remote *ClusterRemote) handleCall(data []byte) {
 	if err != nil {
 		log.Warnf("unmarshal call from %s err: %s", remote.session, err)
 	}
-	log.Infof("start handle rpc call id: %d serviceID: %d methodID: %d from %s",
+	log.Infof("start handle rpc call userID: %d serviceID: %d methodID: %d from %s",
 		call.ID, call.ServiceID, call.MethodID, remote.session)
 	callReturn, err := remote.Host.handleCall(call)
 	if err != nil {
-		log.Warnf("handle rpc call id: %d serviceID: %d methodID: %d from %s err: %s",
+		log.Warnf("handle rpc call userID: %d serviceID: %d methodID: %d from %s err: %s",
 			call.ID, call.ServiceID, call.MethodID, remote.session, err)
 	}
 	if callReturn == nil {
@@ -110,10 +110,10 @@ func (remote *ClusterRemote) handleCall(data []byte) {
 	}
 	err = remote.session.Write(msg)
 	if err != nil {
-		log.Warnf("handle rpc call id: %d serviceID: %d methodID: %d from %s err: %s",
+		log.Warnf("handle rpc call userID: %d serviceID: %d methodID: %d from %s err: %s",
 			call.ID, call.ServiceID, call.MethodID, remote.session, err)
 	}
-	log.Infof("finish handle rpc call id: %d serviceID: %d methodID: %d from %s",
+	log.Infof("finish handle rpc call userID: %d serviceID: %d methodID: %d from %s",
 		call.ID, call.ServiceID, call.MethodID, remote.session)
 }
 
