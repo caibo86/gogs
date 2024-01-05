@@ -10,6 +10,7 @@ package game
 import (
 	"gogs/base/gscluster"
 	"gogs/game/model"
+	"gogs/idl"
 )
 
 type User struct {
@@ -21,4 +22,12 @@ func NewUser(clusterUser *gscluster.ClientAgent) (*User, error) {
 	return &User{
 		agent: clusterUser,
 	}, nil
+}
+
+func (user *User) GetServerTime() (int64, idl.Err, error) {
+	return 0, idl.ErrOK, nil
+}
+
+func (user *User) GetUserInfo() (*idl.UserInfo, idl.Err, error) {
+	return nil, idl.ErrOK, nil
 }

@@ -9,7 +9,6 @@ package game
 
 import (
 	"gogs/base/gscluster"
-	"gogs/game/model"
 	"gogs/idl"
 )
 
@@ -20,7 +19,7 @@ func init() {
 }
 
 func RegisterBuilders() {
-	builders["UserAPI"] = idl.NewPlayerBuilder(func(service gscluster.IService) (idl.IPlayer, error) {
-		return model.NewUser(service.Context().(*gscluster.ClientAgent))
+	builders["UserAPI"] = idl.NewUserBuilder(func(service gscluster.IService) (idl.IUser, error) {
+		return NewUser(service.Context().(*gscluster.ClientAgent))
 	})
 }

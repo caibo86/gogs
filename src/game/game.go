@@ -60,7 +60,7 @@ func Main() {
 	if err != nil {
 		gserrors.Panicf("new game err:%s", err)
 	}
-
+	server.Host.Connect("localhost:9101")
 	// 处理系统信号
 	ProcessSignal()
 	<-exitChan

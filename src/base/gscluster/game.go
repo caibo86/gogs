@@ -21,7 +21,7 @@ type Game struct {
 	*RPC                                       // RPC管理器
 	sync.RWMutex                               // 读写锁
 	ActorSystem     *ActorSystem               // 角色系统
-	host            *Host                      // 集群服务器
+	Host            *Host                      // 集群服务器
 	gateServers     map[string]IGateServer     // 网关服务集合
 	builders        map[string]IServiceBuilder // 服务构造器集合
 	idgen           uint32                     // service userID generator
@@ -40,7 +40,7 @@ func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAd
 	game := &Game{
 		RPC:             NewRPC(),
 		ActorSystem:     actorSystem,
-		host:            actorSystem.host,
+		Host:            actorSystem.host,
 		gateServers:     make(map[string]IGateServer),
 		builders:        builders,
 		UserServiceName: "GameAPI",
@@ -48,19 +48,19 @@ func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAd
 		serverName:      name,
 	}
 	// 注册GameServer服务构造器
-	_, err = game.host.RegisterBuilder(NewGameServerBuilder(func(service IService) (IGameServer, error) {
+	_, err = game.Host.RegisterBuilder(NewGameServerBuilder(func(service IService) (IGameServer, error) {
 		return game, nil
 	}))
 	if err != nil {
 		return nil, err
 	}
 	// 创建本地GameServer服务时,返回自身
-	_, err = game.host.NewLocalService(GameServerTypeName, fmt.Sprintf("%s@%d", name, id))
+	_, err = game.Host.NewLocalService(GameServerTypeName, fmt.Sprintf("%s@%d", name, id))
 	if err != nil {
 		return nil, err
 	}
 	// 注册GateServer服务构造器,只能构造GateServerRemoteService
-	_, err = game.host.RegisterBuilder(NewGateServerBuilder(nil))
+	_, err = game.Host.RegisterBuilder(NewGateServerBuilder(nil))
 	// 监听GateServer类型服务
 	listener := func(service IService, status gsnet.ServiceStatus) bool {
 		game.Lock()
@@ -77,15 +77,15 @@ func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAd
 		log.Debugf("current gate servers: %v", game.gateServers)
 		return true
 	}
-	game.host.ListenServiceType(GateServerTypeName, listener)
+	game.Host.ListenServiceType(GateServerTypeName, listener)
 	return game, nil
 }
 
 // Shutdown 关闭服务器
 func (game *Game) Shutdown() {
 	log.Info("Game shutdown start:")
-	log.Info("Game:host closing...")
-	game.host.Close()
+	log.Info("Game:Host closing...")
+	game.Host.Close()
 	log.Info("Game:ActorSystem closing...")
 	game.ActorSystem.Close()
 	log.Info("Game:DB closing...")
