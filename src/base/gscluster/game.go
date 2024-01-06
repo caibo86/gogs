@@ -8,7 +8,6 @@
 package gscluster
 
 import (
-	"fmt"
 	"gogs/base/etcd"
 	"gogs/base/gserrors"
 	"gogs/base/gsnet"
@@ -32,7 +31,7 @@ type Game struct {
 }
 
 // NewGame 新建游戏服务器
-func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAddr string) (
+func NewGame(name string, builders map[string]IServiceBuilder, localAddr string) (
 	*Game, error) {
 	actorSystem, err := NewActorSystem(name, builders, localAddr)
 	if err != nil {
@@ -45,7 +44,6 @@ func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAd
 		gateServers:     make(map[string]IGateServer),
 		builders:        builders,
 		UserServiceName: "GameAPI",
-		serverID:        id,
 		serverName:      name,
 	}
 	// 注册GameServer服务构造器
@@ -56,7 +54,7 @@ func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAd
 		return nil, err
 	}
 	// 创建本地GameServer服务时,返回自身
-	_, err = game.Host.NewLocalService(GameServerTypeName, fmt.Sprintf("%s@%d", name, id))
+	_, err = game.Host.NewLocalService(GameServerTypeName, name)
 	if err != nil {
 		return nil, err
 	}

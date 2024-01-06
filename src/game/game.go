@@ -8,6 +8,7 @@
 package game
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 	"gogs/base/config"
 	"gogs/base/etcd"
@@ -57,9 +58,9 @@ func Main() {
 	model.InitMongoDB(config.ServerID)
 	RegisterBuilders()
 	var err error
+	name := fmt.Sprintf("%s:%d", config.ServerType, config.ServerID)
 	server, err = gscluster.NewGame(
-		config.ServerID,
-		config.ServerType,
+		name,
 		builders,
 		"localhost:9102",
 	)

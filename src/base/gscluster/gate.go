@@ -82,7 +82,6 @@ func NewGate(name, localAddr, hostAddr string, builder IServiceBuilder, protocol
 	if err != nil {
 		return nil, err
 	}
-
 	return gate, nil
 }
 

@@ -8,6 +8,7 @@
 package gscluster
 
 import (
+	"fmt"
 	"gogs/base/config"
 	"gogs/base/gserrors"
 	"gogs/base/gsnet"
@@ -34,9 +35,10 @@ type ActorSystem struct {
 
 // NewActorSystem 新建角色系统
 func NewActorSystem(name string, builders map[string]IServiceBuilder, localAddr string) (*ActorSystem, error) {
+	systemName := fmt.Sprintf("%s:ActorSystem", name)
 	system := &ActorSystem{
 		RPC:        NewRPC(),
-		name:       name,
+		name:       systemName,
 		host:       NewHost(localAddr),
 		builders:   builders,
 		actors:     make(map[string]IActor),
@@ -50,7 +52,7 @@ func NewActorSystem(name string, builders map[string]IServiceBuilder, localAddr 
 	if err != nil {
 		return nil, err
 	}
-	_, err = system.host.NewLocalService(ActorSystemTypeName, name)
+	_, err = system.host.NewLocalService(ActorSystemTypeName, systemName)
 	if err != nil {
 		return nil, err
 	}

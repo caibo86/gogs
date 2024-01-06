@@ -273,7 +273,7 @@ func (host *Host) NewService(serviceType string, name string, context interface{
 			if service.Type() == serviceType {
 				return service, nil
 			}
-			return service, gserrors.Newf("duplicate service name: %s with different type, expect: %s found: %s,"+
+			return service, gserrors.Newf("duplicate service name: %s with different type, expect: %s, found: %s",
 				name, serviceType, service.Type())
 		}
 	}
@@ -283,7 +283,7 @@ func (host *Host) NewService(serviceType string, name string, context interface{
 	builder, ok := host.builders[serviceType]
 	host.builderMutex.RUnlock()
 	if !ok {
-		return nil, gserrors.Newf("service builder not found: %s", serviceType)
+		return nil, gserrors.Newf("service builder not found for type: %s", serviceType)
 	}
 	service, err := builder.NewService(name, host.newID(), context)
 	if err != nil {
@@ -297,7 +297,7 @@ func (host *Host) NewService(serviceType string, name string, context interface{
 		status:  gsnet.ServiceStatusOnline,
 	}
 	host.ServiceStatusChanged(service, gsnet.ServiceStatusOnline)
-	log.Infof("new local service userID: %d name: %s type: %s", service.ID(), service.Name(), service.Type())
+	log.Infof("local service online name: %s, type: %s, id: %d", service.Name(), service.Type(), service.ID())
 	return service, nil
 }
 
