@@ -361,7 +361,7 @@ func MarshalBytes(v []byte) []byte {
 // UnmarshalBool 反序列化一个布尔值
 func UnmarshalBool(data []byte) (bool, error) {
 	if len(data) != 1 {
-		return false, gserrors.Newf("unmarshal bool, data length is not 1")
+		return false, gserrors.New("unmarshal bool, data length is not 1")
 	}
 	if data[0] == 0 {
 		return false, nil
@@ -372,7 +372,7 @@ func UnmarshalBool(data []byte) (bool, error) {
 // UnmarshalByte 反序列化一个字节
 func UnmarshalByte(data []byte) (byte, error) {
 	if len(data) != 1 {
-		return 0, gserrors.Newf("unmarshal byte, data length is not 1")
+		return 0, gserrors.New("unmarshal byte, data length is not 1")
 	}
 	return data[0], nil
 }
@@ -380,7 +380,7 @@ func UnmarshalByte(data []byte) (byte, error) {
 // UnmarshalInt8 反序列化一个有符号8位整数
 func UnmarshalInt8(data []byte) (int8, error) {
 	if len(data) != 1 {
-		return 0, gserrors.Newf("unmarshal int8, data length is not 1")
+		return 0, gserrors.New("unmarshal int8, data length is not 1")
 	}
 	return int8(data[0]), nil
 }
@@ -388,7 +388,7 @@ func UnmarshalInt8(data []byte) (int8, error) {
 // UnmarshalUint8 反序列化一个无符号8位整数
 func UnmarshalUint8(data []byte) (uint8, error) {
 	if len(data) != 1 {
-		return 0, gserrors.Newf("unmarshal uint8, data length is not 1")
+		return 0, gserrors.New("unmarshal uint8, data length is not 1")
 	}
 	return data[0], nil
 }
@@ -396,7 +396,7 @@ func UnmarshalUint8(data []byte) (uint8, error) {
 // UnmarshalInt16 反序列化一个有符号16位整数
 func UnmarshalInt16(data []byte) (int16, error) {
 	if len(data) != 2 {
-		return 0, gserrors.Newf("unmarshal int16, data length is not 2")
+		return 0, gserrors.New("unmarshal int16, data length is not 2")
 	}
 	return int16(data[0]) | int16(data[1])<<8, nil
 }
@@ -404,7 +404,7 @@ func UnmarshalInt16(data []byte) (int16, error) {
 // UnmarshalUint16 反序列化一个无符号16位整数
 func UnmarshalUint16(data []byte) (uint16, error) {
 	if len(data) != 2 {
-		return 0, gserrors.Newf("unmarshal uint16, data length is not 2")
+		return 0, gserrors.New("unmarshal uint16, data length is not 2")
 	}
 	return uint16(data[0]) | uint16(data[1])<<8, nil
 }
@@ -412,7 +412,7 @@ func UnmarshalUint16(data []byte) (uint16, error) {
 // UnmarshalInt32 反序列化一个有符号32位整数
 func UnmarshalInt32(data []byte) (int32, error) {
 	if len(data) != 4 {
-		return 0, gserrors.Newf("unmarshal int32, data length is not 4")
+		return 0, gserrors.New("unmarshal int32, data length is not 4")
 	}
 	return int32(data[0]) | int32(data[1])<<8 |
 		int32(data[2])<<16 | int32(data[3])<<24, nil
@@ -421,7 +421,7 @@ func UnmarshalInt32(data []byte) (int32, error) {
 // UnmarshalUint32 反序列化一个无符号32位整数
 func UnmarshalUint32(data []byte) (uint32, error) {
 	if len(data) != 4 {
-		return 0, gserrors.Newf("unmarshal uint32, data length is not 4")
+		return 0, gserrors.New("unmarshal uint32, data length is not 4")
 	}
 	return uint32(data[0]) | uint32(data[1])<<8 |
 		uint32(data[2])<<16 | uint32(data[3])<<24, nil
@@ -430,7 +430,7 @@ func UnmarshalUint32(data []byte) (uint32, error) {
 // UnmarshalInt64 反序列化一个有符号64位整数
 func UnmarshalInt64(data []byte) (int64, error) {
 	if len(data) != 8 {
-		return 0, gserrors.Newf("unmarshal int64, data length is not 8")
+		return 0, gserrors.New("unmarshal int64, data length is not 8")
 	}
 	return int64(data[0]) | int64(data[1])<<8 |
 		int64(data[2])<<16 | int64(data[3])<<24 |
@@ -441,7 +441,7 @@ func UnmarshalInt64(data []byte) (int64, error) {
 // UnmarshalUint64 反序列化一个无符号64位整数
 func UnmarshalUint64(data []byte) (uint64, error) {
 	if len(data) != 8 {
-		return 0, gserrors.Newf("unmarshal uint64, data length is not 8")
+		return 0, gserrors.New("unmarshal uint64, data length is not 8")
 	}
 	return uint64(data[0]) | uint64(data[1])<<8 |
 		uint64(data[2])<<16 | uint64(data[3])<<24 |

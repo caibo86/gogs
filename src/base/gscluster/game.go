@@ -9,6 +9,7 @@ package gscluster
 
 import (
 	"fmt"
+	"gogs/base/etcd"
 	"gogs/base/gserrors"
 	"gogs/base/gsnet"
 	log "gogs/base/logger"
@@ -67,12 +68,12 @@ func NewGame(id int64, name string, builders map[string]IServiceBuilder, localAd
 		defer game.Unlock()
 		if status == gsnet.ServiceStatusOnline {
 			game.gateServers[service.Name()] = service.(IGateServer)
-			log.Infof("gate server online name: %s type: %s userID: %d",
-				service.Name(), service.Type(), service.ID())
+			log.Infof("service GateServerRemoteService online name: %s, type: %s, id: %d, remote id: %d",
+				service.Name(), service.Type(), service.ID(), service.(IRemoteService).RemoteID())
 		} else {
 			delete(game.gateServers, service.Name())
-			log.Infof("gate server offline name: %s type: %s userID: %d",
-				service.Name(), service.Type(), service.ID())
+			log.Infof("service GateServerRemoteService  offline name: %s, type: %s, id: %d, remote id: %d",
+				service.Name(), service.Type(), service.ID(), service.(IRemoteService).RemoteID())
 		}
 		log.Debugf("current gate servers: %v", game.gateServers)
 		return true
@@ -88,6 +89,7 @@ func (game *Game) Shutdown() {
 	game.Host.Close()
 	log.Info("Game:ActorSystem closing...")
 	game.ActorSystem.Close()
+	etcd.Exit()
 	log.Info("Game:DB closing...")
 
 	log.Info("Game shutdown finished.")

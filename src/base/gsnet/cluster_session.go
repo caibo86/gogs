@@ -56,19 +56,19 @@ func (driver *ClusterDriver) newClusterSession(addr string, ct ConnectionType) (
 	// 外连需要初始化连接,并定时检查,内连不需要
 	if ct == ConnectionTypeOut {
 		if session.connect() == SessionStatusClosed {
-			log.Debug("exit: %s", session)
+			log.Debugf("session: %s, heart beat exit return status closed", session)
 		}
 		go func() {
 			tick := time.Tick(config.ClusterSessionHeartbeat())
 			for _ = range tick {
 				if session.connect() == SessionStatusClosed {
-					log.Debug("exit: %s", session)
+					log.Debugf("session: %s, heart beat exit return status closed", session)
 					return
 				}
 			}
 		}()
 	}
-	driver.remotes[addr] = session
+	driver.sessions[addr] = session
 	return session, nil
 }
 
@@ -145,7 +145,7 @@ func (session *ClusterSession) connect() SessionStatus {
 		switch session.status {
 		case SessionStatusDisconnected:
 			// 连接
-			log.Info("cluster session: %s connecting", session)
+			log.Infof("cluster session: %s connecting", session)
 			session.changeStatus(SessionStatusConnecting)
 			go session.outConnect()
 		}

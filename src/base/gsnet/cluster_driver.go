@@ -23,7 +23,7 @@ import (
 type ClusterDriver struct {
 	sync.RWMutex
 	localAddr             string                     // 本地地址
-	remotes               map[string]*ClusterSession // 远程会话
+	sessions              map[string]*ClusterSession // 会话集合
 	mutexGroup            []sync.Mutex               // 会话互斥锁列表
 	sessionHandlerBuilder SessionHandlerBuilder      // 会话处理器构造器
 	name                  string                     // 驱动名字
@@ -33,7 +33,7 @@ type ClusterDriver struct {
 func NewClusterDriver(localAddr string, builder SessionHandlerBuilder) *ClusterDriver {
 	driver := &ClusterDriver{
 		localAddr:             localAddr,
-		remotes:               make(map[string]*ClusterSession),
+		sessions:              make(map[string]*ClusterSession),
 		mutexGroup:            make([]sync.Mutex, runtime.NumCPU()*4),
 		sessionHandlerBuilder: builder,
 		name:                  fmt.Sprintf("ClusterDriver(%s)", localAddr),
@@ -61,7 +61,7 @@ func (driver *ClusterDriver) Type() DriverType {
 func (driver *ClusterDriver) GetSession(addr string) (ISession, bool) {
 	driver.RLock()
 	defer driver.RUnlock()
-	session, ok := driver.remotes[addr]
+	session, ok := driver.sessions[addr]
 	return session, ok
 }
 
@@ -69,7 +69,7 @@ func (driver *ClusterDriver) GetSession(addr string) (ISession, bool) {
 func (driver *ClusterDriver) NewSession(addr string, connectionType ConnectionType) (ISession, error) {
 	driver.Lock()
 	defer driver.Unlock()
-	if session, ok := driver.remotes[addr]; ok {
+	if session, ok := driver.sessions[addr]; ok {
 		return session, gserrors.Newf("%s duplicate session addr: %s", driver, addr)
 	}
 	return driver.newClusterSession(addr, connectionType)
@@ -83,14 +83,14 @@ func (driver *ClusterDriver) DelSession(session ISession) {
 	}
 	driver.Lock()
 	defer driver.Unlock()
-	if _, ok := driver.remotes[session.RemoteAddr()]; ok {
-		delete(driver.remotes, session.RemoteAddr())
+	if _, ok := driver.sessions[session.RemoteAddr()]; ok {
+		delete(driver.sessions, session.RemoteAddr())
 	}
 }
 
 // Close 关闭驱动
 func (driver *ClusterDriver) Close() {
-	for _, session := range driver.remotes {
+	for _, session := range driver.sessions {
 		session.Close()
 	}
 }

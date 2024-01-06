@@ -8,14 +8,18 @@
 package game
 
 import (
+	"go.uber.org/zap"
 	"gogs/base/config"
 	"gogs/base/etcd"
 	"gogs/base/gscluster"
 	"gogs/base/gserrors"
+	"gogs/base/gsnet"
 	log "gogs/base/logger"
 	"gogs/game/model"
 	"runtime"
 )
+
+var server *gscluster.Game
 
 func Main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -37,6 +41,7 @@ func Main() {
 		log.SetIsOpenConsole(logConfig.IsOpenConsole),
 		log.SetIsAsync(logConfig.IsAsync),
 		log.SetMaxFileSize(int(logConfig.Maxsize)),
+		log.SetStacktrace(zap.PanicLevel),
 	)
 	etcdConfig := config.GetEtcdConfig()
 	if etcdConfig == nil {
@@ -51,7 +56,8 @@ func Main() {
 	}()
 	model.InitMongoDB(config.ServerID)
 	RegisterBuilders()
-	server, err := gscluster.NewGame(
+	var err error
+	server, err = gscluster.NewGame(
 		config.ServerID,
 		config.ServerType,
 		builders,
@@ -60,10 +66,35 @@ func Main() {
 	if err != nil {
 		gserrors.Panicf("new game err:%s", err)
 	}
-	server.Host.Connect("localhost:9101")
+	etcd.SetServiceCallback(EtcdNodeEventListener)
 	// 处理系统信号
 	ProcessSignal()
 	<-exitChan
 	server.Shutdown()
 	model.CloseMongoDB()
+}
+
+// EtcdNodeEventListener 注册到etcd组件的节点状态变更事件处理器
+func EtcdNodeEventListener(nodeEvent *etcd.NodeEvent) {
+	switch nodeEvent.Event {
+	case etcd.EventAdd:
+		if nodeEvent.Node.GetType() == etcd.ServerTypeGate {
+			if _, ok := server.Host.Node.GetSession(gsnet.DriverTypeCluster, nodeEvent.Node.GetConnectURL()); !ok {
+				_, err := server.Host.Connect(nodeEvent.Node.GetConnectURL())
+				if err != nil {
+					log.Errorf("connect to gate err:%s", err)
+				}
+			}
+		}
+	case etcd.EventDelete:
+		if nodeEvent.Node.GetType() == etcd.ServerTypeGate {
+			session, ok := server.Host.Node.GetSession(gsnet.DriverTypeCluster, nodeEvent.Node.GetConnectURL())
+			if ok {
+				session.Close()
+			}
+		}
+	default:
+		log.Errorf("unknown etcd event:%+v", nodeEvent)
+	}
+
 }

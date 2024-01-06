@@ -58,12 +58,12 @@ func NewGate(name, localAddr, hostAddr string, builder IServiceBuilder, protocol
 		defer gate.Unlock()
 		if status == gsnet.ServiceStatusOnline {
 			gate.gameServers[service.ID()] = service
-			log.Infof("register service name: %s type: %s local userID: %d remote userID: %d",
+			log.Infof("service GameServerRemoteService online name: %s, type: %s, id: %d, remote: %d",
 				service.Name(), service.Type(), service.ID(), service.(IRemoteService).RemoteID())
-			log.Infof("proxy service list: %v", gate.gameServers)
+			log.Infof("service GameServerRemoteService list: %v", gate.gameServers)
 		} else {
 			delete(gate.gameServers, service.ID())
-			log.Infof("unregister service name: %s type: %s local userID: %d remote userID: %d",
+			log.Infof("service GameServerRemoteService offline name: %s, type: %s, id: %d, remote: %d",
 				service.Name(), service.Type(), service.ID(), service.(IRemoteService).RemoteID())
 		}
 		return true

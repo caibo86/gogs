@@ -82,4 +82,5 @@ func Main() {
 	}
 	<-exitChan
 	server.Close()
+	etcd.Exit()
 }
