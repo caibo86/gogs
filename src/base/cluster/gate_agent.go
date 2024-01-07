@@ -23,19 +23,19 @@ const (
 // Gate和GateSession的中间层,每一个GateSession都有一个GateRemote
 // 实现了 IAgent 和 network.ISessionHandler 接口
 type GateAgent struct {
-	gate       *Gate    // 所属网关
-	host       *Host    // 网关挂载的集群服务器
-	service    IService // 承载的服务
-	gameServer IGameServer
+	Gate       *Gate            // 所属网关
+	host       *Host            // 网关挂载的集群服务器
+	service    IService         // 承载的服务
+	gameServer IGameServer      // 游戏服务器远程服务
 	session    network.ISession // 网关会话
 	sessionID  int64            // 网关会话ID
-	userID     int64            // 用户ID
+	userID     int64            // 用户id
 }
 
 // newGateAgent 新建网关远程代理
 func newGateAgent(gate *Gate, session network.ISession, sessionID int64) (*GateAgent, error) {
 	remote := &GateAgent{
-		gate:      gate,
+		Gate:      gate,
 		host:      gate.host,
 		session:   session,
 		sessionID: sessionID,
@@ -47,89 +47,95 @@ func newGateAgent(gate *Gate, session network.ISession, sessionID int64) (*GateA
 }
 
 // rProxy 网关代理
-func (remote *GateAgent) rProxy(userID int64, service IService) (Err, error) {
+func (agent *GateAgent) rProxy(userID int64, service IService) (Err, error) {
 	gameServer := service.(IGameServer)
-	rProxyMsg := &RProxyMsg{
+	rProxyMsg := &UserLoginMsg{
 		UserID:    userID,
-		SessionID: remote.sessionID,
-		Gate:      remote.gate.name,
+		SessionID: agent.sessionID,
+		Gate:      agent.Gate.name,
 	}
 	id, status, err := gameServer.Login(rProxyMsg)
 	if err != nil || status != ErrOK {
 		return status, cberrors.New("call GameServer#Login(%s) status: %s err: %s", gameServer, status, err)
 	}
-	remote.gameServer = gameServer
-	remote.userID = id
+	agent.gameServer = gameServer
+	agent.userID = id
 	return ErrOK, nil
 }
 
 // GameServer .
-func (remote *GateAgent) GameServer() IGameServer {
-	return remote.gameServer
+func (agent *GateAgent) GameServer() IGameServer {
+	return agent.gameServer
 }
 
-// UserID .
-func (remote *GateAgent) UserID() int64 {
-	return remote.userID
+// ActorName 绑定的角色唯一Name
+func (agent *GateAgent) ActorName() string {
+	return agent.actorName
 }
 
-// Session .
-func (remote *GateAgent) Session() network.ISession {
-	return remote.session
+// Close implements IAgent
+func (agent *GateAgent) Close() {
+}
+
+// Session implements IAgent
+func (agent *GateAgent) Session() network.ISession {
+	return agent.session
 }
 
 // Post implements IAgent
-func (remote *GateAgent) Post(service IService, call *network.Call) error {
-	return remote.gate.Post(remote.session, call)
+func (agent *GateAgent) Post(service IService, call *network.Call) error {
+	return agent.Gate.Post(agent.session, call)
 }
 
 // Wait implements IAgent
-func (remote *GateAgent) Wait(service IService, call *network.Call, timeout time.Duration) (Future, error) {
-	return remote.gate.Wait(remote.session, call, timeout)
+func (agent *GateAgent) Wait(service IService, call *network.Call, timeout time.Duration) (Future, error) {
+	return agent.Gate.Wait(agent.session, call, timeout)
 }
 
 // Write implements IAgent
-func (remote *GateAgent) Write(msg *network.Message) error {
-	return remote.session.Write(msg)
+func (agent *GateAgent) Write(msg *network.Message) error {
+	return agent.session.Write(msg)
 }
 
 // SessionStatusChanged implements network.ISessionHandler
-func (remote *GateAgent) SessionStatusChanged(status network.SessionStatus) {
-	if status == network.SessionStatusClosed && remote.gameServer != nil {
-		remote.gate.sessionStatusChanged(remote, status)
+func (agent *GateAgent) SessionStatusChanged(status network.SessionStatus) {
+	if status == network.SessionStatusClosed && agent.gameServer != nil {
+		agent.Gate.sessionStatusChanged(agent, status)
 		rProxyMsg := &RProxyMsg{
-			UserID:    remote.userID,
-			SessionID: remote.sessionID,
-			Gate:      remote.gate.name,
+			UserID:    agent.userID,
+			SessionID: agent.sessionID,
+			Gate:      agent.Gate.name,
 		}
-		_ = remote.gameServer.Logout(rProxyMsg)
+		_ = agent.gameServer.Logout(rProxyMsg)
 	}
 }
 
 // Read implements network.ISessionHandler
-func (remote *GateAgent) Read(session network.ISession, msg *network.Message) {
+func (agent *GateAgent) Read(session network.ISession, msg *network.Message) {
 	switch msg.Type {
 	case network.MessageTypeCall:
-		go remote.handleCall(msg.Data)
+		go agent.handleCall(msg.Data)
 	case network.MessageTypeReturn:
-		go remote.handleReturn(msg.Data)
+		go agent.handleReturn(msg.Data)
 	}
 }
 
 // handleCall 处理对本地网关服务的调用
-func (remote *GateAgent) handleCall(data []byte) {
+func (agent *GateAgent) handleCall(data []byte) {
 	call, err := network.UnmarshalCall(data)
 	if err != nil {
-		log.Warnf("unmarshal call from %s err: %s", remote.session, err)
+		log.Warnf("unmarshal call from %s err: %s", agent.session, err)
 		return
 	}
+	log.Infof("handle rpc call id: %d serviceID: %d methodID: %d from %s",
+		call.ID, call.ServiceID, call.MethodID, agent.session)
 	switch ID(call.ServiceID) {
 	case gateID:
 		var callReturn *network.Return
-		callReturn, err = remote.service.Call(call)
+		callReturn, err = agent.service.Call(call)
 		if err != nil {
-			log.Warnf("handle rpc call userID: %d serviceID: %d methodID: %d from %s err: %s",
-				call.ID, call.ServiceID, call.MethodID, remote.session, err)
+			log.Warnf("handle rpc call id: %d serviceID: %d methodID: %d from %s err: %s",
+				call.ID, call.ServiceID, call.MethodID, agent.session, err)
 			return
 		}
 		if callReturn == nil {
@@ -140,39 +146,41 @@ func (remote *GateAgent) handleCall(data []byte) {
 			Type: network.MessageTypeReturn,
 			Data: data,
 		}
-		err = remote.session.Write(msg)
+		err = agent.session.Write(msg)
 		if err != nil {
 			log.Warnf("handle rpc call userID: %d serviceID: %d methodID: %d from %s err: %s",
-				call.ID, call.ServiceID, call.MethodID, remote.session, err)
+				call.ID, call.ServiceID, call.MethodID, agent.session, err)
 			return
 		}
 	case gameID:
-		if remote.gameServer != nil {
+		if agent.gameServer != nil {
 			tunnelMsg := &TunnelMsg{
-				UserID: remote.userID,
+				UserID: agent.userID,
 				Type:   network.MessageTypeCall,
 				Data:   data,
 			}
-			err = remote.gameServer.Tunnel(tunnelMsg)
+			err = agent.gameServer.Tunnel(tunnelMsg)
 			if err != nil {
 				log.Warnf("rProxy call from %s to %s err: %s",
-					remote.session, remote.gameServer, err)
+					agent.session, agent.gameServer, err)
 				return
 			}
 		} else {
-			log.Warnf("call %v from a non logged in user: %s", call, remote.session)
+			log.Warnf("call %v from a non logged in user: %s", call, agent.session)
 		}
+	default:
+		log.Errorf("call %v from %s, unknown serviceID: %d", call, agent.session, call.ServiceID)
 	}
 }
 
 // handleReturn 处理对远程服务的调用返回
-func (remote *GateAgent) handleReturn(data []byte) {
-	gameServer := remote.gameServer
+func (agent *GateAgent) handleReturn(data []byte) {
+	gameServer := agent.gameServer
 	if gameServer == nil {
 		return
 	}
 	tunnelMsg := &TunnelMsg{
-		UserID: remote.userID,
+		UserID: agent.userID,
 		Type:   network.MessageTypeReturn,
 		Data:   data,
 	}

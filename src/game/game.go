@@ -68,7 +68,7 @@ func Main() {
 		cberrors.Panic("new game err:%s", err)
 	}
 	etcd.SetServiceCallback(EtcdNodeEventListener)
-
+	CheckGateConn()
 	// 处理系统信号
 	ProcessSignal()
 	<-exitChan
@@ -78,7 +78,19 @@ func Main() {
 
 // CheckGateConn 检查网关连接
 func CheckGateConn() {
-	
+	nodes, err := etcd.GetDepListByType(etcd.ServerTypeGate)
+	if err != nil {
+		log.Errorf("get etcd gate list err:%s", err)
+		return
+	}
+	for _, node := range nodes {
+		if _, ok := server.Host.Node.GetSession(network.DriverTypeHost, node.GetConnectURL()); !ok {
+			_, err := server.Host.Connect(node.GetConnectURL())
+			if err != nil {
+				log.Errorf("connect to gate err:%s", err)
+			}
+		}
+	}
 }
 
 // EtcdNodeEventListener 注册到etcd组件的节点状态变更事件处理器

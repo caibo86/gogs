@@ -8,6 +8,7 @@
 package cluster
 
 import (
+	"fmt"
 	"gogs/base/cberrors"
 	"gogs/base/cluster/network"
 	"gogs/base/etcd"
@@ -73,7 +74,7 @@ func NewGame(name string, builders map[string]IServiceBuilder, localAddr string)
 			log.Infof("service GateServerRemoteService  offline name: %s, type: %s, id: %d, remote id: %d",
 				service.Name(), service.Type(), service.ID(), service.(IRemoteService).RemoteID())
 		}
-		log.Debugf("current gate servers: %v", game.gateServers)
+		log.Debugf("current Gate servers: %v", game.gateServers)
 		return true
 	}
 	game.Host.ListenServiceType(GateServerTypeName, listener)
@@ -104,7 +105,7 @@ func (game *Game) Name() string {
 }
 
 // Login 登录
-func (game *Game) Login(msg *RProxyMsg) (int64, Err, error) {
+func (game *Game) Login(msg *UserLoginInfo) (string, Err, error) {
 	game.Lock()
 	gateServer, ok := game.gateServers[msg.Gate]
 	game.Unlock()
@@ -150,10 +151,60 @@ func (game *Game) Login(msg *RProxyMsg) (int64, Err, error) {
 }
 
 // Logout 登出
-func (game *Game) Logout(msg *RProxyMsg) error {
+func (game *Game) Logout(msg *UserLoginInfo) error {
+	actorName := fmt.Sprintf("%s:%s@%d", game.ActorSystem.name, game.UserServiceName, msg.UserID)
+	if actor, ok := game.ActorSystem.GetActor(actorName); ok {
+		clientAgent := actor.Context().(*ClientAgent)
+		if clientAgent.sessionID != msg.SessionID {
+			log.Infof("%s logout %s %s", clientAgent, clientAgent.sessionID, msg.SessionID)
+			return nil
+		}
+		log.Infof("%s logout", clientAgent)
+		game.Lock()
+		clientAgent.SetClientService(nil)
+		game.Unlock()
+	}
 	return nil
 }
 
+// Tunnel 处理gate转发来的client消息
 func (game *Game) Tunnel(msg *TunnelMsg) error {
-	return nil
+	if msg.Type == network.MessageTypeReturn {
+		callReturn, err := network.UnmarshalReturn(msg.Data)
+		if err != nil {
+			return err
+		}
+		game.Notify(callReturn)
+		return nil
+	}
+	// 如果是调用,查找用户角色
+	if actor, ok := game.ActorSystem.GetActor(msg.ActorName); ok {
+		// 获取角色上下文
+		clientAgent := actor.Context().(*ClientAgent)
+		call, err := network.UnmarshalCall(msg.Data)
+		if err != nil {
+			return err
+		}
+		// 调用角色方法
+		callReturn, err := actor.Service().Call(call)
+		if err != nil {
+			return err
+		}
+		if callReturn == nil {
+			return nil
+		}
+		data := callReturn.Marshal()
+		if clientService, ok := clientAgent.ClientService(); ok {
+			msg := &network.Message{
+				Type: network.MessageTypeReturn,
+				Data: data,
+			}
+			err = clientService.Agent().Write(msg)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+	}
+	return cberrors.New("actor not found: %s", msg.ActorName)
 }

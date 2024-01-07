@@ -11,73 +11,32 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"gogs/base/cberrors"
-	"gogs/base/config"
 	log "gogs/base/logger"
 	"net"
 )
 
 // ClientSession 客户端会话
 type ClientSession struct {
-	driver     *ClientDriver   // 所属驱动
-	handler    ISessionHandler // 会话处理器
-	remoteAddr string          // 会话名字
-	name       string          // 会话id
-	key        []byte          // AES加密密钥
-	conn       net.Conn        // tcp连接
-	websocket  *websocket.Conn // websocket连接
-	exit       chan struct{}   // 关闭信号
-	cached     chan *Message   // 发送消息队列
-	status     SessionStatus   // 状态
-	protocol   ProtocolType    // 协议类型
-}
-
-// NewSession 创建一个客户端会话
-func (driver *ClientDriver) NewSession(remoteAddr string, ct ConnectionType) (ISession, error) {
-	// 客户端仅支持外连
-	if ct != ConnectionTypeOut {
-		return nil, cberrors.New("client session only support out connection")
-	}
-	driver.RLock()
-	if session, ok := driver.userSessions[remoteAddr]; ok {
-		driver.RUnlock()
-		return session, cberrors.New("client session(%s) already exists", remoteAddr)
-	}
-	driver.RUnlock()
-	// 创建会话
-	session := &ClientSession{
-		driver:     driver,
-		remoteAddr: remoteAddr,
-		name:       fmt.Sprintf("ClientSession(%s)", remoteAddr),
-		status:     SessionStatusDisconnected,
-		cached:     make(chan *Message, config.ClientSessionCache()),
-		protocol:   driver.protocol,
-	}
-	handler, err := driver.sessionHandlerBuilder(session)
-	if err != nil {
-		return nil, err
-	}
-	session.handler = handler
-	// 异步连接会话
-	go session.connect()
-	driver.Lock()
-	driver.userSessions[remoteAddr] = session
-	driver.Unlock()
-	return session, nil
+	driver    *ClientDriver   // 所属驱动
+	handler   ISessionHandler // 会话处理器
+	name      string          // 会话名字,在driver中唯一
+	key       []byte          // AES加密密钥
+	conn      net.Conn        // tcp连接
+	websocket *websocket.Conn // websocket连接
+	exit      chan struct{}   // 关闭信号
+	cached    chan *Message   // 发送消息队列
+	status    SessionStatus   // 状态
+	protocol  ProtocolType    // 协议类型
 }
 
 // String implements fmt.Stringer
 func (session *ClientSession) String() string {
-	return session.name
+	return fmt.Sprintf("ClientSession(%s)", session.name)
 }
 
 // Name implements ISession
 func (session *ClientSession) Name() string {
 	return session.name
-}
-
-// RemoteAddr implements ISession
-func (session *ClientSession) RemoteAddr() string {
-	return session.remoteAddr
 }
 
 // Status implements ISession

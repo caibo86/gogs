@@ -9,7 +9,7 @@ package game
 
 import (
 	"gogs/base/cluster"
-	"gogs/idl"
+	"gogs/cb"
 )
 
 var builders map[string]cluster.IServiceBuilder
@@ -19,7 +19,7 @@ func init() {
 }
 
 func RegisterBuilders() {
-	builders["UserAPI"] = idl.NewUserBuilder(func(service cluster.IService) (idl.IUser, error) {
+	builders["UserAPI"] = cb.NewUserBuilder(func(service cluster.IService) (cb.IUser, error) {
 		return NewUser(service.Context().(*cluster.ClientAgent))
 	})
 }

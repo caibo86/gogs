@@ -149,6 +149,7 @@ func (driver *GateDriver) handleAccept(stream *Stream, conn net.Conn, websocketC
 		_ = conn.Close()
 		return
 	}
+	log.Infof("driver: %s new channel: %s", driver, channel)
 	// websocket 特殊处理
 	if driver.protocol == ProtocolWebsocket {
 		<-channel.exit

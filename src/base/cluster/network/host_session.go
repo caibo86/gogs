@@ -27,14 +27,13 @@ const (
 // HostSession 集群节点会话
 type HostSession struct {
 	sync.WaitGroup
-	remoteAddr     string          // 远程地址
+	remoteAddr     string          // 远程地址,同时也是HostSession的name
 	conn           net.Conn        // tcp连接
 	exit           chan struct{}   // 关闭信号
 	driver         *HostDriver     // 所属驱动
 	status         SessionStatus   // 状态
 	handler        ISessionHandler // 会话处理器
 	cached         chan *Message   // 发送消息队列
-	name           string          // 会话名字
 	connectionType ConnectionType  // 连接类型
 }
 
@@ -45,7 +44,6 @@ func (driver *HostDriver) newHostSession(addr string, ct ConnectionType) (*HostS
 		driver:         driver,
 		status:         SessionStatusDisconnected,
 		cached:         make(chan *Message, config.HostSessionCache()),
-		name:           fmt.Sprintf("HostSession(%s)", addr),
 		connectionType: ct,
 	}
 	handler, err := driver.sessionHandlerBuilder(session)
@@ -74,16 +72,11 @@ func (driver *HostDriver) newHostSession(addr string, ct ConnectionType) (*HostS
 
 // String implement fmt.Stringer
 func (session *HostSession) String() string {
-	return session.name
+	return fmt.Sprintf("HostSession(%s)", session.remoteAddr)
 }
 
-// Name 获取会话名字
+// Name 获取会话名字,对HostSession来说就是远程地址
 func (session *HostSession) Name() string {
-	return session.name
-}
-
-// RemoteAddr 获取远程地址
-func (session *HostSession) RemoteAddr() string {
 	return session.remoteAddr
 }
 

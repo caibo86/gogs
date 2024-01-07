@@ -83,8 +83,8 @@ func (driver *HostDriver) DelSession(session ISession) {
 	}
 	driver.Lock()
 	defer driver.Unlock()
-	if _, ok := driver.sessions[session.RemoteAddr()]; ok {
-		delete(driver.sessions, session.RemoteAddr())
+	if _, ok := driver.sessions[session.Name()]; ok {
+		delete(driver.sessions, session.Name())
 	}
 }
 
@@ -98,12 +98,12 @@ func (driver *HostDriver) Close() {
 // lock 当目标会话在驱动上进行修改时,根据算法获取会话互斥锁,加锁后调用
 func (driver *HostDriver) lock(session *HostSession, callback func()) {
 	var hashcode uint32
-	if len(session.RemoteAddr()) < 64 {
+	if len(session.Name()) < 64 {
 		scratch := make([]byte, 64)
-		copy(scratch, session.RemoteAddr())
+		copy(scratch, session.Name())
 		hashcode = crc32.ChecksumIEEE(scratch) % uint32(len(driver.mutexGroup))
 	} else {
-		hashcode = crc32.ChecksumIEEE([]byte(session.RemoteAddr())) % uint32(len(driver.mutexGroup))
+		hashcode = crc32.ChecksumIEEE([]byte(session.Name())) % uint32(len(driver.mutexGroup))
 	}
 	driver.mutexGroup[hashcode].Lock()
 	defer driver.mutexGroup[hashcode].Unlock()

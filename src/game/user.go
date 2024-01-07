@@ -9,8 +9,8 @@ package game
 
 import (
 	"gogs/base/cluster"
+	"gogs/cb"
 	"gogs/game/model"
-	"gogs/idl"
 )
 
 type User struct {
@@ -24,10 +24,10 @@ func NewUser(clusterUser *cluster.ClientAgent) (*User, error) {
 	}, nil
 }
 
-func (user *User) GetServerTime() (int64, idl.Err, error) {
-	return 0, idl.ErrOK, nil
+func (user *User) GetServerTime() (int64, cb.Err, error) {
+	return 0, cb.ErrOK, nil
 }
 
-func (user *User) GetUserInfo() (*idl.UserInfo, idl.Err, error) {
-	return nil, idl.ErrOK, nil
+func (user *User) GetUserInfo() (*cb.UserInfo, cb.Err, error) {
+	return nil, cb.ErrOK, nil
 }

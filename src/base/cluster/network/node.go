@@ -37,9 +37,8 @@ type ISession interface {
 	Status() SessionStatus    // 状态
 	DriverType() DriverType   // 驱动类型
 	Close()                   // 关闭会话
-	Handler() ISessionHandler // 会话句柄
-	Name() string             // 会话标识符
-	RemoteAddr() string       // 远程地址
+	Handler() ISessionHandler // 会话处理器
+	Name() string             // 会话标识符,唯一
 }
 
 // ISessionHandler 会话处理器

@@ -1,5 +1,5 @@
 // -------------------------------------------
-// @file      : gate.go
+// @file      : Gate.go
 // @author    : 蔡波
 // @contact   : caibo923@gmail.com
 // @time      : 2024/1/4 上午11:15
@@ -18,12 +18,12 @@ import (
 
 // Gate 网关服务器
 type Gate struct {
-	*RPC                              // RPC管理器
-	sync.RWMutex                      // 读写锁
-	name         string               // 网关名字
-	host         *Host                // 集群服务器
-	gameServers  map[ID]IService      // Game以GameServer形式,保存在Gate
-	remotes      map[int64]*GateAgent // GateRemote列表,通过UserID索引
+	*RPC                               // RPC管理器
+	sync.RWMutex                       // 读写锁
+	name         string                // 网关名字
+	host         *Host                 // 集群服务器
+	gameServers  map[ID]IService       // Game以GameServer形式,保存在Gate
+	agents       map[string]*GateAgent // GateAgent列表,通过ActorName索引
 	builder      IServiceBuilder
 	idgen        int64 // session userID generator
 }
@@ -33,7 +33,7 @@ func NewGate(name, localAddr, hostAddr string, builder IServiceBuilder, protocol
 	gate := &Gate{
 		name:        name,
 		gameServers: make(map[ID]IService),
-		remotes:     make(map[int64]*GateAgent),
+		agents:      make(map[string]*GateAgent),
 		builder:     builder,
 	}
 	// 为网关创建集群节点服务器
@@ -106,27 +106,28 @@ func (gate *Gate) GenSessionID() int64 {
 }
 
 // sessionStatusChanged 会话状态变化
-func (gate *Gate) sessionStatusChanged(remote *GateAgent, status network.SessionStatus) {
+func (gate *Gate) sessionStatusChanged(agent *GateAgent, status network.SessionStatus) {
 	gate.Lock()
 	defer gate.Unlock()
 	if status == network.SessionStatusInConnected {
-		gate.remotes[remote.UserID()] = remote
+		gate.agents[agent.UserID()] = agent
 	} else {
-		delete(gate.remotes, remote.UserID())
+		delete(gate.agents, agent.UserID())
 	}
 }
 
-// RProxy 反向代理
-func (gate *Gate) RProxy(remote *GateAgent, userID int64, target string) (Err, error) {
+// Login 用户登录
+func (gate *Gate) Login(agent *GateAgent, req *) (Err, error) {
 	gate.Lock()
 	defer gate.Unlock()
+	// TODO 这里
 	for _, gameServer := range gate.gameServers {
 		if target == "" || strings.Split(gameServer.Name(), ":")[0] == target {
-			status, err := remote.rProxy(userID, gameServer)
+			status, err := agent.rProxy(userID, gameServer)
 			if err != nil {
 				return status, err
 			}
-			go gate.sessionStatusChanged(remote, network.SessionStatusInConnected)
+			go gate.sessionStatusChanged(agent, network.SessionStatusInConnected)
 			return ErrOK, nil
 		}
 	}
@@ -136,7 +137,7 @@ func (gate *Gate) RProxy(remote *GateAgent, userID int64, target string) (Err, e
 // Tunnel 转发从Game->Client的消息,通过UserID找到对应的Session
 func (gate *Gate) Tunnel(msg *TunnelMsg) error {
 	gate.RLock()
-	remote, ok := gate.remotes[msg.UserID]
+	remote, ok := gate.agents[msg.ActorName]
 	gate.RUnlock()
 	if ok {
 		return remote.session.Write(&network.Message{

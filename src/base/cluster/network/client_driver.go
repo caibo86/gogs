@@ -9,6 +9,8 @@ package network
 
 import (
 	"fmt"
+	"gogs/base/cberrors"
+	"gogs/base/config"
 	"hash/crc32"
 	"runtime"
 	"sync"
@@ -63,10 +65,15 @@ func (driver *ClientDriver) Protocol() ProtocolType {
 	return driver.protocol
 }
 
+// SetBuilder 设置会话处理器构造器
+func (driver *ClientDriver) SetBuilder(builder SessionHandlerBuilder) {
+	driver.sessionHandlerBuilder = builder
+}
+
 // lock 会话加锁回调
 func (driver *ClientDriver) lock(session *ClientSession, callback func()) {
 	var hashCode uint32
-	name := session.RemoteAddr()
+	name := session.name
 	length := len(name)
 	if length < 64 {
 		scratch := make([]byte, 64)
@@ -93,12 +100,40 @@ func (driver *ClientDriver) GetSession(name string) (ISession, bool) {
 func (driver *ClientDriver) DelSession(session ISession) {
 	driver.Lock()
 	defer driver.Unlock()
-	if driver.userSessions[session.RemoteAddr()] == session {
-		delete(driver.userSessions, session.RemoteAddr())
+	if driver.userSessions[session.Name()] == session {
+		delete(driver.userSessions, session.Name())
 	}
 }
 
-// SetBuilder 设置会话处理器构造器
-func (driver *ClientDriver) SetBuilder(builder SessionHandlerBuilder) {
-	driver.sessionHandlerBuilder = builder
+// NewSession 创建一个客户端会话
+func (driver *ClientDriver) NewSession(name string, ct ConnectionType) (ISession, error) {
+	// 客户端仅支持外连
+	if ct != ConnectionTypeOut {
+		return nil, cberrors.New("client session only support out connection")
+	}
+	driver.RLock()
+	if session, ok := driver.userSessions[name]; ok {
+		driver.RUnlock()
+		return session, cberrors.New("client session(%s) already exists", name)
+	}
+	driver.RUnlock()
+	// 创建会话
+	session := &ClientSession{
+		driver:   driver,
+		name:     name,
+		status:   SessionStatusDisconnected,
+		cached:   make(chan *Message, config.ClientSessionCache()),
+		protocol: driver.protocol,
+	}
+	handler, err := driver.sessionHandlerBuilder(session)
+	if err != nil {
+		return nil, err
+	}
+	session.handler = handler
+	// 异步连接会话
+	go session.connect()
+	driver.Lock()
+	driver.userSessions[session.name] = session
+	driver.Unlock()
+	return session, nil
 }

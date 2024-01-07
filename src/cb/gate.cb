@@ -35,6 +35,6 @@ struct ClientInfo {
 
 // 网关API
 service Gate {
-	Login(LoginReq, ClientInfo) -> (LoginAck, Err); // 登录
+	Login(LoginReq, ClientInfo) -> (LoginAck, Code); // 登录
 }
 

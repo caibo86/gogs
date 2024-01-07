@@ -8,11 +8,11 @@ struct UserInfo {
 
 // 游戏服API
 service Game {
-	GetServerTime() -> (int64, Err); // 获取服务器时间,毫秒
+	GetServerTime() -> (int64, Code); // 获取服务器时间,毫秒
 }
 
 // 用户API
 service User(Game) {
-	GetUserInfo() -> (UserInfo, Err); // 获取用户信息
+	GetUserInfo() -> (UserInfo, Code); // 获取用户信息
 }
 

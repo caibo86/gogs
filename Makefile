@@ -28,7 +28,7 @@ cbc:
 t:
 	@rm -f src/base/cblang/*.cb.go
 	@cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/cbc/cb2go
-	GOPATH=$(GOPATH) cb2go --module gogs gs idl
+	GOPATH=$(GOPATH) cb2go --module gogs gs cb
 
 getdeepcopy:
 	cd src/cmd/gengo/examples/deepcopy-gen && go build . && cp deepcopy-gen $(GOPATH)/bin
@@ -57,6 +57,9 @@ game:
 
 login:
 	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/login_main
+
+simulator:
+	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/simulator_main
 
 etcd:
 	sh ./src/scripts/init_config_in_etcd.sh

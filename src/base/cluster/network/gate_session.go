@@ -18,7 +18,6 @@ import (
 
 // GateSession 网关会话
 type GateSession struct {
-	remoteAddr    string          // 远程地址
 	conn          net.Conn        // tcp连接
 	websocketConn *websocket.Conn // websocket连接
 	driver        *GateDriver     // 所属驱动
@@ -34,7 +33,6 @@ type GateSession struct {
 func (driver *GateDriver) newGateSession(key []byte, conn net.Conn, websocketConn *websocket.Conn) (*GateSession, error) {
 	remoteAddr := conn.RemoteAddr().String()
 	session := &GateSession{
-		remoteAddr:    remoteAddr,
 		conn:          conn,
 		websocketConn: websocketConn,
 		driver:        driver,
@@ -70,11 +68,6 @@ func (session *GateSession) String() string {
 // Name 获取会话名字
 func (session *GateSession) Name() string {
 	return session.name
-}
-
-// RemoteAddr 获取远程地址
-func (session *GateSession) RemoteAddr() string {
-	return session.remoteAddr
 }
 
 // Close 关闭会话
@@ -133,6 +126,7 @@ func (session *GateSession) recvLoop() {
 	}
 	for {
 		msg, err := ReadMessage(stream)
+		log.Infof("session: %s recv msg: %+v", session, msg)
 		if err != nil {
 			session.Close()
 			log.Debugf("%s session: %s recv loop err: %s", session.driver, session, err)

@@ -87,6 +87,8 @@ func With(keys ...string) {
 			manager.AddConfig(NewLoginConfig())
 		case KeyMap:
 			manager.AddConfig(NewMapConfig())
+		case KeySimulator:
+			manager.AddConfig(NewSimulatorConfig())
 		default:
 			cberrors.Panic("unknown config type:%s", key)
 		}
