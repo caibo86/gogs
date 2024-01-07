@@ -8,7 +8,9 @@ pkg/
 
 .~*
 *.out
-*.gs.go
+*.cb.go
 src/apps/gsc/gs2go/gen4go
-*.gs.gss
-
+*.cb.cbb
+*.log
+*.err
+*.panic

@@ -10,7 +10,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"gogs/base/gserrors"
+	"gogs/base/cberrors"
 	"gogs/base/misc"
 	"gopkg.in/yaml.v2"
 	"os"
@@ -63,7 +63,7 @@ func (m *Manager) String() string {
 func (m *Manager) CheckConfig() {
 	for _, key := range m.keys {
 		if _, ok := m.configMap[key]; !ok {
-			gserrors.Panicf("config %s not set", key)
+			cberrors.Panic("config %s not set", key)
 		}
 	}
 }
@@ -88,7 +88,7 @@ func With(keys ...string) {
 		case KeyMap:
 			manager.AddConfig(NewMapConfig())
 		default:
-			gserrors.Panicf("unknown config type:%s", key)
+			cberrors.Panic("unknown config type:%s", key)
 		}
 	}
 }
@@ -111,18 +111,18 @@ func LoadGlobalConfig(cfgFilename string) {
 	baseFilename := path.Join(basePath, "base.yml")
 	baseData, err := os.ReadFile(baseFilename)
 	if err != nil {
-		gserrors.PanicfWith(err, "LoadGlobalConfig ReadFile(%s) err", baseFilename)
+		cberrors.PanicfWith(err, "LoadGlobalConfig ReadFile(%s) err", baseFilename)
 		return
 	}
 	filename := path.Join(basePath, cfgFilename)
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		gserrors.PanicfWith(err, "LoadGlobalConfig ReadFile(%s) err", filename)
+		cberrors.PanicfWith(err, "LoadGlobalConfig ReadFile(%s) err", filename)
 		return
 	}
 	content := os.ExpandEnv(string(baseData) + string(data))
 	if err = ParseGlobalConfig(content); err != nil {
-		gserrors.PanicWith(err, "ParseGlobalConfig err")
+		cberrors.PanicWith(err, "ParseGlobalConfig err")
 	}
 }
 

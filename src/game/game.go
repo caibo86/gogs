@@ -10,17 +10,17 @@ package game
 import (
 	"fmt"
 	"go.uber.org/zap"
+	"gogs/base/cberrors"
+	"gogs/base/cluster"
+	"gogs/base/cluster/network"
 	"gogs/base/config"
 	"gogs/base/etcd"
-	"gogs/base/gscluster"
-	"gogs/base/gserrors"
-	"gogs/base/gsnet"
 	log "gogs/base/logger"
 	"gogs/game/model"
 	"runtime"
 )
 
-var server *gscluster.Game
+var server *cluster.Game
 
 func Main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -29,10 +29,10 @@ func Main() {
 	// 游戏服配置
 	gameConfig := config.GetGameConfig()
 	if logConfig == nil {
-		gserrors.Panic("unable to find log config")
+		cberrors.Panic("unable to find log config")
 	}
 	if gameConfig == nil {
-		gserrors.Panic("unable to find game config")
+		cberrors.Panic("unable to find game config")
 	}
 	// 初始化日志
 	log.Init(
@@ -46,10 +46,10 @@ func Main() {
 	)
 	etcdConfig := config.GetEtcdConfig()
 	if etcdConfig == nil {
-		gserrors.Panic("unable to find etcd config")
+		cberrors.Panic("unable to find etcd config")
 	}
 	if err := etcd.Init(etcdConfig, nil); err != nil {
-		gserrors.Panicf("etcd init err:%s", err)
+		cberrors.Panic("etcd init err:%s", err)
 	}
 	defer func() {
 		// 等待异步日志写入完成
@@ -59,13 +59,13 @@ func Main() {
 	RegisterBuilders()
 	var err error
 	name := fmt.Sprintf("%s:%d", config.ServerType, config.ServerID)
-	server, err = gscluster.NewGame(
+	server, err = cluster.NewGame(
 		name,
 		builders,
 		"localhost:9102",
 	)
 	if err != nil {
-		gserrors.Panicf("new game err:%s", err)
+		cberrors.Panic("new game err:%s", err)
 	}
 	etcd.SetServiceCallback(EtcdNodeEventListener)
 	// 处理系统信号
@@ -80,7 +80,7 @@ func EtcdNodeEventListener(nodeEvent *etcd.NodeEvent) {
 	switch nodeEvent.Event {
 	case etcd.EventAdd:
 		if nodeEvent.Node.GetType() == etcd.ServerTypeGate {
-			if _, ok := server.Host.Node.GetSession(gsnet.DriverTypeCluster, nodeEvent.Node.GetConnectURL()); !ok {
+			if _, ok := server.Host.Node.GetSession(network.DriverTypeCluster, nodeEvent.Node.GetConnectURL()); !ok {
 				_, err := server.Host.Connect(nodeEvent.Node.GetConnectURL())
 				if err != nil {
 					log.Errorf("connect to gate err:%s", err)
@@ -89,7 +89,7 @@ func EtcdNodeEventListener(nodeEvent *etcd.NodeEvent) {
 		}
 	case etcd.EventDelete:
 		if nodeEvent.Node.GetType() == etcd.ServerTypeGate {
-			session, ok := server.Host.Node.GetSession(gsnet.DriverTypeCluster, nodeEvent.Node.GetConnectURL())
+			session, ok := server.Host.Node.GetSession(network.DriverTypeCluster, nodeEvent.Node.GetConnectURL())
 			if ok {
 				session.Close()
 			}

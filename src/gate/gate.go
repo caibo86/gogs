@@ -9,11 +9,11 @@ package gate
 
 import (
 	"fmt"
+	"gogs/base/cberrors"
+	"gogs/base/cluster"
+	"gogs/base/cluster/network"
 	"gogs/base/config"
 	"gogs/base/etcd"
-	"gogs/base/gscluster"
-	"gogs/base/gserrors"
-	"gogs/base/gsnet"
 	log "gogs/base/logger"
 	"gogs/idl"
 	"runtime"
@@ -31,10 +31,10 @@ func Main() {
 	// 网关配置
 	gateConfig := config.GetGateConfig()
 	if logConfig == nil {
-		gserrors.Panic("unable to find log config")
+		cberrors.Panic("unable to find log config")
 	}
 	if gateConfig == nil {
-		gserrors.Panic("unable to find gate config")
+		cberrors.Panic("unable to find gate config")
 	}
 	// 初始化日志
 	log.Init(
@@ -58,18 +58,18 @@ func Main() {
 	// 网关名字
 	name := fmt.Sprintf("%s:%d", config.ServerType, config.ServerID)
 	// 网关服务构造器
-	builder := idl.NewGateBuilder(func(service gscluster.IService) (idl.IGate, error) {
-		return NewRealGate(service.Context().(*gscluster.GateRemote)), nil
+	builder := idl.NewGateBuilder(func(service cluster.IService) (idl.IGate, error) {
+		return NewRealGate(service.Context().(*cluster.GateRemote)), nil
 	})
 	log.Infof("gate: %s addr: %s inner addr: %s", name, addr, hostAddr)
-	server, err := gscluster.NewGate(name, addr, hostAddr, builder, gsnet.ProtocolTCP)
+	server, err := cluster.NewGate(name, addr, hostAddr, builder, network.ProtocolTCP)
 	if err != nil {
-		gserrors.Panic(err.Error())
+		cberrors.Panic(err.Error())
 	}
 	// 启动监听后再启动etcd组件
 	etcdConfig := config.GetEtcdConfig()
 	if etcdConfig == nil {
-		gserrors.Panic("unable to find etcd config")
+		cberrors.Panic("unable to find etcd config")
 	}
 	config.Adjust(
 		config.SetEtcdServiceType(config.ServerType),
@@ -78,7 +78,7 @@ func Main() {
 		config.SetEtcdServicePort(gateConfig.InnerPort),
 	)
 	if err := etcd.Init(etcdConfig, nil); err != nil {
-		gserrors.Panicf("etcd init err:%s", err)
+		cberrors.Panic("etcd init err:%s", err)
 	}
 	<-exitChan
 	server.Close()

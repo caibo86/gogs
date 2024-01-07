@@ -8,18 +8,18 @@
 package gate
 
 import (
-	"gogs/base/gscluster"
+	"gogs/base/cluster"
 	log "gogs/base/logger"
 	"gogs/idl"
 )
 
 // RealGate 实际网关服务提供者
 type RealGate struct {
-	remote *gscluster.GateRemote
+	remote *cluster.GateRemote
 }
 
 // NewRealGate 新建网关服务提供者
-func NewRealGate(remote *gscluster.GateRemote) *RealGate {
+func NewRealGate(remote *cluster.GateRemote) *RealGate {
 	return &RealGate{
 		remote: remote,
 	}

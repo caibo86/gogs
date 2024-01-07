@@ -8,7 +8,7 @@
 package misc
 
 import (
-	"gogs/base/gserrors"
+	"gogs/base/cberrors"
 	"gogs/base/idgen/snowflake_v2"
 	log "gogs/base/logger"
 )
@@ -23,7 +23,7 @@ func InitIDGen(serverID int64) {
 // NewID 生成新的ID 上层考虑到返回值可能为0
 func NewID() int64 {
 	if sf == nil {
-		gserrors.Panic("init snowflake id generator first")
+		cberrors.Panic("init snowflake id generator first")
 	}
 	id, err := sf.Next()
 	if err != nil {

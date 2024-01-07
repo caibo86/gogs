@@ -10,9 +10,9 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"gogs/base/gserrors"
-	"gogs/base/gslang"
-	"gogs/base/gslang/ast"
+	"gogs/base/cberrors"
+	"gogs/base/cblang"
+	"gogs/base/cblang/ast"
 	log "gogs/base/logger"
 	"os"
 	"os/exec"
@@ -26,33 +26,33 @@ var moduleName string
 
 // 包名映射的引入包的go代码
 var packageMapping = map[string]string{
-	"gsnet.":     `import "gogs/base/gsnet"`,
-	"gserrors.":  `import "gogs/base/gserrors"`,
-	"gscluster.": `import "gogs/base/gscluster"`,
-	"config.":    `import "gogs/base/config"`,
-	"bytes.":     `import "bytes"`,
-	"fmt.":       `import "fmt"`,
-	"time.":      `import "time"`,
-	"bits.":      `import "math/bits"`,
-	"io":         `import "io"`,
+	"network.":  `import "gogs/base/cluster/network"`,
+	"cberrors.": `import "gogs/base/cberrors"`,
+	"cluster.":  `import "gogs/base/cluster"`,
+	"config.":   `import "gogs/base/config"`,
+	"bytes.":    `import "bytes"`,
+	"fmt.":      `import "fmt"`,
+	"time.":     `import "time"`,
+	"bits.":     `import "math/bits"`,
+	"io":        `import "io"`,
 }
 
-// gslang内置类型对应的golang表示
+// cblang内置类型对应的golang表示
 var keyMapping = map[string]string{
-	".gslang.Byte":    "byte",
-	".gslang.Bytes":   "[]byte",
-	".gslang.Int8":    "int8",
-	".gslang.Uint8":   "uint8",
-	".gslang.Int16":   "int16",
-	".gslang.Uint16":  "uint16",
-	".gslang.Int32":   "int32",
-	".gslang.Uint32":  "uint32",
-	".gslang.Int64":   "int64",
-	".gslang.Uint64":  "uint64",
-	".gslang.Float32": "float32",
-	".gslang.Float64": "float64",
-	".gslang.Bool":    "bool",
-	".gslang.String":  "string",
+	".cblang.Byte":    "byte",
+	".cblang.Bytes":   "[]byte",
+	".cblang.Int8":    "int8",
+	".cblang.Uint8":   "uint8",
+	".cblang.Int16":   "int16",
+	".cblang.Uint16":  "uint16",
+	".cblang.Int32":   "int32",
+	".cblang.Uint32":  "uint32",
+	".cblang.Int64":   "int64",
+	".cblang.Uint64":  "uint64",
+	".cblang.Float32": "float32",
+	".cblang.Float64": "float64",
+	".cblang.Bool":    "bool",
+	".cblang.String":  "string",
 	"Byte":            "byte",
 	"Bytes":           "[]byte",
 	"Int8":            "int8",
@@ -69,58 +69,58 @@ var keyMapping = map[string]string{
 	"String":          "string",
 }
 
-// gslang内置类型的默认值对应的golang表示
+// cblang内置类型的默认值对应的golang表示
 var defaultVal = map[string]string{
-	".gslang.Byte":    "byte(0)",
-	".gslang.Bytes":   "[]byte(nil)",
-	".gslang.Int8":    "int8(0)",
-	".gslang.Uint8":   "uint8(0)",
-	".gslang.Int16":   "int16(0)",
-	".gslang.Uint16":  "uint16(0)",
-	".gslang.Int32":   "int32(0)",
-	".gslang.Uint32":  "uint32(0)",
-	".gslang.Int64":   "int64(0)",
-	".gslang.Uint64":  "uint64(0)",
-	".gslang.Float32": "float32(0)",
-	".gslang.Float64": "float64(0)",
-	".gslang.Bool":    "false",
-	".gslang.String":  "\"\"",
+	".cblang.Byte":    "byte(0)",
+	".cblang.Bytes":   "[]byte(nil)",
+	".cblang.Int8":    "int8(0)",
+	".cblang.Uint8":   "uint8(0)",
+	".cblang.Int16":   "int16(0)",
+	".cblang.Uint16":  "uint16(0)",
+	".cblang.Int32":   "int32(0)",
+	".cblang.Uint32":  "uint32(0)",
+	".cblang.Int64":   "int64(0)",
+	".cblang.Uint64":  "uint64(0)",
+	".cblang.Float32": "float32(0)",
+	".cblang.Float64": "float64(0)",
+	".cblang.Bool":    "false",
+	".cblang.String":  "\"\"",
 }
 
 // writeMapping 写入方法映射
 var writeMapping = map[string]string{
-	"Bool":    "gsnet.WriteBool",
-	"Byte":    "gsnet.WriteByte",
-	"Bytes":   "gsnet.WriteBytes",
-	"Int8":    "gsnet.WriteInt8",
-	"Uint8":   "gsnet.WriteUint8",
-	"Int16":   "gsnet.WriteInt16",
-	"Uint16":  "gsnet.WriteUint16",
-	"Int32":   "gsnet.WriteInt32",
-	"Uint32":  "gsnet.WriteUint32",
-	"Float32": "gsnet.WriteFloat32",
-	"Int64":   "gsnet.WriteInt64",
-	"Uint64":  "gsnet.WriteUint64",
-	"Float64": "gsnet.WriteFloat64",
-	"String":  "gsnet.WriteString",
+	"Bool":    "network.WriteBool",
+	"Byte":    "network.WriteByte",
+	"Bytes":   "network.WriteBytes",
+	"Int8":    "network.WriteInt8",
+	"Uint8":   "network.WriteUint8",
+	"Int16":   "network.WriteInt16",
+	"Uint16":  "network.WriteUint16",
+	"Int32":   "network.WriteInt32",
+	"Uint32":  "network.WriteUint32",
+	"Float32": "network.WriteFloat32",
+	"Int64":   "network.WriteInt64",
+	"Uint64":  "network.WriteUint64",
+	"Float64": "network.WriteFloat64",
+	"String":  "network.WriteString",
 }
 
 // readMapping 读方法映射
 var readMapping = map[string]string{
-	"Bool":    "gsnet.ReadBool",
-	"Byte":    "gsnet.ReadByte",
-	"Bytes":   "gsnet.ReadBytes",
-	"Int8":    "gsnet.ReadInt8",
-	"Uint8":   "gsnet.ReadUint8",
-	"Int16":   "gsnet.ReadInt16",
-	"Uint16":  "gsnet.ReadUint16",
-	"Int32":   "gsnet.ReadInt32",
-	"Uint32":  "gsnet.ReadUint32",
-	"Float32": "gsnet.ReadFloat32",
-	"Int64":   "gsnet.ReadInt64",
-	"Uint64":  "gsnet.ReadUint64",
-	"Float64": "gsnet.ReadFloat64",
-	"String":  "gsnet.ReadString",
+	"Bool":    "network.ReadBool",
+	"Byte":    "network.ReadByte",
+	"Bytes":   "network.ReadBytes",
+	"Int8":    "network.ReadInt8",
+	"Uint8":   "network.ReadUint8",
+	"Int16":   "network.ReadInt16",
+	"Uint16":  "network.ReadUint16",
+	"Int32":   "network.ReadInt32",
+	"Uint32":  "network.ReadUint32",
+	"Float32": "network.ReadFloat32",
+	"Int64":   "network.ReadInt64",
+	"Uint64":  "network.ReadUint64",
+	"Float64": "network.ReadFloat64",
+	"String":  "network.ReadString",
 }
 
 // compareMapping 比较方法映射
@@ -143,38 +143,38 @@ var compareMapping = map[string]string{
 
 // marshalMapping 写入方法映射
 var marshalMapping = map[string]string{
-	"Bool":    "gsnet.MarshalBool",
-	"Byte":    "gsnet.MarshalByte",
-	"Bytes":   "gsnet.MarshalBytes",
-	"Int8":    "gsnet.MarshalInt8",
-	"Uint8":   "gsnet.MarshalUint8",
-	"Int16":   "gsnet.MarshalInt16",
-	"Uint16":  "gsnet.MarshalUint16",
-	"Int32":   "gsnet.MarshalInt32",
-	"Uint32":  "gsnet.MarshalUint32",
-	"Float32": "gsnet.MarshalFloat32",
-	"Int64":   "gsnet.MarshalInt64",
-	"Uint64":  "gsnet.MarshalUint64",
-	"Float64": "gsnet.MarshalFloat64",
-	"String":  "gsnet.MarshalString",
+	"Bool":    "network.MarshalBool",
+	"Byte":    "network.MarshalByte",
+	"Bytes":   "network.MarshalBytes",
+	"Int8":    "network.MarshalInt8",
+	"Uint8":   "network.MarshalUint8",
+	"Int16":   "network.MarshalInt16",
+	"Uint16":  "network.MarshalUint16",
+	"Int32":   "network.MarshalInt32",
+	"Uint32":  "network.MarshalUint32",
+	"Float32": "network.MarshalFloat32",
+	"Int64":   "network.MarshalInt64",
+	"Uint64":  "network.MarshalUint64",
+	"Float64": "network.MarshalFloat64",
+	"String":  "network.MarshalString",
 }
 
 // unmarshalMapping 读方法映射
 var unmarshalMapping = map[string]string{
-	"Bool":    "gsnet.UnmarshalBool",
-	"Byte":    "gsnet.UnmarshalByte",
-	"Bytes":   "gsnet.UnmarshalBytes",
-	"Int8":    "gsnet.UnmarshalInt8",
-	"Uint8":   "gsnet.UnmarshalUint8",
-	"Int16":   "gsnet.UnmarshalInt16",
-	"Uint16":  "gsnet.UnmarshalUint16",
-	"Int32":   "gsnet.UnmarshalInt32",
-	"Uint32":  "gsnet.UnmarshalUint32",
-	"Float32": "gsnet.UnmarshalFloat32",
-	"Int64":   "gsnet.UnmarshalInt64",
-	"Uint64":  "gsnet.UnmarshalUint64",
-	"Float64": "gsnet.UnmarshalFloat64",
-	"String":  "gsnet.UnmarshalString",
+	"Bool":    "network.UnmarshalBool",
+	"Byte":    "network.UnmarshalByte",
+	"Bytes":   "network.UnmarshalBytes",
+	"Int8":    "network.UnmarshalInt8",
+	"Uint8":   "network.UnmarshalUint8",
+	"Int16":   "network.UnmarshalInt16",
+	"Uint16":  "network.UnmarshalUint16",
+	"Int32":   "network.UnmarshalInt32",
+	"Uint32":  "network.UnmarshalUint32",
+	"Float32": "network.UnmarshalFloat32",
+	"Int64":   "network.UnmarshalInt64",
+	"Uint64":  "network.UnmarshalUint64",
+	"Float64": "network.UnmarshalFloat64",
+	"String":  "network.UnmarshalString",
 }
 
 // Gen4Go golang代码生成器
@@ -190,7 +190,7 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 	gen = &Gen4Go{}
 	functions := template.FuncMap{
 		"symbol":              strings.Title,
-		"pos":                 gslang.Pos,
+		"pos":                 cblang.Pos,
 		"typeName":            gen.typeName,
 		"params":              gen.params,
 		"returnParams":        gen.returnParams,
@@ -287,7 +287,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 					}`,
 					field.Name(), field.Name())
 			default:
-				gserrors.Panicf("not here %s", field.Type.Name())
+				cberrors.Panic("not here %s", field.Type.Name())
 			}
 		}
 	case *ast.Slice, *ast.Array:
@@ -367,7 +367,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 					}`,
 					field.Name(), field.Name())
 			default:
-				gserrors.Panicf("not here %s", field.Type.Name())
+				cberrors.Panic("not here %s", field.Type.Name())
 			}
 		}
 	case *ast.Map:
@@ -392,7 +392,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 			case *ast.Enum:
 				keyStr = "4"
 			default:
-				gserrors.Panicf("map key can only be int or string, %s not supported", hash.Key.Name())
+				cberrors.Panic("map key can only be int or string, %s not supported", hash.Key.Name())
 			}
 		}
 		ref = hash.Value.(*ast.TypeRef)
@@ -414,7 +414,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 			case *ast.Table:
 				valStr = "4 + v.Size()"
 			default:
-				gserrors.Panicf("map value %s not supported", hash.Value.Name())
+				cberrors.Panic("map value %s not supported", hash.Value.Name())
 			}
 		}
 		return fmt.Sprintf(
@@ -432,7 +432,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 			keyStr,
 			valStr)
 	}
-	gserrors.Panic("not here")
+	cberrors.Panic("not here")
 	return "unknown"
 }
 
@@ -446,7 +446,7 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 		if str, ok = writeMapping[ref.Ref.Name()]; ok {
 			return fmt.Sprintf(
 				`if `+compareMapping[ref.Ref.Name()]+` {
-					i = gsnet.WriteFieldID(data, i, %d)
+					i = network.WriteFieldID(data, i, %d)
 					i = %s(data, i, m.%s)
 				}`,
 				field.Name(), field.ID, str, field.Name())
@@ -455,22 +455,22 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 			case *ast.Enum:
 				return fmt.Sprintf(
 					`if m.%s != 0 {
-						i = gsnet.WriteFieldID(data, i, %d)
-						i = gsnet.WriteEnum(data, i, int32(m.%s))
+						i = network.WriteFieldID(data, i, %d)
+						i = network.WriteEnum(data, i, int32(m.%s))
 					}`,
 					field.Name(), field.ID, field.Name())
 			case *ast.Table:
 				return fmt.Sprintf(
 					`if m.%s != nil {
-						i = gsnet.WriteFieldID(data, i, %d)
+						i = network.WriteFieldID(data, i, %d)
 						size := m.%s.Size()
-						i = gsnet.WriteUint32(data, i, uint32(size))
+						i = network.WriteUint32(data, i, uint32(size))
 						m.%s.MarshalToSizedBuffer(data[i:])
 						i += size
 					}`,
 					field.Name(), field.ID, field.Name(), field.Name())
 			default:
-				gserrors.Panicf("not here %s", field.Type.Name())
+				cberrors.Panic("not here %s", field.Type.Name())
 			}
 		}
 	case *ast.Slice, *ast.Array:
@@ -490,8 +490,8 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 			if isSlice && ref.Ref.Name() == "Byte" {
 				return fmt.Sprintf(
 					`if len(m.%s) > 0 {
-						i = gsnet.WriteFieldID(data, i , %d)
-						i = gsnet.WriteBytes(data, i, m.%s)
+						i = network.WriteFieldID(data, i , %d)
+						i = network.WriteBytes(data, i, m.%s)
 					}`,
 					field.Name(),
 					field.ID,
@@ -502,23 +502,23 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 		} else {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
-				str = `i = gsnet.WriteEnum(data, i, int32(e))`
+				str = `i = network.WriteEnum(data, i, int32(e))`
 			case *ast.Table:
 				str = `size := e.Size()
-						i = gsnet.WriteUint32(data, i, uint32(size))
+						i = network.WriteUint32(data, i, uint32(size))
 						if e != nil {
 							e.MarshalToSizedBuffer(data[i:])
 						}
 						i += size`
 			default:
-				gserrors.Panicf("not here %s", field.Type.Name())
+				cberrors.Panic("not here %s", field.Type.Name())
 			}
 		}
 		if isSlice {
 			return fmt.Sprintf(
 				`if len(m.%s) > 0 {
-					i = gsnet.WriteFieldID(data, i , %d)
-					i = gsnet.WriteUint32(data, i, uint32(len(m.%s)))
+					i = network.WriteFieldID(data, i , %d)
+					i = network.WriteUint32(data, i, uint32(len(m.%s)))
 					for _, e := range m.%s {
 						%s
 					}
@@ -530,8 +530,8 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 				str)
 		} else {
 			return fmt.Sprintf(
-				`i = gsnet.WriteFieldID(data, i , %d)
-					i = gsnet.WriteUint32(data, i, uint32(len(m.%s)))
+				`i = network.WriteFieldID(data, i , %d)
+					i = network.WriteUint32(data, i, uint32(len(m.%s)))
 					for _, e := range m.%s {
 						%s
 					}`,
@@ -553,9 +553,9 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 		} else {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
-				keyStr = `i = gsnet.WriteEnum(data, i, int32(k))`
+				keyStr = `i = network.WriteEnum(data, i, int32(k))`
 			default:
-				gserrors.Panicf("map key can only be int or string, %s not supported", hash.Key.Name())
+				cberrors.Panic("map key can only be int or string, %s not supported", hash.Key.Name())
 			}
 		}
 		ref = hash.Value.(*ast.TypeRef)
@@ -564,22 +564,22 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 		} else {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
-				valStr = `i = gsnet.WriteEnum(data, i, int32(v))`
+				valStr = `i = network.WriteEnum(data, i, int32(v))`
 			case *ast.Table:
 				valStr = `size := v.Size()
-						i = gsnet.WriteUint32(data, i, uint32(size))
+						i = network.WriteUint32(data, i, uint32(size))
 						if v != nil {
 							v.MarshalToSizedBuffer(data[i:])
 						}
 						i += size`
 			default:
-				gserrors.Panicf("map value %s not supported", hash.Value.Name())
+				cberrors.Panic("map value %s not supported", hash.Value.Name())
 			}
 		}
 		return fmt.Sprintf(
 			`if len(m.%s) > 0 {
-						i = gsnet.WriteFieldID(data, i, %d)
-						i = gsnet.WriteUint32(data, i, uint32(len(m.%s)))
+						i = network.WriteFieldID(data, i, %d)
+						i = network.WriteUint32(data, i, uint32(len(m.%s)))
 						for k, v := range m.%s {
 							%s
 							%s
@@ -592,7 +592,7 @@ func (gen *Gen4Go) writeType(field *ast.Field) string {
 			keyStr,
 			valStr)
 	}
-	gserrors.Panic("not here")
+	cberrors.Panic("not here")
 	return "unknown"
 }
 
@@ -609,12 +609,12 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				return fmt.Sprintf(`var v int32
-						i, v = gsnet.ReadEnum(data, i)
+						i, v = network.ReadEnum(data, i)
 						m.%s = %s(v)`,
 					field.Name(), gen.typeName(ref))
 			case *ast.Table:
 				return fmt.Sprintf(`var size uint32
-						i, size = gsnet.ReadUint32(data, i)
+						i, size = network.ReadUint32(data, i)
 						if m.%s == nil {
 							m.%s = %s
 						}
@@ -623,7 +623,7 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 						} 
 						i += int(size)`, field.Name(), field.Name(), gen.defaultVal(ref), field.Name())
 			default:
-				gserrors.Panicf("not here %s", field.Type.Name())
+				cberrors.Panic("not here %s", field.Type.Name())
 			}
 		}
 	case *ast.Slice, *ast.Array:
@@ -640,7 +640,7 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 		var ok bool
 		if str, ok = readMapping[ref.Ref.Name()]; ok {
 			if isSlice && ref.Ref.Name() == "Byte" {
-				return fmt.Sprintf(`i, m.%s = gsnet.ReadBytes(data, i)`,
+				return fmt.Sprintf(`i, m.%s = network.ReadBytes(data, i)`,
 					field.Name())
 			} else {
 				str = fmt.Sprintf("i, m.%s[j] = %s(data, i)", field.Name(), str)
@@ -649,13 +649,13 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				str = fmt.Sprintf(`var v int32
-				i, v = gsnet.ReadEnum(data, i)
+				i, v = network.ReadEnum(data, i)
 				m.%s[j] = %s(v)`,
 					field.Name(), gen.typeName(ref))
 			case *ast.Table:
 				str = fmt.Sprintf(
 					`var size uint32
-						i, size = gsnet.ReadUint32(data, i)
+						i, size = network.ReadUint32(data, i)
 						if size > 0 {
 							m.%s[j] = %s
 							if err = m.%s[j].Unmarshal(data[i:i+int(size)]); err != nil {
@@ -664,13 +664,13 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 						}
 						i += int(size)`, field.Name(), gen.defaultVal(ref), field.Name())
 			default:
-				gserrors.Panicf("not here %s", field.Type.Name())
+				cberrors.Panic("not here %s", field.Type.Name())
 			}
 		}
 		if isSlice {
 			return fmt.Sprintf(
 				`var length uint32
-				i, length = gsnet.ReadUint32(data, i)
+				i, length = network.ReadUint32(data, i)
 				m.%s = make([]%s, length)
 				for j := uint32(0); j < length; j++ {
 					%s
@@ -679,7 +679,7 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 		} else {
 			return fmt.Sprintf(
 				`var length uint32
-				i, length = gsnet.ReadUint32(data, i)
+				i, length = network.ReadUint32(data, i)
 				for j := uint32(0); j < length; j++ {
 					%s
 				}`,
@@ -699,10 +699,10 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				keyStr = fmt.Sprintf(`var k1 int32
-					i, k1 = gsnet.ReadEnum(data, i)
+					i, k1 = network.ReadEnum(data, i)
 					k := %s(k1)`, gen.typeName(hash.Key))
 			default:
-				gserrors.Panicf("map key can only be int or string, %s not supported", hash.Key.Name())
+				cberrors.Panic("map key can only be int or string, %s not supported", hash.Key.Name())
 			}
 		}
 		ref = hash.Value.(*ast.TypeRef)
@@ -713,12 +713,12 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				valStr = fmt.Sprintf(`var v1 int32
-					i, v1 = gsnet.ReadEnum(data, i)
+					i, v1 = network.ReadEnum(data, i)
 					v := %s(v1)`, gen.typeName(hash.Value))
 			case *ast.Table:
 				valStr = fmt.Sprintf(`var size uint32
 						var v %s
-						i, size = gsnet.ReadUint32(data, i)
+						i, size = network.ReadUint32(data, i)
 						if size > 0 {
 							v = %s
 							if err = v.Unmarshal(data[i:i+int(size)]); err != nil {
@@ -727,12 +727,12 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 						}
 						i += int(size)`, gen.typeName(hash.Value), gen.defaultVal(hash.Value))
 			default:
-				gserrors.Panicf("map value %s not supported", hash.Value.Name())
+				cberrors.Panic("map value %s not supported", hash.Value.Name())
 			}
 		}
 		return fmt.Sprintf(
 			`var length uint32
-					i, length = gsnet.ReadUint32(data, i)
+					i, length = network.ReadUint32(data, i)
 					if m.%s == nil{
 						m.%s = make(map[%s]%s)
 					}
@@ -746,7 +746,7 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 			gen.typeName(hash.Value),
 			keyStr, valStr, field.Name())
 	}
-	gserrors.Panic("not here")
+	cberrors.Panic("not here")
 	return "unknown"
 }
 
@@ -903,7 +903,7 @@ func (gen *Gen4Go) marshalType(expr ast.Expr) string {
 		// 数组
 		array := expr.(*ast.Array)
 		var buff bytes.Buffer
-		if array.Element.Name() == ".gslang.Byte" {
+		if array.Element.Name() == ".cblang.Byte" {
 			if err := gen.tpl.ExecuteTemplate(&buff, "writeByteArray", array); err != nil {
 				panic(err)
 			}
@@ -917,7 +917,7 @@ func (gen *Gen4Go) marshalType(expr ast.Expr) string {
 		// 切片
 		slice := expr.(*ast.Slice)
 		var buff bytes.Buffer
-		if slice.Element.Name() == ".gslang.Byte" {
+		if slice.Element.Name() == ".cblang.Byte" {
 			if err := gen.tpl.ExecuteTemplate(&buff, "writeByteList", slice); err != nil {
 				panic(err)
 			}
@@ -936,7 +936,7 @@ func (gen *Gen4Go) marshalType(expr ast.Expr) string {
 		}
 		return buff.String()
 	}
-	gserrors.Panic("not here")
+	cberrors.Panic("not here")
 	return ""
 }
 
@@ -964,7 +964,7 @@ func (gen *Gen4Go) unmarshalType(expr ast.Expr) string {
 		// 数组
 		array := expr.(*ast.Array)
 		var buff bytes.Buffer
-		if array.Element.Name() == ".gslang.Byte" {
+		if array.Element.Name() == ".cblang.Byte" {
 			if err := gen.tpl.ExecuteTemplate(&buff, "readByteArray", array); err != nil {
 				panic(err)
 			}
@@ -978,7 +978,7 @@ func (gen *Gen4Go) unmarshalType(expr ast.Expr) string {
 		// 切片
 		slice := expr.(*ast.Slice)
 		var buff bytes.Buffer
-		if slice.Element.Name() == ".gslang.Byte" {
+		if slice.Element.Name() == ".cblang.Byte" {
 			if err := gen.tpl.ExecuteTemplate(&buff, "readByteList", slice); err != nil {
 				panic(err)
 			}
@@ -997,7 +997,7 @@ func (gen *Gen4Go) unmarshalType(expr ast.Expr) string {
 		}
 		return buff.String()
 	}
-	gserrors.Panic("not here")
+	cberrors.Panic("not here")
 	return ""
 }
 
@@ -1032,7 +1032,7 @@ func (gen *Gen4Go) defaultVal(expr ast.Expr) string {
 		array := expr.(*ast.Array)
 		var buff bytes.Buffer
 		if err := gen.tpl.ExecuteTemplate(&buff, "arrayInit", array); err != nil {
-			gserrors.Panic(err.Error())
+			cberrors.Panic(err.Error())
 		}
 		return buff.String()
 	case *ast.Slice:
@@ -1041,7 +1041,7 @@ func (gen *Gen4Go) defaultVal(expr ast.Expr) string {
 		// 字典
 		return fmt.Sprintf("make(%s)", gen.typeName(expr))
 	}
-	gserrors.Panic("not here")
+	cberrors.Panic("not here")
 	return "unknown"
 }
 
@@ -1144,7 +1144,7 @@ func (gen *Gen4Go) typeName(expr ast.Expr) string {
 		hash := expr.(*ast.Map)
 		return fmt.Sprintf("map[%s]%s", gen.typeName(hash.Key), gen.typeName(hash.Value))
 	}
-	gserrors.Panicf("unknown golang typeName: %s\n\t%s", expr, gslang.Pos(expr))
+	cberrors.Panic("unknown golang typeName: %s\n\t%s", expr, cblang.Pos(expr))
 	return "unknown"
 }
 
@@ -1159,7 +1159,7 @@ func (gen *Gen4Go) sovFunc(script *ast.Script) string {
 // printComments 打印注释
 func (gen *Gen4Go) printComments(node ast.Node) string {
 	var ret string
-	comments := gslang.Comments(node)
+	comments := cblang.Comments(node)
 	if len(comments) > 0 {
 		ret += "\n"
 		for i, comment := range comments {
@@ -1178,7 +1178,7 @@ func (gen *Gen4Go) printComments(node ast.Node) string {
 // printComments 打印注释到一行
 func (gen *Gen4Go) printCommentsToLine(node ast.Node) string {
 	var ret string
-	comments := gslang.Comments(node)
+	comments := cblang.Comments(node)
 	if len(comments) > 0 {
 		ret = "//"
 		for _, comment := range comments {
@@ -1192,15 +1192,15 @@ func (gen *Gen4Go) printCommentsToLine(node ast.Node) string {
 
 // writeFile 将代码节点对应的golang代码写入到文件
 func (gen *Gen4Go) writeFile(script *ast.Script, bytes []byte) {
-	fullPath, ok := gslang.FilePath(script)
+	fullPath, ok := cblang.FilePath(script)
 	if !ok {
-		gserrors.Panic("compile must bind file path to script")
+		cberrors.Panic("compile must bind file path to script")
 	}
 	// 写入文件名为 源文件名+.go
 	fullPath += ".go"
 	err := os.WriteFile(fullPath, bytes, 0644)
 	if err != nil {
-		gserrors.Panic(err.Error())
+		cberrors.Panic(err.Error())
 	}
 	log.Infof("Write to file successfully: %s success", fullPath)
 
@@ -1213,8 +1213,8 @@ func (gen *Gen4Go) writeFile(script *ast.Script, bytes []byte) {
 
 // VisitPackage 访问包
 func (gen *Gen4Go) VisitPackage(pkg *ast.Package) ast.Node {
-	// 内置gslang包则直接返回
-	if pkg.Name() == "base/gslang" {
+	// 内置cblang包则直接返回
+	if pkg.Name() == "base/cblang" {
 		return pkg
 	}
 	// 轮询访问包中代码节点
@@ -1229,7 +1229,7 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 	gen.buff.Reset()
 	// 默认的一些代码
 	if err := gen.tpl.ExecuteTemplate(&gen.buff, "script", script); err != nil {
-		gserrors.Panic(err.Error())
+		cberrors.Panic(err.Error())
 	}
 
 	// 轮询访问代码中的所有类型 Enum Struct Table Service
@@ -1254,7 +1254,7 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 	// 代码中有类型
 	if gen.buff.Len() > 0 {
 		var buff bytes.Buffer
-		filename, _ := gslang.FilePath(script)
+		filename, _ := cblang.FilePath(script)
 		filename += ".go"
 		filename = filepath.Base(filename)
 		// 写入额外信息
@@ -1272,11 +1272,11 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 		buff.WriteString(fmt.Sprintf("package %s\n", filepath.Base(script.Package().Name())))
 		codes := gen.buff.String()
 		// 如果两个特定的内置包中的gs文件 则不需要加包前缀
-		if script.Package().Name() == "base/gsnet" {
-			codes = strings.Replace(codes, "gsnet.", "", -1)
+		if script.Package().Name() == "base/network" {
+			codes = strings.Replace(codes, "network.", "", -1)
 		}
-		if script.Package().Name() == "base/gscluster" {
-			codes = strings.Replace(codes, "gscluster.", "", -1)
+		if script.Package().Name() == "base/cluster" {
+			codes = strings.Replace(codes, "cluster.", "", -1)
 		}
 		// service类型会用到logger
 		if hasService {
@@ -1321,13 +1321,13 @@ func (gen *Gen4Go) VisitScript(script *ast.Script) ast.Node {
 
 // VisitEnum 访问枚举
 func (gen *Gen4Go) VisitEnum(enum *ast.Enum) ast.Node {
-	if gslang.IsError(enum) {
+	if cblang.IsError(enum) {
 		if err := gen.tpl.ExecuteTemplate(&gen.buff, "error", enum); err != nil {
-			gserrors.Panic(err.Error())
+			cberrors.Panic(err.Error())
 		}
 	} else {
 		if err := gen.tpl.ExecuteTemplate(&gen.buff, "enum", enum); err != nil {
-			gserrors.Panic(err.Error())
+			cberrors.Panic(err.Error())
 		}
 	}
 	return enum
@@ -1337,13 +1337,13 @@ func (gen *Gen4Go) VisitEnum(enum *ast.Enum) ast.Node {
 func (gen *Gen4Go) VisitTable(table *ast.Table) ast.Node {
 	table.Sort()
 
-	if gslang.IsStruct(table) {
+	if cblang.IsStruct(table) {
 		if err := gen.tpl.ExecuteTemplate(&gen.buff, "struct", table); err != nil {
-			gserrors.Panic(err.Error())
+			cberrors.Panic(err.Error())
 		}
 	} else {
 		if err := gen.tpl.ExecuteTemplate(&gen.buff, "table", table); err != nil {
-			gserrors.Panic(err.Error())
+			cberrors.Panic(err.Error())
 		}
 	}
 	return table
@@ -1352,7 +1352,7 @@ func (gen *Gen4Go) VisitTable(table *ast.Table) ast.Node {
 // VisitService 访问协议
 func (gen *Gen4Go) VisitService(service *ast.Service) ast.Node {
 	if err := gen.tpl.ExecuteTemplate(&gen.buff, "service", service); err != nil {
-		gserrors.Panic(err.Error())
+		cberrors.Panic(err.Error())
 	}
 	return service
 }

@@ -8,17 +8,17 @@
 package game
 
 import (
-	"gogs/base/gscluster"
+	"gogs/base/cluster"
 	"gogs/game/model"
 	"gogs/idl"
 )
 
 type User struct {
 	*model.DBUser
-	agent *gscluster.ClientAgent
+	agent *cluster.ClientAgent
 }
 
-func NewUser(clusterUser *gscluster.ClientAgent) (*User, error) {
+func NewUser(clusterUser *cluster.ClientAgent) (*User, error) {
 	return &User{
 		agent: clusterUser,
 	}, nil

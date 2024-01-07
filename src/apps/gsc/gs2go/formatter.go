@@ -10,9 +10,9 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"gogs/base/gserrors"
-	"gogs/base/gslang"
-	"gogs/base/gslang/ast"
+	"gogs/base/cberrors"
+	"gogs/base/cblang"
+	"gogs/base/cblang/ast"
 	log "gogs/base/logger"
 	"os"
 	"path/filepath"
@@ -22,7 +22,7 @@ import (
 // printAttrs 输出格式化后属性
 func printAttrs(buff *bytes.Buffer, node ast.Node) {
 	for _, attr := range node.Attrs() {
-		if attr.Name() != ".Struct" && attr.Name() != ".gslang.Struct" {
+		if attr.Name() != ".Struct" && attr.Name() != ".cblang.Struct" {
 			printComments(buff, attr)
 			buff.WriteString(fmt.Sprintf("%s\n", attr.OriginName()))
 		}
@@ -31,7 +31,7 @@ func printAttrs(buff *bytes.Buffer, node ast.Node) {
 
 // printCommentsToLine 输出格式化后的注释到一行
 func printCommentsToLine(buff *bytes.Buffer, node ast.Node) {
-	comments := gslang.Comments(node)
+	comments := cblang.Comments(node)
 	if len(comments) > 0 {
 		buff.WriteString("//")
 		for _, comment := range comments {
@@ -44,7 +44,7 @@ func printCommentsToLine(buff *bytes.Buffer, node ast.Node) {
 
 // printComments 输出格式化后的注释
 func printComments(buff *bytes.Buffer, node ast.Node) bool {
-	comments := gslang.Comments(node)
+	comments := cblang.Comments(node)
 	if len(comments) > 0 {
 		for _, comment := range comments {
 			value := comment.Value.(string)
@@ -58,15 +58,15 @@ func printComments(buff *bytes.Buffer, node ast.Node) bool {
 
 // writeFormatFile 格式化后的gs文件
 func writeFormatFile(script *ast.Script, bytes []byte) {
-	fullPath, ok := gslang.FilePath(script)
+	fullPath, ok := cblang.FilePath(script)
 	if !ok {
-		gserrors.Panic("compile must bind file path to script")
+		cberrors.Panic("compile must bind file path to script")
 	}
 	// 写入文件名为 源文件名+.gss
 	// fullPath += ".gss"
 	err := os.WriteFile(fullPath, bytes, 0644)
 	if err != nil {
-		gserrors.Panic(err.Error())
+		cberrors.Panic(err.Error())
 	}
 	log.Infof("Format file successfully: %s success", fullPath)
 }
@@ -78,7 +78,7 @@ func formatScript(script *ast.Script) {
 
 	count := 0
 	for _, ref := range script.Imports {
-		if ref.Name() != "gslang" {
+		if ref.Name() != "cblang" {
 			count++
 			break
 		}
@@ -88,7 +88,7 @@ func formatScript(script *ast.Script) {
 	if count > 0 {
 		buff.WriteString("import (\n")
 		for _, ref := range script.Imports {
-			if ref.Name() != "gslang" {
+			if ref.Name() != "cblang" {
 				if ref.Name() == filepath.Base(ref.Ref.Name()) {
 					buff.WriteString(fmt.Sprintf("\t\"%s\"\n", ref.Ref))
 				} else {
@@ -126,7 +126,7 @@ func formatScript(script *ast.Script) {
 		if table, ok := t.(*ast.Table); ok {
 			printComments(&buff, table)
 			printAttrs(&buff, table)
-			if gslang.IsStruct(table) {
+			if cblang.IsStruct(table) {
 				buff.WriteString(fmt.Sprintf("struct %s {\n", table.Name()))
 			} else {
 				buff.WriteString(fmt.Sprintf("table %s {\n", table.Name()))

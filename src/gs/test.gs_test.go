@@ -130,8 +130,8 @@ var pbCar = &pb.Car{
 		int32(pb.Subject_Chinese):   {}},
 }
 
-func TestGSLangMarshal(t *testing.T) {
-	Convey("测试gslang的序列化和反序列化", t, func() {
+func TestcblangMarshal(t *testing.T) {
+	Convey("测试cblang的序列化和反序列化", t, func() {
 		data := car.Marshal()
 		newCar := &Car{}
 		err := newCar.Unmarshal(data)
@@ -243,7 +243,7 @@ func TestLength(t *testing.T) {
 	Convey("看下序列化后数据长度对比", t, func() {
 		fmt.Println("car size:", car.Size())
 		data := car.Marshal()
-		fmt.Println("gslang序列化后:", len(data))
+		fmt.Println("cblang序列化后:", len(data))
 		data1, _ := pbCar.Marshal()
 		fmt.Println("protobuf序列化后:", len(data1))
 	})

@@ -11,8 +11,8 @@ import (
 	"flag"
 	"fmt"
 
-	"gogs/base/gserrors"
-	"gogs/base/gslang"
+	"gogs/base/cberrors"
+	"gogs/base/cblang"
 	log "gogs/base/logger"
 )
 
@@ -33,15 +33,15 @@ func main() {
 		}
 		if err := log.Close(); err != nil {
 			fmt.Println(err.Error())
-			gserrors.Panic(err.Error())
+			cberrors.Panic(err.Error())
 		}
 	}()
 	// 解析命令行参数
 	flag.StringVar(&moduleName, "module", "gogs", "golang module name")
 	flag.Parse()
 	log.Infof("Set module name: %s", moduleName)
-	packages := []string{"base/gsnet", "base/gscluster"}
-	compiler := gslang.NewCompiler()
+	packages := []string{"base/cluster/network", "base/cluster"}
+	compiler := cblang.NewCompiler()
 	log.Info("Start compiling packages: ", flag.Args())
 	packages = append(packages, flag.Args()...)
 	// 编译默认的两个包及命令行提供的目标包
