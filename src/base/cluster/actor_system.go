@@ -156,7 +156,7 @@ func (system *ActorSystem) NewActor(name ActorName, context IActorContext) (IAct
 		serviceID := system.newServiceID()
 		locker := &system.groupLocks[serviceID%ID(len(system.groupLocks))]
 		nameStr := name.String()
-		remote := newActorRemote(system, nameStr, neighbor)
+		remote := newActorAgent(system, nameStr, neighbor)
 		actor := newBaseActor(system, &name, locker, context)
 		context.SetActor(actor)
 		actor.service = builder.NewRemoteService(remote, nameStr, serviceID, 0, actor)

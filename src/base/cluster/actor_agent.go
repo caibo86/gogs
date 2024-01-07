@@ -19,8 +19,8 @@ type ActorAgent struct {
 	neighbor IActorSystem
 }
 
-// newActorRemote 新建角色远程代理
-func newActorRemote(system *ActorSystem, name string, neighbor IActorSystem) *ActorAgent {
+// newActorAgent 新建角色会话代理
+func newActorAgent(system *ActorSystem, name string, neighbor IActorSystem) *ActorAgent {
 	return &ActorAgent{
 		system:   system,
 		name:     name,

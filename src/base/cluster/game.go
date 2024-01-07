@@ -140,7 +140,7 @@ func (game *Game) Login(msg *RProxyMsg) (int64, Err, error) {
 	}
 	game.Lock()
 	defer game.Unlock()
-	remoteService := builder.NewRemoteService(newTunnelRemote(game, clientAgent.userID, gateServer),
+	remoteService := builder.NewRemoteService(newTunnelAgent(game, clientAgent.userID, gateServer),
 		actor.Name(),
 		game.newServiceID(),
 		0,

@@ -121,9 +121,9 @@ DoRegistry:
 	host.neighborMutex.RLock()
 	defer host.neighborMutex.RUnlock()
 	for _, neighbor := range host.neighbors {
-		err := neighbor.clusterRemote.Write(msg)
+		err := neighbor.agent.Write(msg)
 		if err != nil {
-			log.Errorf("neighbors clusterRemote write msg err: %s", err)
+			log.Errorf("neighbors agent write msg err: %s", err)
 		}
 	}
 	log.Info("Host service registry data sent")
@@ -214,7 +214,7 @@ func (host *Host) sessionStatusChanged(remote *HostAgent, status network.Session
 		}
 		err := remote.Write(msg)
 		if err != nil {
-			log.Errorf("clusterRemote:%s  write msg err: %s", remote, err)
+			log.Errorf("agent:%s  write msg err: %s", remote, err)
 		}
 	case network.SessionStatusClosed, network.SessionStatusDisconnected:
 		// 邻居节点断开连接

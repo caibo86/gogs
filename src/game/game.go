@@ -68,11 +68,17 @@ func Main() {
 		cberrors.Panic("new game err:%s", err)
 	}
 	etcd.SetServiceCallback(EtcdNodeEventListener)
+
 	// 处理系统信号
 	ProcessSignal()
 	<-exitChan
 	server.Shutdown()
 	model.CloseMongoDB()
+}
+
+// CheckGateConn 检查网关连接
+func CheckGateConn() {
+	
 }
 
 // EtcdNodeEventListener 注册到etcd组件的节点状态变更事件处理器

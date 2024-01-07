@@ -9,16 +9,16 @@ package cluster
 
 // Neighbor 集群中的邻居
 type Neighbor struct {
-	clusterRemote *HostAgent
-	services      map[string]IRemoteService // 按名字索引的邻居节点上的远程服务
-	servicesByID  map[ID]IRemoteService     // 按ID索引的邻居节点上的远程服务
+	agent        *HostAgent
+	services     map[string]IRemoteService // 按名字索引的邻居节点上的远程服务
+	servicesByID map[ID]IRemoteService     // 按ID索引的邻居节点上的远程服务
 }
 
 // NewNeighbor 新建邻居节点
-func NewNeighbor(remote *HostAgent) *Neighbor {
+func NewNeighbor(agent *HostAgent) *Neighbor {
 	return &Neighbor{
-		clusterRemote: remote,
-		services:      make(map[string]IRemoteService),
-		servicesByID:  make(map[ID]IRemoteService),
+		agent:        agent,
+		services:     make(map[string]IRemoteService),
+		servicesByID: make(map[ID]IRemoteService),
 	}
 }
