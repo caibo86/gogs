@@ -56,7 +56,7 @@ func (remote *TunnelRemote) Write(msg *network.Message) error {
 
 // DriverType implement network.ISession
 func (remote *TunnelRemote) DriverType() network.DriverType {
-	return network.DriverTypeCluster
+	return network.DriverTypeHost
 }
 
 // Status implement network.ISession

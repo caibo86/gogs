@@ -80,7 +80,7 @@ func EtcdNodeEventListener(nodeEvent *etcd.NodeEvent) {
 	switch nodeEvent.Event {
 	case etcd.EventAdd:
 		if nodeEvent.Node.GetType() == etcd.ServerTypeGate {
-			if _, ok := server.Host.Node.GetSession(network.DriverTypeCluster, nodeEvent.Node.GetConnectURL()); !ok {
+			if _, ok := server.Host.Node.GetSession(network.DriverTypeHost, nodeEvent.Node.GetConnectURL()); !ok {
 				_, err := server.Host.Connect(nodeEvent.Node.GetConnectURL())
 				if err != nil {
 					log.Errorf("connect to gate err:%s", err)
@@ -89,7 +89,7 @@ func EtcdNodeEventListener(nodeEvent *etcd.NodeEvent) {
 		}
 	case etcd.EventDelete:
 		if nodeEvent.Node.GetType() == etcd.ServerTypeGate {
-			session, ok := server.Host.Node.GetSession(network.DriverTypeCluster, nodeEvent.Node.GetConnectURL())
+			session, ok := server.Host.Node.GetSession(network.DriverTypeHost, nodeEvent.Node.GetConnectURL())
 			if ok {
 				session.Close()
 			}

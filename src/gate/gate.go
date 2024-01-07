@@ -59,7 +59,7 @@ func Main() {
 	name := fmt.Sprintf("%s:%d", config.ServerType, config.ServerID)
 	// 网关服务构造器
 	builder := idl.NewGateBuilder(func(service cluster.IService) (idl.IGate, error) {
-		return NewRealGate(service.Context().(*cluster.GateRemote)), nil
+		return NewRealGate(service.Context().(*cluster.GateAgent)), nil
 	})
 	log.Infof("gate: %s addr: %s inner addr: %s", name, addr, hostAddr)
 	server, err := cluster.NewGate(name, addr, hostAddr, builder, network.ProtocolTCP)

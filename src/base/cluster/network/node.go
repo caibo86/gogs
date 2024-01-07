@@ -17,10 +17,10 @@ import (
 type DriverType int32
 
 const (
-	DriverTypeCluster DriverType = 1
-	DriverTypeClient  DriverType = 2
-	DriverTypeGate    DriverType = 3
-	DriverTypeActor   DriverType = 4
+	DriverTypeHost   DriverType = 1
+	DriverTypeClient DriverType = 2
+	DriverTypeGate   DriverType = 3
+	DriverTypeActor  DriverType = 4
 )
 
 // ProtocolType 协议类型

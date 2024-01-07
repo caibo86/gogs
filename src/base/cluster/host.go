@@ -1,5 +1,5 @@
 // -------------------------------------------
-// @file      : cluster.go
+// @file      : host.go
 // @author    : 蔡波
 // @contact   : caibo923@gmail.com
 // @time      : 2023/12/29 下午6:28
@@ -47,7 +47,7 @@ func NewHost(localAddr string) *Host {
 		registryExit:           make(chan struct{}, 1),
 	}
 	_ = host.Node.NewDriver(
-		network.NewClusterDriver(
+		network.NewHostDriver(
 			localAddr,
 			func(session network.ISession) (network.ISessionHandler, error) {
 				return NewClusterRemote(host, session), nil
@@ -256,7 +256,7 @@ func (host *Host) UnregisterBuilder(serviceType string) IServiceBuilder {
 
 // Connect 对集群中指定地址的节点发起连接
 func (host *Host) Connect(remoteAddr string) (IAgent, error) {
-	session, err := host.Node.NewSession(network.DriverTypeCluster, remoteAddr, network.ConnectionTypeOut)
+	session, err := host.Node.NewSession(network.DriverTypeHost, remoteAddr, network.ConnectionTypeOut)
 	if session == nil {
 		return nil, err
 	}

@@ -15,11 +15,11 @@ import (
 
 // RealGate 实际网关服务提供者
 type RealGate struct {
-	remote *cluster.GateRemote
+	remote *cluster.GateAgent
 }
 
 // NewRealGate 新建网关服务提供者
-func NewRealGate(remote *cluster.GateRemote) *RealGate {
+func NewRealGate(remote *cluster.GateAgent) *RealGate {
 	return &RealGate{
 		remote: remote,
 	}

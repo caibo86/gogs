@@ -18,7 +18,7 @@ func main() {
 	}()
 	log.Init(
 		log.SetIsOpenFile(true),
-		log.SetFilename("./log/gsc.log"),
+		log.SetFilename("./log/cbc.log"),
 	)
 	fmt.Println(11)
 	log.Panic("我是panic")

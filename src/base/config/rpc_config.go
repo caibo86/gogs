@@ -13,8 +13,8 @@ type RPCConfig struct {
 	Timeout                 int64 `yaml:"timeout"`                 // 超时时间,单位秒
 	ListenRetryInterval     int64 `yaml:"listenRetryInterval"`     // 监听重试时间,单位秒
 	GateSessionCache        int   `yaml:"gateSessionCache"`        // 网关会话消息发送缓存大小
-	ClusterSessionCache     int   `yaml:"clusterSessionCache"`     // 集群会话消息发送缓存大小
-	ClusterSessionHeartbeat int   `yaml:"clusterSessionHeartbeat"` // 集群会话心跳间隔,单位秒
+	HostSessionCache        int   `yaml:"hostSessionCache"`        // 集群会话消息发送缓存大小
+	HostSessionHeartbeat    int   `yaml:"hostSessionHeartbeat"`    // 集群会话心跳间隔,单位秒
 	ClientSessionCache      int   `yaml:"clientSessionCache"`      // 客户端会话消息发送缓存大小
 	ClusterRegistryInterval int   `yaml:"clusterRegistryInterval"` // 集群服务注册时间间隔,单位秒
 	ClusterRegistryMax      int   `yaml:"clusterRegistryMax"`      // 集群单次注册服务的最大数量
@@ -27,8 +27,8 @@ func NewRPCConfig() *RPCConfig {
 		Timeout:                 5,
 		ListenRetryInterval:     5,
 		GateSessionCache:        4096,
-		ClusterSessionCache:     4096,
-		ClusterSessionHeartbeat: 30,
+		HostSessionCache:        4096,
+		HostSessionHeartbeat:    30,
 		ClientSessionCache:      64,
 		ClusterRegistryInterval: 2,
 		ClusterRegistryMax:      128,
@@ -63,12 +63,12 @@ func GateSessionCache() int {
 	return GetRPCConfig().GateSessionCache
 }
 
-func ClusterSessionCache() int {
-	return GetRPCConfig().ClusterSessionCache
+func HostSessionCache() int {
+	return GetRPCConfig().HostSessionCache
 }
 
-func ClusterSessionHeartbeat() time.Duration {
-	return time.Duration(GetRPCConfig().ClusterSessionHeartbeat) * time.Second
+func HostSessionHeartbeat() time.Duration {
+	return time.Duration(GetRPCConfig().HostSessionHeartbeat) * time.Second
 }
 
 func ClientSessionCache() int {

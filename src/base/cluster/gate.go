@@ -18,12 +18,12 @@ import (
 
 // Gate 网关服务器
 type Gate struct {
-	*RPC                               // RPC管理器
-	sync.RWMutex                       // 读写锁
-	name         string                // 网关名字
-	host         *Host                 // 集群服务器
-	gameServers  map[ID]IService       // Game以GameServer形式,保存在Gate
-	remotes      map[int64]*GateRemote // GateRemote列表,通过UserID索引
+	*RPC                              // RPC管理器
+	sync.RWMutex                      // 读写锁
+	name         string               // 网关名字
+	host         *Host                // 集群服务器
+	gameServers  map[ID]IService      // Game以GameServer形式,保存在Gate
+	remotes      map[int64]*GateAgent // GateRemote列表,通过UserID索引
 	builder      IServiceBuilder
 	idgen        int64 // session userID generator
 }
@@ -33,14 +33,14 @@ func NewGate(name, localAddr, hostAddr string, builder IServiceBuilder, protocol
 	gate := &Gate{
 		name:        name,
 		gameServers: make(map[ID]IService),
-		remotes:     make(map[int64]*GateRemote),
+		remotes:     make(map[int64]*GateAgent),
 		builder:     builder,
 	}
 	// 为网关创建集群节点服务器
 	gate.host = NewHost(hostAddr)
 	// 注册GateDriver
 	sessionHandler := func(session network.ISession) (network.ISessionHandler, error) {
-		return newGateRemote(gate, session, gate.GenSessionID())
+		return newGateAgent(gate, session, gate.GenSessionID())
 	}
 	err := gate.host.Node.NewDriver(network.NewGateDriver(localAddr, sessionHandler, protocol))
 	if err != nil {
@@ -106,7 +106,7 @@ func (gate *Gate) GenSessionID() int64 {
 }
 
 // sessionStatusChanged 会话状态变化
-func (gate *Gate) sessionStatusChanged(remote *GateRemote, status network.SessionStatus) {
+func (gate *Gate) sessionStatusChanged(remote *GateAgent, status network.SessionStatus) {
 	gate.Lock()
 	defer gate.Unlock()
 	if status == network.SessionStatusInConnected {
@@ -117,7 +117,7 @@ func (gate *Gate) sessionStatusChanged(remote *GateRemote, status network.Sessio
 }
 
 // RProxy 反向代理
-func (gate *Gate) RProxy(remote *GateRemote, userID int64, target string) (Err, error) {
+func (gate *Gate) RProxy(remote *GateAgent, userID int64, target string) (Err, error) {
 	gate.Lock()
 	defer gate.Unlock()
 	for _, gameServer := range gate.gameServers {

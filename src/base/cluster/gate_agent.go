@@ -1,5 +1,5 @@
 // -------------------------------------------
-// @file      : gate_remote.go
+// @file      : gate_agent.go
 // @author    : 蔡波
 // @contact   : caibo923@gmail.com
 // @time      : 2024/1/4 上午11:19
@@ -19,10 +19,10 @@ const (
 	gameID = ID(2)
 )
 
-// GateRemote 网关远程代理
+// GateAgent 网关远程代理
 // Gate和GateSession的中间层,每一个GateSession都有一个GateRemote
 // 实现了 IAgent 和 network.ISessionHandler 接口
-type GateRemote struct {
+type GateAgent struct {
 	gate       *Gate    // 所属网关
 	host       *Host    // 网关挂载的集群服务器
 	service    IService // 承载的服务
@@ -32,22 +32,22 @@ type GateRemote struct {
 	userID     int64            // 用户ID
 }
 
-// newGateRemote 新建网关远程代理
-func newGateRemote(gate *Gate, session network.ISession, sessionID int64) (*GateRemote, error) {
-	remote := &GateRemote{
+// newGateAgent 新建网关远程代理
+func newGateAgent(gate *Gate, session network.ISession, sessionID int64) (*GateAgent, error) {
+	remote := &GateAgent{
 		gate:      gate,
 		host:      gate.host,
 		session:   session,
 		sessionID: sessionID,
 	}
-	// 网关本地服务的上下文存的这个GateRemote
+	// 网关本地服务的上下文存的这个 GateAgent
 	var err error
 	remote.service, err = gate.builder.NewService(session.Name(), gateID, remote)
 	return remote, err
 }
 
 // rProxy 网关代理
-func (remote *GateRemote) rProxy(userID int64, service IService) (Err, error) {
+func (remote *GateAgent) rProxy(userID int64, service IService) (Err, error) {
 	gameServer := service.(IGameServer)
 	rProxyMsg := &RProxyMsg{
 		UserID:    userID,
@@ -64,37 +64,37 @@ func (remote *GateRemote) rProxy(userID int64, service IService) (Err, error) {
 }
 
 // GameServer .
-func (remote *GateRemote) GameServer() IGameServer {
+func (remote *GateAgent) GameServer() IGameServer {
 	return remote.gameServer
 }
 
 // UserID .
-func (remote *GateRemote) UserID() int64 {
+func (remote *GateAgent) UserID() int64 {
 	return remote.userID
 }
 
 // Session .
-func (remote *GateRemote) Session() network.ISession {
+func (remote *GateAgent) Session() network.ISession {
 	return remote.session
 }
 
 // Post implements IAgent
-func (remote *GateRemote) Post(service IService, call *network.Call) error {
+func (remote *GateAgent) Post(service IService, call *network.Call) error {
 	return remote.gate.Post(remote.session, call)
 }
 
 // Wait implements IAgent
-func (remote *GateRemote) Wait(service IService, call *network.Call, timeout time.Duration) (Future, error) {
+func (remote *GateAgent) Wait(service IService, call *network.Call, timeout time.Duration) (Future, error) {
 	return remote.gate.Wait(remote.session, call, timeout)
 }
 
 // Write implements IAgent
-func (remote *GateRemote) Write(msg *network.Message) error {
+func (remote *GateAgent) Write(msg *network.Message) error {
 	return remote.session.Write(msg)
 }
 
 // SessionStatusChanged implements network.ISessionHandler
-func (remote *GateRemote) SessionStatusChanged(status network.SessionStatus) {
+func (remote *GateAgent) SessionStatusChanged(status network.SessionStatus) {
 	if status == network.SessionStatusClosed && remote.gameServer != nil {
 		remote.gate.sessionStatusChanged(remote, status)
 		rProxyMsg := &RProxyMsg{
@@ -107,7 +107,7 @@ func (remote *GateRemote) SessionStatusChanged(status network.SessionStatus) {
 }
 
 // Read implements network.ISessionHandler
-func (remote *GateRemote) Read(session network.ISession, msg *network.Message) {
+func (remote *GateAgent) Read(session network.ISession, msg *network.Message) {
 	switch msg.Type {
 	case network.MessageTypeCall:
 		go remote.handleCall(msg.Data)
@@ -117,7 +117,7 @@ func (remote *GateRemote) Read(session network.ISession, msg *network.Message) {
 }
 
 // handleCall 处理对本地网关服务的调用
-func (remote *GateRemote) handleCall(data []byte) {
+func (remote *GateAgent) handleCall(data []byte) {
 	call, err := network.UnmarshalCall(data)
 	if err != nil {
 		log.Warnf("unmarshal call from %s err: %s", remote.session, err)
@@ -166,7 +166,7 @@ func (remote *GateRemote) handleCall(data []byte) {
 }
 
 // handleReturn 处理对远程服务的调用返回
-func (remote *GateRemote) handleReturn(data []byte) {
+func (remote *GateAgent) handleReturn(data []byte) {
 	gameServer := remote.gameServer
 	if gameServer == nil {
 		return

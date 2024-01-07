@@ -1,5 +1,5 @@
 // -------------------------------------------
-// @file      : cluster.go
+// @file      : host_agent.go
 // @author    : 蔡波
 // @contact   : caibo923@gmail.com
 // @time      : 2024/1/4 上午12:40
@@ -15,7 +15,7 @@ import (
 
 // HostAgent 集群会话代理
 // 实现了 network.ISessionHandler 接口和 IAgent 接口
-// 将 Host 与 ClusterSession 连接起来 在两者中间实现消息传递
+// 将 Host 与 HostSession 连接起来 在两者中间实现消息传递
 // 负责识别Message结构 根据不同Code调用上层函数
 type HostAgent struct {
 	session network.ISession // 远程服务 传输层通道

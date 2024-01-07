@@ -1,5 +1,5 @@
 // -------------------------------------------
-// @file      : gsc.go
+// @file      : cbc.go
 // @author    : 蔡波
 // @contact   : caibo923@gmail.com
 // @time      : 2023/12/19 下午3:53
@@ -20,7 +20,7 @@ const ignoreErr = "sync /dev/stdout: invalid argument"
 
 func main() {
 	log.Init(
-		log.SetFilename("log/gs2go.log"),
+		log.SetFilename("log/cb2go.log"),
 		log.SetIsOpenFile(true),
 		log.SetIsAsync(false),
 		// log.SetStacktrace(zap.PanicLevel),
@@ -40,7 +40,7 @@ func main() {
 	flag.StringVar(&moduleName, "module", "gogs", "golang module name")
 	flag.Parse()
 	log.Infof("Set module name: %s", moduleName)
-	packages := []string{"base/cluster/network", "base/cluster"}
+	packages := []string{"base/cluster"}
 	compiler := cblang.NewCompiler()
 	log.Info("Start compiling packages: ", flag.Args())
 	packages = append(packages, flag.Args()...)

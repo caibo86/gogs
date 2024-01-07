@@ -111,18 +111,18 @@ func LoadGlobalConfig(cfgFilename string) {
 	baseFilename := path.Join(basePath, "base.yml")
 	baseData, err := os.ReadFile(baseFilename)
 	if err != nil {
-		cberrors.PanicfWith(err, "LoadGlobalConfig ReadFile(%s) err", baseFilename)
+		cberrors.Panic("LoadGlobalConfig ReadFile(%s) err: %s", baseFilename, err)
 		return
 	}
 	filename := path.Join(basePath, cfgFilename)
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		cberrors.PanicfWith(err, "LoadGlobalConfig ReadFile(%s) err", filename)
+		cberrors.Panic("LoadGlobalConfig ReadFile(%s) err: %s", filename, err)
 		return
 	}
 	content := os.ExpandEnv(string(baseData) + string(data))
 	if err = ParseGlobalConfig(content); err != nil {
-		cberrors.PanicWith(err, "ParseGlobalConfig err")
+		cberrors.Panic("ParseGlobalConfig err: %s", err)
 	}
 }
 

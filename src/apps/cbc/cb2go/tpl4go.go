@@ -370,11 +370,11 @@ func (builder *{{$Service}}Builder) NewService(
 
 // NewRemoteService creating a new {{$Service}} RemoteService
 func (builder *{{$Service}}Builder) NewRemoteService(
-	remote cluster.IRemote, name string, lid cluster.ID, 
+	agent cluster.IAgent, name string, lid cluster.ID, 
 	rid cluster.ID, context interface{}) cluster.IRemoteService {
     return &{{$Service}}RemoteService{
         name: name,
-        remote: remote,
+        agent: agent,
         context: context,
         lid: lid,
         rid: rid,
@@ -500,9 +500,9 @@ func (service *{{$Service}}Service){{$Name}}{{params .Params}}{{returnParams .Re
 
 
 
-// {{$Service}}RemoteService a remote service inherited cluster.IRemote
+// {{$Service}}RemoteService a remote service inherited cluster.IAgent
 type {{$Service}}RemoteService struct {
-    remote cluster.IRemote
+    agent cluster.IAgent
     rid cluster.ID // remote id
     lid cluster.ID // local id
     name string
@@ -531,9 +531,9 @@ func (service *{{$Service}}RemoteService) RemoteID() cluster.ID {
     return service.rid
 }
 
-// Agent remote service IRemote
-func (service *{{$Service}}RemoteService) Agent() cluster.IRemote {
-    return service.remote
+// Agent remote service session agent
+func (service *{{$Service}}RemoteService) Agent() cluster.IAgent {
+    return service.agent
 }
 
 
@@ -558,7 +558,7 @@ func (service *{{$Service}}RemoteService) Call(call *network.Call) (callReturn *
 	{{range .Methods}} {{$Name := .Name}} case {{.ID}}:
 		// {{$Name}}
         {{if .Return}} var future cluster.Future
-        future, err = service.remote.Wait(service, call, service.timeout)
+        future, err = service.agent.Wait(service, call, service.timeout)
         if err != nil {
             err = cberrors.New("call {{$Service}}RemoteService#{{$Name}} err: %s", err)
             return
@@ -574,7 +574,7 @@ func (service *{{$Service}}RemoteService) Call(call *network.Call) (callReturn *
             return
         }
         return
-        {{else}} err = service.remote.Post(service,call)
+        {{else}} err = service.agent.Post(service,call)
         if err != nil {
             err = cberrors.New("post {{$Service}}RemoteService#{{$Name}} err: %s", err)
             return
@@ -597,7 +597,7 @@ func (service *{{$Service}}RemoteService){{$Name}}{{params .Params}}{{returnPara
     call.Params = append(call.Params, param{{.ID}})
     {{end}}
     {{if .Return}} var future cluster.Future
-    future,err = service.remote.Wait(service, call, service.timeout)
+    future,err = service.agent.Wait(service, call, service.timeout)
     if err != nil {
         err = cberrors.New("call {{$Service}}RemoteService#{{$Name}} err: %s" ,err)
         return
@@ -617,7 +617,7 @@ func (service *{{$Service}}RemoteService){{$Name}}{{params .Params}}{{returnPara
         err = cberrors.New("unmarshal {{$Service}}RemoteService#{{$Name}} return{{.ID}} {{typeName .Type}} err: %s", err)
         return
     }
-	{{end}} {{else}} err = service.remote.Post(service, call)
+	{{end}} {{else}} err = service.agent.Post(service, call)
     if err != nil {
         err = cberrors.New("post {{$Service}}RemoteService#{{$Name}} err: %s", err)
         return

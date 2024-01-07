@@ -9,7 +9,7 @@ pkg/
 .~*
 *.out
 *.cb.go
-src/apps/gsc/gs2go/gen4go
+src/apps/cbc/cb2go/gen4go
 *.cb.cbb
 *.log
 *.err

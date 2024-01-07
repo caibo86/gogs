@@ -22,13 +22,13 @@ LD_FLAGS="\
 
 GO_FLAGS=-ldflags=$(LD_FLAGS) -tags=$(GO_TAGS)
 
-gsc:
-	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/gsc/gs2go
+cbc:
+	cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/cbc/cb2go
 
 t:
-	@rm -f src/base/cblang/*.gs.go
-	@cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/gsc/gs2go
-	GOPATH=$(GOPATH) gs2go --module gogs gs idl
+	@rm -f src/base/cblang/*.cb.go
+	@cd src && GOBIN=$(GOBIN) $(GO) install $(GO_FLAGS) gogs/apps/cbc/cb2go
+	GOPATH=$(GOPATH) cb2go --module gogs gs idl
 
 getdeepcopy:
 	cd src/cmd/gengo/examples/deepcopy-gen && go build . && cp deepcopy-gen $(GOPATH)/bin

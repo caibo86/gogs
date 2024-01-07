@@ -47,7 +47,7 @@ func (driver *GateDriver) newGateSession(key []byte, conn net.Conn, websocketCon
 	// 创建会话处理器
 	handler, err := driver.sessionHandlerBuilder(session)
 	if err != nil {
-		return nil, cberrors.NewfWith(err, "%s session(%s) create session handler err", driver, session)
+		return nil, cberrors.New("%s session(%s) create session handler err: %s", driver, session, err)
 	}
 	session.handler = handler
 	// 启动发送和接收

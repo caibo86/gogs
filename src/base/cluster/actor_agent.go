@@ -1,5 +1,5 @@
 // -------------------------------------------
-// @file      : actor_remote.go
+// @file      : actor_agent.go
 // @author    : 蔡波
 // @contact   : caibo923@gmail.com
 // @time      : 2024/1/4 下午4:22
@@ -13,15 +13,15 @@ import (
 	"time"
 )
 
-type ActorRemote struct {
+type ActorAgent struct {
 	system   *ActorSystem // 本地角色系统引用
 	name     string       // 角色名字
 	neighbor IActorSystem
 }
 
 // newActorRemote 新建角色远程代理
-func newActorRemote(system *ActorSystem, name string, neighbor IActorSystem) *ActorRemote {
-	return &ActorRemote{
+func newActorRemote(system *ActorSystem, name string, neighbor IActorSystem) *ActorAgent {
+	return &ActorAgent{
 		system:   system,
 		name:     name,
 		neighbor: neighbor,
@@ -29,30 +29,30 @@ func newActorRemote(system *ActorSystem, name string, neighbor IActorSystem) *Ac
 }
 
 // Name 获取角色名字
-func (remote *ActorRemote) Name() string {
-	return remote.name
+func (agent *ActorAgent) Name() string {
+	return agent.name
 }
 
 // Post implement IAgent
-func (remote *ActorRemote) Post(service IService, call *network.Call) error {
-	return remote.system.Post(remote, call)
+func (agent *ActorAgent) Post(service IService, call *network.Call) error {
+	return agent.system.Post(agent, call)
 }
 
 // Wait implement IAgent
-func (remote *ActorRemote) Wait(service IService, call *network.Call, timeout time.Duration) (Future, error) {
-	return remote.system.Wait(remote, call, timeout)
+func (agent *ActorAgent) Wait(service IService, call *network.Call, timeout time.Duration) (Future, error) {
+	return agent.system.Wait(agent, call, timeout)
 }
 
 // Write implement IAgent
-func (remote *ActorRemote) Write(msg *network.Message) error {
+func (agent *ActorAgent) Write(msg *network.Message) error {
 	if msg.Type == network.MessageTypeCall {
 		return cberrors.New("check actor remote service implement")
 	}
 	actorMsg := &ActorMsg{
-		ActorName: remote.name,
+		ActorName: agent.name,
 		Data:      msg.Data,
 	}
-	callReturn, status, err := remote.neighbor.ActorInvoke(actorMsg)
+	callReturn, status, err := agent.neighbor.ActorInvoke(actorMsg)
 	if err != nil {
 		return err
 	}
@@ -60,37 +60,37 @@ func (remote *ActorRemote) Write(msg *network.Message) error {
 		return status
 	}
 	if len(callReturn.Params) != 0 {
-		remote.system.Notify(callReturn)
+		agent.system.Notify(callReturn)
 	}
 	return nil
 }
 
 // Close implement IAgent
-func (remote *ActorRemote) Close() {
+func (agent *ActorAgent) Close() {
 }
 
 // Session implement IAgent
-func (remote *ActorRemote) Session() network.ISession {
+func (agent *ActorAgent) Session() network.ISession {
 	cberrors.Panic("not here")
 	return nil
 }
 
 // Status implement network.ISession
-func (remote *ActorRemote) Status() network.SessionStatus {
+func (agent *ActorAgent) Status() network.SessionStatus {
 	return network.SessionStatusInConnected
 }
 
 // DriverType implement network.ISession
-func (remote *ActorRemote) DriverType() network.DriverType {
+func (agent *ActorAgent) DriverType() network.DriverType {
 	return network.DriverTypeActor
 }
 
 // Handler implement network.ISession
-func (remote *ActorRemote) Handler() network.ISessionHandler {
+func (agent *ActorAgent) Handler() network.ISessionHandler {
 	return nil
 }
 
 // RemoteAddr implement network.ISession
-func (remote *ActorRemote) RemoteAddr() string {
+func (agent *ActorAgent) RemoteAddr() string {
 	return ""
 }
