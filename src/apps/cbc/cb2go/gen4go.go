@@ -222,55 +222,58 @@ func (gen *Gen4Go) lowerFirst(name string) string {
 }
 
 // calTypeSize 根据类型获取计算大小的函数
-func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
+func (gen *Gen4Go) calTypeSize(field ast.Expr, name string) string {
+	if name == "" {
+		name = "m." + field.Name()
+	}
 	switch field.Type.(type) {
 	case *ast.TypeRef:
 		ref := field.Type.(*ast.TypeRef)
 		switch ref.Ref.Name() {
 		case "Bool":
 			return fmt.Sprintf(
-				`if m.%s {
+				`if %s {
 					n += 3
 				}`,
-				field.Name())
+				name)
 		case "Byte", "Int8", "Uint8":
 			return fmt.Sprintf(
 				`if m.%s != 0 {
 					n += 3
 				}`,
-				field.Name())
+				name)
 		case "Int16", "Uint16":
 			return fmt.Sprintf(
 				`if m.%s != 0 {
 					n += 4
 				}`,
-				field.Name())
+				name)
 		case "Int32", "Uint32", "Float32":
 			return fmt.Sprintf(
 				`if m.%s != 0 {
 					n += 6
 				}`,
-				field.Name())
+				name)
 		case "Int64", "Uint64", "Float64":
 			return fmt.Sprintf(
 				`if m.%s != 0 {
 					n += 10
 				}`,
-				field.Name())
+				name)
 		case "String":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 					if l > 0 {
 					n += 6 + l 
 				}`,
-				field.Name())
+				name)
 		case "Bytes":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 					if l > 0 {
 					n += 6 + l 
 				}`,
-				field.Name())
+				name)
 		default:
 			switch ref.Ref.(type) {
 			case *ast.Enum:
@@ -278,14 +281,14 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 					`if m.%s != 0 {
 						n += 6
 					}`,
-					field.Name())
+					name)
 			case *ast.Table:
 				return fmt.Sprintf(
 					`if m.%s != nil {
 						l = m.%s.Size()
 						n += 6 + l
 					}`,
-					field.Name(), field.Name())
+					name, name)
 			default:
 				cberrors.Panic("not here %s", field.Type.Name())
 			}
@@ -305,28 +308,28 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 				if l > 0 {
 					n += 6 + l
 				}`,
-				field.Name())
+				name)
 		case "Uint16", "Int16":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 				if l > 0 {
 					n += 6 + l * 2
 				}`,
-				field.Name())
+				name)
 		case "Uint32", "Int32", "Float32":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 				if l > 0 {
 					n += 6 + l * 4
 				}`,
-				field.Name())
+				name)
 		case "Uint64", "Int64", "Float64":
 			return fmt.Sprintf(
 				`l = len(m.%s)
 				if l > 0 {
 					n += 6 + l * 8
 				}`,
-				field.Name())
+				name)
 		case "String":
 			return fmt.Sprintf(
 				`if len(m.%s) > 0 {
@@ -336,7 +339,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 						n += 4 + l
 					}
 				}`,
-				field.Name(), field.Name())
+				name, name)
 		case "Bytes":
 			return fmt.Sprintf(
 				`if len(m.%s) > 0 {
@@ -346,7 +349,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 						n += 4 + l
 					}
 				}`,
-				field.Name(), field.Name())
+				name, name)
 		default:
 			switch ref.Ref.(type) {
 			case *ast.Enum:
@@ -355,7 +358,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 					if l > 0 {
 						n += 6 + l * 4
 					}`,
-					field.Name())
+					name)
 			case *ast.Table:
 				return fmt.Sprintf(
 					`l = len(m.%s)
@@ -365,7 +368,7 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 							n += 4 + e.Size()
 						}
 					}`,
-					field.Name(), field.Name())
+					name, name)
 			default:
 				cberrors.Panic("not here %s", field.Type.Name())
 			}
@@ -427,8 +430,8 @@ func (gen *Gen4Go) calTypeSize(field *ast.Field) string {
 							n += %s
 						}
 					}`,
-			field.Name(),
-			field.Name(),
+			name,
+			name,
 			keyStr,
 			valStr)
 	}
@@ -900,110 +903,112 @@ func (gen *Gen4Go) marshalType(expr ast.Expr) string {
 			strings.Title(ref.NamePath[0]),
 		)
 	case *ast.Array:
-		// 数组
-		array := expr.(*ast.Array)
-		var str string
-		ref := slice.Element.(*ast.TypeRef)
-		if _, ok := keyMapping[ref.Ref.Name()]; ok {
-			return fmt.Sprintf(`if m.%s != nil {
-					in, out := &m.%s, &out.%s
-					*out = make([]%s, len(*in))
-					copy(*out,*in)
-				}`,
-				field.Name(), field.Name(), field.Name(), gen.typeName(ref))
-		}
-		switch ref.Ref.(type) {
-		case *ast.Table:
-			return fmt.Sprintf(`if m.%s != nil {
-					in, out := &m.%s, &out.%s
-					*out = make([]%s, len(*in))
-					for i:= range *in {
-						if (*in)[i] != nil {
-							in, out := &(*in)[i], &(*out)[i]	
-							*out = %s
-							(*in).CopyInto(*out)
-						}
-					}
-				}`,
-				field.Name(), field.Name(), field.Name(), gen.typeName(ref), gen.defaultVal(ref))
-		default:
-			return fmt.Sprintf(`if m.%s != nil {
-					in, out := &m.%s, &out.%s
-					*out = make([]%s, len(*in))
-					copy(*out,*in)
-				}`,
-				field.Name(), field.Name(), field.Name(), gen.typeName(ref))
-		}
-
-		var buff bytes.Buffer
-		if array.Element.Name() == ".cblang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "marshalByteArray", array); err != nil {
-				panic(err)
-			}
-		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "marshalArray", array); err != nil {
-				panic(err)
-			}
-		}
-		return buff.String()
+		// // 数组
+		// array := expr.(*ast.Array)
+		// var str string
+		// ref := slice.Element.(*ast.TypeRef)
+		// if _, ok := keyMapping[ref.Ref.Name()]; ok {
+		// 	return fmt.Sprintf(`if m.%s != nil {
+		// 			in, out := &m.%s, &out.%s
+		// 			*out = make([]%s, len(*in))
+		// 			copy(*out,*in)
+		// 		}`,
+		// 		field.Name(), field.Name(), field.Name(), gen.typeName(ref))
+		// }
+		// switch ref.Ref.(type) {
+		// case *ast.Table:
+		// 	return fmt.Sprintf(`if m.%s != nil {
+		// 			in, out := &m.%s, &out.%s
+		// 			*out = make([]%s, len(*in))
+		// 			for i:= range *in {
+		// 				if (*in)[i] != nil {
+		// 					in, out := &(*in)[i], &(*out)[i]
+		// 					*out = %s
+		// 					(*in).CopyInto(*out)
+		// 				}
+		// 			}
+		// 		}`,
+		// 		field.Name(), field.Name(), field.Name(), gen.typeName(ref), gen.defaultVal(ref))
+		// default:
+		// 	return fmt.Sprintf(`if m.%s != nil {
+		// 			in, out := &m.%s, &out.%s
+		// 			*out = make([]%s, len(*in))
+		// 			copy(*out,*in)
+		// 		}`,
+		// 		field.Name(), field.Name(), field.Name(), gen.typeName(ref))
+		// }
+		//
+		// var buff bytes.Buffer
+		// if array.Element.Name() == ".cblang.Byte" {
+		// 	if err := gen.tpl.ExecuteTemplate(&buff, "marshalByteArray", array); err != nil {
+		// 		panic(err)
+		// 	}
+		// } else {
+		// 	if err := gen.tpl.ExecuteTemplate(&buff, "marshalArray", array); err != nil {
+		// 		panic(err)
+		// 	}
+		// }
+		// return buff.String()
+		return ""
 	case *ast.Slice:
-		// 切片
-		slice := expr.(*ast.Slice)
-		ref := slice.Element.(*ast.TypeRef)
-		if _, ok := writeMapping[ref.Ref.Name()]; ok {
-			if ref.Ref.Name() == "Byte" {
-				return fmt.Sprintf(
-					`if len(m.%s) > 0 {
-						i = network.WriteFieldID(data, i , %d)
-						i = network.WriteBytes(data, i, m.%s)
-					}`,
-					field.Name(),
-					field.ID,
-					field.Name())
-			} else {
-				str = fmt.Sprintf("i = %s(data, i, e)", str)
-			}
-			return fmt.Sprintf(`if m.%s != nil {
-					in, out := &m.%s, &out.%s
-					*out = make([]%s, len(*in))
-					copy(*out,*in)
-				}`,
-				field.Name(), field.Name(), field.Name(), gen.typeName(ref))
-		}
-		switch ref.Ref.(type) {
-		case *ast.Table:
-			return fmt.Sprintf(`if m.%s != nil {
-					in, out := &m.%s, &out.%s
-					*out = make([]%s, len(*in))
-					for i:= range *in {
-						if (*in)[i] != nil {
-							in, out := &(*in)[i], &(*out)[i]	
-							*out = %s
-							(*in).CopyInto(*out)
-						}
-					}
-				}`,
-				field.Name(), field.Name(), field.Name(), gen.typeName(ref), gen.defaultVal(ref))
-		default:
-			return fmt.Sprintf(`if m.%s != nil {
-					in, out := &m.%s, &out.%s
-					*out = make([]%s, len(*in))
-					copy(*out,*in)
-				}`,
-				field.Name(), field.Name(), field.Name(), gen.typeName(ref))
-		}
-
-		var buff bytes.Buffer
-		if slice.Element.Name() == ".cblang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "marshalByteSlice", slice); err != nil {
-				panic(err)
-			}
-		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "marshalSlice", slice); err != nil {
-				panic(err)
-			}
-		}
-		return buff.String()
+		// // 切片
+		// slice := expr.(*ast.Slice)
+		// ref := slice.Element.(*ast.TypeRef)
+		// if _, ok := writeMapping[ref.Ref.Name()]; ok {
+		// 	if ref.Ref.Name() == "Byte" {
+		// 		return fmt.Sprintf(
+		// 			`if len(m.%s) > 0 {
+		// 				i = network.WriteFieldID(data, i , %d)
+		// 				i = network.WriteBytes(data, i, m.%s)
+		// 			}`,
+		// 			field.Name(),
+		// 			field.ID,
+		// 			field.Name())
+		// 	} else {
+		// 		str = fmt.Sprintf("i = %s(data, i, e)", str)
+		// 	}
+		// 	return fmt.Sprintf(`if m.%s != nil {
+		// 			in, out := &m.%s, &out.%s
+		// 			*out = make([]%s, len(*in))
+		// 			copy(*out,*in)
+		// 		}`,
+		// 		field.Name(), field.Name(), field.Name(), gen.typeName(ref))
+		// }
+		// switch ref.Ref.(type) {
+		// case *ast.Table:
+		// 	return fmt.Sprintf(`if m.%s != nil {
+		// 			in, out := &m.%s, &out.%s
+		// 			*out = make([]%s, len(*in))
+		// 			for i:= range *in {
+		// 				if (*in)[i] != nil {
+		// 					in, out := &(*in)[i], &(*out)[i]
+		// 					*out = %s
+		// 					(*in).CopyInto(*out)
+		// 				}
+		// 			}
+		// 		}`,
+		// 		field.Name(), field.Name(), field.Name(), gen.typeName(ref), gen.defaultVal(ref))
+		// default:
+		// 	return fmt.Sprintf(`if m.%s != nil {
+		// 			in, out := &m.%s, &out.%s
+		// 			*out = make([]%s, len(*in))
+		// 			copy(*out,*in)
+		// 		}`,
+		// 		field.Name(), field.Name(), field.Name(), gen.typeName(ref))
+		// }
+		//
+		// var buff bytes.Buffer
+		// if slice.Element.Name() == ".cblang.Byte" {
+		// 	if err := gen.tpl.ExecuteTemplate(&buff, "marshalByteSlice", slice); err != nil {
+		// 		panic(err)
+		// 	}
+		// } else {
+		// 	if err := gen.tpl.ExecuteTemplate(&buff, "marshalSlice", slice); err != nil {
+		// 		panic(err)
+		// 	}
+		// }
+		// return buff.String()
+		return ""
 	case *ast.Map:
 		// 字典
 		hash := expr.(*ast.Map)
@@ -1052,30 +1057,31 @@ func (gen *Gen4Go) unmarshalType(expr ast.Expr) string {
 		}
 		return buff.String()
 	case *ast.Slice:
-		// 切片
-		slice := expr.(*ast.Slice)
-		ref := slice.Element.(*ast.TypeRef)
-		var str string
-		if _, ok := readMapping[ref.Ref.Name()]; ok {
-			if ref.Ref.Name() == "Byte" {
-				str = `network.ReadBytes(data, i)`
-			} else {
-				str = fmt.Sprintf(`network.Read%s(data, i)`, gen.typeName(ref))
-			}
-		}
-
-		return fmt.Sprintf(`func(data []byte) (%s, error) {
-			var i int 
-			var length uint32
-			var ret %s
-			i, length = network.ReadUint32(data)
-			if length > 0 {
-				ret = make(%s, length)
-				for j := uint32(0); j < length; j++ {
-					ret[j] = 
-				}
-			}
-		}`, gen.typeName(slice), gen.typeName(slice), gen.typeName(slice))
+		// // 切片
+		// slice := expr.(*ast.Slice)
+		// ref := slice.Element.(*ast.TypeRef)
+		// var str string
+		// if _, ok := readMapping[ref.Ref.Name()]; ok {
+		// 	if ref.Ref.Name() == "Byte" {
+		// 		str = `network.ReadBytes(data, i)`
+		// 	} else {
+		// 		str = fmt.Sprintf(`network.Read%s(data, i)`, gen.typeName(ref))
+		// 	}
+		// }
+		//
+		// return fmt.Sprintf(`func(data []byte) (%s, error) {
+		// 	var i int
+		// 	var length uint32
+		// 	var ret %s
+		// 	i, length = network.ReadUint32(data)
+		// 	if length > 0 {
+		// 		ret = make(%s, length)
+		// 		for j := uint32(0); j < length; j++ {
+		// 			ret[j] =
+		// 		}
+		// 	}
+		// }`, gen.typeName(slice), gen.typeName(slice), gen.typeName(slice))
+		return ""
 	case *ast.Map:
 		// 字典
 		hash := expr.(*ast.Map)

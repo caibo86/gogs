@@ -45,16 +45,16 @@ struct Message {
 
 // 一次调用
 struct Call {
-	ID        uint32  = 1; // 流水号
-	ServiceID uint32  = 2; // 服务ID
-	MethodID  uint32  = 3; // 方法ID
-	Params    []bytes = 4; // 序列化后的入参
+	ID        uint32 = 1; // 流水号
+	ServiceID uint32 = 2; // 服务ID
+	MethodID  uint32 = 3; // 方法ID
+	Params    []byte = 4; // 序列化后的入参
 }
 
 // 返回
 struct Return {
-	ID        uint32  = 1; // 流水号
-	ServiceID uint32  = 2; // 服务ID
-	Params    []bytes = 3; // 序列化后的返回值
+	ID        uint32 = 1; // 流水号
+	ServiceID uint32 = 2; // 服务ID
+	Params    []byte = 3; // 序列化后的返回值
 }
 
