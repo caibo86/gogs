@@ -16,9 +16,24 @@ import (
 
 // Param 参数表达式
 type Param struct {
-	BaseExpr      // 内嵌基本表达式实现
-	ID       int  // 参数ID
-	Type     Expr // 参数类型
+	BaseExpr        // 内嵌基本表达式实现
+	ID       uint16 // 参数ID
+	Type     Expr   // 参数类型
+}
+
+// GetName implement IField
+func (param *Param) GetName() string {
+	return fmt.Sprintf("arg%d", param.ID)
+}
+
+// GetID implement IField
+func (param *Param) GetID() uint16 {
+	return param.ID
+}
+
+// GetType implement IField
+func (param *Param) GetType() Expr {
+	return param.Type
 }
 
 // Method 方法表达式
@@ -74,7 +89,7 @@ func (method *Method) ReturnParams() uint16 {
 func (method *Method) NewReturn(paramType Expr) *Param {
 	// 用给定类型表达式做类型及当前方法返回参数列表长度做ID 进行初始化
 	param := &Param{
-		ID:   len(method.Return),
+		ID:   uint16(len(method.Return)),
 		Type: paramType,
 	}
 	// 设置类型节点的父节点为此参数节点
@@ -92,7 +107,7 @@ func (method *Method) NewReturn(paramType Expr) *Param {
 func (method *Method) NewParam(paramType Expr) *Param {
 	// 用给定类型表达式做类型及当前方法返回参数列表长度做ID 进行初始化
 	param := &Param{
-		ID:   len(method.Params),
+		ID:   uint16(len(method.Params)),
 		Type: paramType,
 	}
 	// 设置类型节点的父节点为此参数节点

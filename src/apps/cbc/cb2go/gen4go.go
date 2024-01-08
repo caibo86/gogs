@@ -208,9 +208,21 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"printCommentsToLine": gen.printCommentsToLine,
 		"marshalType":         gen.marshalType,
 		"unmarshalType":       gen.unmarshalType,
+		"addReceiver":         gen.addReceiver,
+		"addArg":              gen.addArg,
 	}
 	gen.tpl, err = template.New("golang").Funcs(functions).Parse(tpl4go)
 	return
+}
+
+// addReceiver 添加接收者
+func (gen *Gen4Go) addReceiver(name string) string {
+	return "m." + name
+}
+
+// addArg 参数名
+func (gen *Gen4Go) addArg(id uint16) string {
+	return fmt.Sprintf("arg%d", id)
 }
 
 // lowerFirst 首字母小写
@@ -222,13 +234,10 @@ func (gen *Gen4Go) lowerFirst(name string) string {
 }
 
 // calTypeSize 根据类型获取计算大小的函数
-func (gen *Gen4Go) calTypeSize(field ast.Expr, name string) string {
-	if name == "" {
-		name = "m." + field.Name()
-	}
-	switch field.Type.(type) {
+func (gen *Gen4Go) calTypeSize(t ast.Expr, name string) string {
+	switch t.(type) {
 	case *ast.TypeRef:
-		ref := field.Type.(*ast.TypeRef)
+		ref := t.(*ast.TypeRef)
 		switch ref.Ref.Name() {
 		case "Bool":
 			return fmt.Sprintf(
@@ -238,38 +247,38 @@ func (gen *Gen4Go) calTypeSize(field ast.Expr, name string) string {
 				name)
 		case "Byte", "Int8", "Uint8":
 			return fmt.Sprintf(
-				`if m.%s != 0 {
+				`if %s != 0 {
 					n += 3
 				}`,
 				name)
 		case "Int16", "Uint16":
 			return fmt.Sprintf(
-				`if m.%s != 0 {
+				`if %s != 0 {
 					n += 4
 				}`,
 				name)
 		case "Int32", "Uint32", "Float32":
 			return fmt.Sprintf(
-				`if m.%s != 0 {
+				`if %s != 0 {
 					n += 6
 				}`,
 				name)
 		case "Int64", "Uint64", "Float64":
 			return fmt.Sprintf(
-				`if m.%s != 0 {
+				`if %s != 0 {
 					n += 10
 				}`,
 				name)
 		case "String":
 			return fmt.Sprintf(
-				`l = len(m.%s)
+				`l = len(%s)
 					if l > 0 {
 					n += 6 + l 
 				}`,
 				name)
 		case "Bytes":
 			return fmt.Sprintf(
-				`l = len(m.%s)
+				`l = len(%s)
 					if l > 0 {
 					n += 6 + l 
 				}`,
@@ -278,63 +287,63 @@ func (gen *Gen4Go) calTypeSize(field ast.Expr, name string) string {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				return fmt.Sprintf(
-					`if m.%s != 0 {
+					`if %s != 0 {
 						n += 6
 					}`,
 					name)
 			case *ast.Table:
 				return fmt.Sprintf(
-					`if m.%s != nil {
-						l = m.%s.Size()
+					`if %s != nil {
+						l = %s.Size()
 						n += 6 + l
 					}`,
 					name, name)
 			default:
-				cberrors.Panic("not here %s", field.Type.Name())
+				cberrors.Panic("not here %s", t.Name())
 			}
 		}
 	case *ast.Slice, *ast.Array:
 		// 切片和数组
 		var ref *ast.TypeRef
-		if slice, ok := field.Type.(*ast.Slice); ok {
+		if slice, ok := t.(*ast.Slice); ok {
 			ref = slice.Element.(*ast.TypeRef)
 		} else {
-			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
+			ref = t.(*ast.Array).Element.(*ast.TypeRef)
 		}
 		switch ref.Ref.Name() {
 		case "Byte", "Int8", "Uint8", "Bool":
 			return fmt.Sprintf(
-				`l = len(m.%s)
+				`l = len(%s)
 				if l > 0 {
 					n += 6 + l
 				}`,
 				name)
 		case "Uint16", "Int16":
 			return fmt.Sprintf(
-				`l = len(m.%s)
+				`l = len(%s)
 				if l > 0 {
 					n += 6 + l * 2
 				}`,
 				name)
 		case "Uint32", "Int32", "Float32":
 			return fmt.Sprintf(
-				`l = len(m.%s)
+				`l = len(%s)
 				if l > 0 {
 					n += 6 + l * 4
 				}`,
 				name)
 		case "Uint64", "Int64", "Float64":
 			return fmt.Sprintf(
-				`l = len(m.%s)
+				`l = len(%s)
 				if l > 0 {
 					n += 6 + l * 8
 				}`,
 				name)
 		case "String":
 			return fmt.Sprintf(
-				`if len(m.%s) > 0 {
+				`if len(%s) > 0 {
 					n += 6
-					for _, s := range m.%s {
+					for _, s := range %s {
 						l = len(s)
 						n += 4 + l
 					}
@@ -342,7 +351,7 @@ func (gen *Gen4Go) calTypeSize(field ast.Expr, name string) string {
 				name, name)
 		case "Bytes":
 			return fmt.Sprintf(
-				`if len(m.%s) > 0 {
+				`if len(%s) > 0 {
 					n += 6
 					for _, s := range m.%s {
 						l = len(s)
@@ -354,28 +363,28 @@ func (gen *Gen4Go) calTypeSize(field ast.Expr, name string) string {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				return fmt.Sprintf(
-					`l = len(m.%s)
+					`l = len(%s)
 					if l > 0 {
 						n += 6 + l * 4
 					}`,
 					name)
 			case *ast.Table:
 				return fmt.Sprintf(
-					`l = len(m.%s)
+					`l = len(%s)
 					if l > 0 {
 						n += 6
-						for _, e := range m.%s {
+						for _, e := range %s {
 							n += 4 + e.Size()
 						}
 					}`,
 					name, name)
 			default:
-				cberrors.Panic("not here %s", field.Type.Name())
+				cberrors.Panic("not here %s", t.Name())
 			}
 		}
 	case *ast.Map:
 		// 字典
-		hash := field.Type.(*ast.Map)
+		hash := t.(*ast.Map)
 		var keyStr string
 		var valStr string
 		ref := hash.Key.(*ast.TypeRef)
@@ -421,9 +430,9 @@ func (gen *Gen4Go) calTypeSize(field ast.Expr, name string) string {
 			}
 		}
 		return fmt.Sprintf(
-			`if len(m.%s) > 0 {
+			`if len(%s) > 0 {
 						n += 6
-						for k, v := range m.%s {
+						for k, v := range %s {
 							_ = k
 							_ = v
 							n += %s
@@ -439,8 +448,8 @@ func (gen *Gen4Go) calTypeSize(field ast.Expr, name string) string {
 	return "unknown"
 }
 
-// writeType 根据字段类型生成写入函数
-func (gen *Gen4Go) writeType(field *ast.Field) string {
+// writeType 根据字段类型生成写入函数 TODO
+func (gen *Gen4Go) writeType(field ast.IField) string {
 	switch field.Type.(type) {
 	case *ast.TypeRef:
 		var str string

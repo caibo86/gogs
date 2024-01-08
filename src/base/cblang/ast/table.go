@@ -12,11 +12,32 @@ import (
 	"strconv"
 )
 
+type IField interface {
+	GetName() string
+	GetID() uint16
+	GetType() Expr
+}
+
 // Field 结构体的字段,表达式
 type Field struct {
 	BaseExpr        // 内嵌基本表达式实现
 	ID       uint16 // ID 从0开始的
 	Type     Expr   // 类型表达式
+}
+
+// GetName implements IField
+func (field *Field) GetName() string {
+	return field.Name()
+}
+
+// GetID implements IField
+func (field *Field) GetID() uint16 {
+	return field.ID
+}
+
+// GetType implements IField
+func (field *Field) GetType() Expr {
+	return field.Type
 }
 
 // Table 表或者结构体,表达式
