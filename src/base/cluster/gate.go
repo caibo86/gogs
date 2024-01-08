@@ -128,7 +128,7 @@ func (gate *Gate) Login(agent *GateAgent, ntf *UserLoginNtf, ci *ClientInfo) (Er
 			gameServer := service.(IGameServer)
 			userID, code, err := gameServer.Login(ntf, ci)
 			if err != nil || code != ErrOK {
-				return code, cberrors.New("call GameServer#Login(%s) code: %s err: %s", gameServer, code, err)
+				return code, cberrors.New("call GameServer#Login(%s) code: %s, err: %v", gameServer, code, err)
 			}
 			agent.gameServer = gameServer
 			agent.userID = userID

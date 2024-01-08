@@ -38,7 +38,9 @@ func NewHostDriver(localAddr string, builder SessionHandlerBuilder) *HostDriver 
 		sessionHandlerBuilder: builder,
 		name:                  fmt.Sprintf("HostDriver(%s)", localAddr),
 	}
-	go driver.run()
+	if localAddr != "" {
+		go driver.run()
+	}
 	return driver
 }
 

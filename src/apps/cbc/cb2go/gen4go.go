@@ -902,13 +902,46 @@ func (gen *Gen4Go) marshalType(expr ast.Expr) string {
 	case *ast.Array:
 		// 数组
 		array := expr.(*ast.Array)
+		var str string
+		ref := slice.Element.(*ast.TypeRef)
+		if _, ok := keyMapping[ref.Ref.Name()]; ok {
+			return fmt.Sprintf(`if m.%s != nil {
+					in, out := &m.%s, &out.%s
+					*out = make([]%s, len(*in))
+					copy(*out,*in)
+				}`,
+				field.Name(), field.Name(), field.Name(), gen.typeName(ref))
+		}
+		switch ref.Ref.(type) {
+		case *ast.Table:
+			return fmt.Sprintf(`if m.%s != nil {
+					in, out := &m.%s, &out.%s
+					*out = make([]%s, len(*in))
+					for i:= range *in {
+						if (*in)[i] != nil {
+							in, out := &(*in)[i], &(*out)[i]	
+							*out = %s
+							(*in).CopyInto(*out)
+						}
+					}
+				}`,
+				field.Name(), field.Name(), field.Name(), gen.typeName(ref), gen.defaultVal(ref))
+		default:
+			return fmt.Sprintf(`if m.%s != nil {
+					in, out := &m.%s, &out.%s
+					*out = make([]%s, len(*in))
+					copy(*out,*in)
+				}`,
+				field.Name(), field.Name(), field.Name(), gen.typeName(ref))
+		}
+
 		var buff bytes.Buffer
 		if array.Element.Name() == ".cblang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "writeByteArray", array); err != nil {
+			if err := gen.tpl.ExecuteTemplate(&buff, "marshalByteArray", array); err != nil {
 				panic(err)
 			}
 		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "writeArray", array); err != nil {
+			if err := gen.tpl.ExecuteTemplate(&buff, "marshalArray", array); err != nil {
 				panic(err)
 			}
 		}
@@ -916,13 +949,57 @@ func (gen *Gen4Go) marshalType(expr ast.Expr) string {
 	case *ast.Slice:
 		// 切片
 		slice := expr.(*ast.Slice)
+		ref := slice.Element.(*ast.TypeRef)
+		if _, ok := writeMapping[ref.Ref.Name()]; ok {
+			if ref.Ref.Name() == "Byte" {
+				return fmt.Sprintf(
+					`if len(m.%s) > 0 {
+						i = network.WriteFieldID(data, i , %d)
+						i = network.WriteBytes(data, i, m.%s)
+					}`,
+					field.Name(),
+					field.ID,
+					field.Name())
+			} else {
+				str = fmt.Sprintf("i = %s(data, i, e)", str)
+			}
+			return fmt.Sprintf(`if m.%s != nil {
+					in, out := &m.%s, &out.%s
+					*out = make([]%s, len(*in))
+					copy(*out,*in)
+				}`,
+				field.Name(), field.Name(), field.Name(), gen.typeName(ref))
+		}
+		switch ref.Ref.(type) {
+		case *ast.Table:
+			return fmt.Sprintf(`if m.%s != nil {
+					in, out := &m.%s, &out.%s
+					*out = make([]%s, len(*in))
+					for i:= range *in {
+						if (*in)[i] != nil {
+							in, out := &(*in)[i], &(*out)[i]	
+							*out = %s
+							(*in).CopyInto(*out)
+						}
+					}
+				}`,
+				field.Name(), field.Name(), field.Name(), gen.typeName(ref), gen.defaultVal(ref))
+		default:
+			return fmt.Sprintf(`if m.%s != nil {
+					in, out := &m.%s, &out.%s
+					*out = make([]%s, len(*in))
+					copy(*out,*in)
+				}`,
+				field.Name(), field.Name(), field.Name(), gen.typeName(ref))
+		}
+
 		var buff bytes.Buffer
 		if slice.Element.Name() == ".cblang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "writeByteList", slice); err != nil {
+			if err := gen.tpl.ExecuteTemplate(&buff, "marshalByteSlice", slice); err != nil {
 				panic(err)
 			}
 		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "writeList", slice); err != nil {
+			if err := gen.tpl.ExecuteTemplate(&buff, "marshalSlice", slice); err != nil {
 				panic(err)
 			}
 		}
@@ -931,7 +1008,7 @@ func (gen *Gen4Go) marshalType(expr ast.Expr) string {
 		// 字典
 		hash := expr.(*ast.Map)
 		var buff bytes.Buffer
-		if err := gen.tpl.ExecuteTemplate(&buff, "readMap", hash); err != nil {
+		if err := gen.tpl.ExecuteTemplate(&buff, "marshalMap", hash); err != nil {
 			panic(err)
 		}
 		return buff.String()
@@ -965,11 +1042,11 @@ func (gen *Gen4Go) unmarshalType(expr ast.Expr) string {
 		array := expr.(*ast.Array)
 		var buff bytes.Buffer
 		if array.Element.Name() == ".cblang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "readByteArray", array); err != nil {
+			if err := gen.tpl.ExecuteTemplate(&buff, "unmarshalByteArray", array); err != nil {
 				panic(err)
 			}
 		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "readArray", array); err != nil {
+			if err := gen.tpl.ExecuteTemplate(&buff, "unmarshalArray", array); err != nil {
 				panic(err)
 			}
 		}
@@ -977,22 +1054,33 @@ func (gen *Gen4Go) unmarshalType(expr ast.Expr) string {
 	case *ast.Slice:
 		// 切片
 		slice := expr.(*ast.Slice)
-		var buff bytes.Buffer
-		if slice.Element.Name() == ".cblang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "readByteList", slice); err != nil {
-				panic(err)
-			}
-		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "readList", slice); err != nil {
-				panic(err)
+		ref := slice.Element.(*ast.TypeRef)
+		var str string
+		if _, ok := readMapping[ref.Ref.Name()]; ok {
+			if ref.Ref.Name() == "Byte" {
+				str = `network.ReadBytes(data, i)`
+			} else {
+				str = fmt.Sprintf(`network.Read%s(data, i)`, gen.typeName(ref))
 			}
 		}
-		return buff.String()
+
+		return fmt.Sprintf(`func(data []byte) (%s, error) {
+			var i int 
+			var length uint32
+			var ret %s
+			i, length = network.ReadUint32(data)
+			if length > 0 {
+				ret = make(%s, length)
+				for j := uint32(0); j < length; j++ {
+					ret[j] = 
+				}
+			}
+		}`, gen.typeName(slice), gen.typeName(slice), gen.typeName(slice))
 	case *ast.Map:
 		// 字典
 		hash := expr.(*ast.Map)
 		var buff bytes.Buffer
-		if err := gen.tpl.ExecuteTemplate(&buff, "readMap", hash); err != nil {
+		if err := gen.tpl.ExecuteTemplate(&buff, "unmarshalMap", hash); err != nil {
 			panic(err)
 		}
 		return buff.String()

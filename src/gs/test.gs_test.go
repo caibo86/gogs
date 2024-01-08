@@ -292,7 +292,8 @@ func BenchmarkPBCar_CopyByMarshal(b *testing.B) {
 func TestPB(t *testing.T) {
 	pbCar := &pb.Car{
 		// VarStructs: make([]*pb.Student, 3),
-		VarMap1: make(map[string]*pb.Student, 3),
+		VarMap1:    make(map[string]*pb.Student, 3),
+		VarTeacher: &pb.Teacher{},
 	}
 	pbCar.VarMap1["成都"] = nil
 	fmt.Println(pbCar.VarMap1)
@@ -305,7 +306,7 @@ func TestPB(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
+	fmt.Printf("teacher:%+v\n", *newPbCar.VarTeacher)
 	fmt.Println("结果:", newPbCar.VarMap1 == nil)
 	stu := new(Student)
 	fmt.Println("stu的size:", stu.Size())

@@ -52,8 +52,12 @@ func (api *API) Login(req *cb.LoginReq, clientInfo *cb.ClientInfo) (*cb.LoginAck
 		IsAndroidEmulator:    clientInfo.IsAndroidEmulator,
 	}
 	internalErr, err := api.GateAgent.Gate.Login(api.GateAgent, ntf, ci)
-	if err != nil || internalErr != cluster.ErrOK {
-		log.Errorf("login error, internalErr: %s, err: %s", internalErr, err)
+	if err != nil {
+		log.Errorf("login err: %v", err)
+		return nil, cb.CodeSystemErr, nil
+	}
+	if internalErr != cluster.ErrOK {
+		log.Errorf("login internal err: %s", internalErr)
 		return nil, cb.CodeSystemErr, nil
 	}
 	ack := &cb.LoginAck{

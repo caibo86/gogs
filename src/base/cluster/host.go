@@ -52,6 +52,7 @@ func NewHost(localAddr string) *Host {
 			func(session network.ISession) (network.ISessionHandler, error) {
 				return NewClusterRemote(host, session), nil
 			}))
+
 	go func() {
 		// 启动定时器,定时向邻居节点注册服务
 		host.wg.Add(1)

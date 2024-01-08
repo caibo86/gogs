@@ -106,7 +106,7 @@ func (simulator *Simulator) sessionStatusChanged(agent *SimulatorAgent, status n
 			log.Debug("unable to find a builder for service type: client")
 			return
 		}
-		gateServerBuilder, ok := simulator.builders["Gate"]
+		gateServerBuilder, ok := simulator.builders["gate"]
 		if !ok {
 			log.Debug("unable to find a builder for service type: Gate")
 			return

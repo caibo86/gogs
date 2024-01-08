@@ -9,6 +9,8 @@ package config
 
 // LoginConfig 登录服务器配置
 type LoginConfig struct {
+	LogPath string `yaml:"logPath"`
+	DBName  string `yaml:"dbName"`
 }
 
 // NewLoginConfig 创建登录服务器配置

@@ -1,0 +1,22 @@
+// 账号下的一个用户
+struct AccountUser {
+	UserID   int64 = 1; // 用户ID
+	ServerID int64 = 2; // 用户所在服务器ID
+}
+
+// 用于鉴权的数据
+struct AuthData {
+	UserID     int64  = 1; // 用户ID
+	AccountID  int64  = 2; // 账号ID
+	ServerID   int64  = 3; // 用户所在服务器ID
+	Token      string = 4; // 鉴权Token
+	OnlyVerify bool   = 5; // 是否只验证Token
+}
+
+// 登录相关的服务,Login提供给Gate
+service Login {
+	Auth(AuthData)            -> (int64, Code);         // 账号验证
+	DelAccountUsers([]int64);                           // 删除账号下的多个用户
+	GetAccountUsers(int64)    -> ([]AccountUser, Code); // 获取用户账号
+}
+

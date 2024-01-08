@@ -61,12 +61,23 @@ func NewActorSystem(name string, builders map[string]IServiceBuilder, localAddr 
 		defer system.neighborLock.Unlock()
 		if status == network.ServiceStatusOnline {
 			system.neighbors[service.Name()] = service.(IActorSystem)
-			log.Infof("neighbor actor system online name: %s type: %s userID: %d",
-				service.Name(), service.Type(), service.ID())
+			if _, ok := service.(*ActorSystemRemoteService); ok {
+				log.Infof("neighbor actor system online name: %s type: %s userID: %d",
+					service.Name(), service.Type(), service.ID())
+			} else {
+				log.Infof("local actor system online name: %s type: %s userID: %d",
+					service.Name(), service.Type(), service.ID())
+			}
+
 		} else {
 			delete(system.neighbors, service.Name())
-			log.Infof("neighbor actor system offline name: %s type: %s userID: %d",
-				service.Name(), service.Type(), service.ID())
+			if _, ok := service.(*ActorSystemRemoteService); ok {
+				log.Infof("neighbor actor system offline name: %s type: %s userID: %d",
+					service.Name(), service.Type(), service.ID())
+			} else {
+				log.Infof("local actor system offline name: %s type: %s userID: %d",
+					service.Name(), service.Type(), service.ID())
+			}
 		}
 		return true
 	}
@@ -156,10 +167,10 @@ func (system *ActorSystem) NewActor(name ActorName, context IActorContext) (IAct
 		serviceID := system.newServiceID()
 		locker := &system.groupLocks[serviceID%ID(len(system.groupLocks))]
 		nameStr := name.String()
-		remote := newActorAgent(system, nameStr, neighbor)
+		agent := newActorAgent(system, nameStr, neighbor)
 		actor := newBaseActor(system, &name, locker, context)
 		context.SetActor(actor)
-		actor.service = builder.NewRemoteService(remote, nameStr, serviceID, 0, actor)
+		actor.service = builder.NewRemoteService(agent, nameStr, serviceID, 0, actor)
 		system.actorLock.Lock()
 		if old, ok := system.actors[nameStr]; ok {
 			system.actorLock.Unlock()

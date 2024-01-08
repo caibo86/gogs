@@ -15,4 +15,4 @@ log:
 
 game:
   logPath: ./log/game_${SERVER_ID}.log
-  dbName: game_${SERVER_ID}
+  dbName: gogs_game_${SERVER_ID}

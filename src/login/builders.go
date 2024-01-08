@@ -5,11 +5,10 @@
 // @time      : 2024/1/4 下午11:55
 // -------------------------------------------
 
-package game
+package login
 
 import (
 	"gogs/base/cluster"
-	"gogs/cb"
 )
 
 var builders map[string]cluster.IServiceBuilder
@@ -19,7 +18,5 @@ func init() {
 }
 
 func RegisterBuilders() {
-	builders["client"] = cb.NewUserBuilder(func(service cluster.IService) (cb.IUser, error) {
-		return NewUser(service.Context().(*cluster.ClientAgent))
-	})
+	builders =
 }

@@ -1,5 +1,5 @@
 // -------------------------------------------
-// @file      : game.go
+// @file      : login.go
 // @author    : 蔡波
 // @contact   : caibo923@gmail.com
 // @time      : 2024/1/4 下午2:54
@@ -27,7 +27,6 @@ type Game struct {
 	builders        map[string]IServiceBuilder // 服务构造器集合
 	idgen           uint32                     // service userID generator
 	UserServiceName string                     // 实际提供API服务的本地服务名字
-	serverID        int64                      // 服务器ID
 	serverName      string                     // 服务器名字
 }
 
@@ -44,7 +43,7 @@ func NewGame(name string, builders map[string]IServiceBuilder, localAddr string)
 		Host:            actorSystem.host,
 		gateServers:     make(map[string]IGateServer),
 		builders:        builders,
-		UserServiceName: "GameAPI",
+		UserServiceName: "client",
 		serverName:      name,
 	}
 	// 注册GameServer服务构造器
@@ -83,15 +82,13 @@ func NewGame(name string, builders map[string]IServiceBuilder, localAddr string)
 
 // Shutdown 关闭服务器
 func (game *Game) Shutdown() {
-	log.Info("Game shutdown start:")
-	log.Info("Game:Host closing...")
+	log.Infof("%s shutdown start:", game.serverName)
+	log.Infof("%s:Host closing...", game.serverName)
 	game.Host.Close()
-	log.Info("Game:ActorSystem closing...")
+	log.Infof("%s:ActorSystem closing...", game.serverName)
 	game.ActorSystem.Close()
 	etcd.Exit()
-	log.Info("Game:DB closing...")
-
-	log.Info("Game shutdown finished.")
+	log.Infof("%s shutdown finished.", game.serverName)
 }
 
 // newServiceID 生成一个唯一ID
@@ -134,7 +131,7 @@ func (game *Game) Login(ntf *UserLoginNtf, ci *ClientInfo) (int64, Err, error) {
 		var err error
 		actor, err = game.ActorSystem.NewActor(name, clientAgent)
 		if actor == nil {
-			log.Errorf("new actor: %s err: %s", name, err)
+			log.Errorf("new actor: %s err: %s", name.String(), err)
 			return 0, ErrActorName, nil
 		}
 	} else {

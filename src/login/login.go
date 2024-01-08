@@ -5,7 +5,7 @@
 // @time      : 2024/1/4 上午11:13
 // -------------------------------------------
 
-package game
+package login
 
 import (
 	"fmt"
@@ -20,23 +20,23 @@ import (
 	"runtime"
 )
 
-var server *cluster.Game
+var server *cluster.Normal
 
 func Main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	// 日志配置
 	logConfig := config.GetLogConfig()
-	// 游戏服配置
-	gameConfig := config.GetGameConfig()
+	// 登录服配置
+	loginConfig := config.GetLoginConfig()
 	if logConfig == nil {
 		cberrors.Panic("unable to find log config")
 	}
-	if gameConfig == nil {
-		cberrors.Panic("unable to find game config")
+	if loginConfig == nil {
+		cberrors.Panic("unable to find login config")
 	}
 	// 初始化日志
 	log.Init(
-		log.SetFilename(gameConfig.LogPath),
+		log.SetFilename(loginConfig.LogPath),
 		log.SetIsOpenFile(logConfig.IsOpenFile),
 		log.SetIsOpenErrorFile(logConfig.IsOpenErrorFile),
 		log.SetIsOpenConsole(logConfig.IsOpenConsole),
@@ -57,16 +57,9 @@ func Main() {
 	}()
 	model.InitMongoDB(config.ServerID)
 	RegisterBuilders()
-	var err error
 	name := fmt.Sprintf("%s:%d", config.ServerType, config.ServerID)
-	server, err = cluster.NewGame(
-		name,
-		builders,
-		"localhost:9102",
-	)
-	if err != nil {
-		cberrors.Panic("new game err:%s", err)
-	}
+	server = cluster.NewNormal(name, builders, "")
+	server.Host.NewService()
 	etcd.SetServiceCallback(EtcdNodeEventListener)
 	CheckGateConn()
 	// 处理系统信号

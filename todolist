@@ -1,0 +1,7 @@
+1.Login服务器
+2.分析线程和锁
+3.怎么由methodID索引到对应的函数名
+4.ActorSystem的Neighbor怎么调用
+5.检查session的关闭
+6.marshalType和unmarshalType没有完成
+7:Call和Return的参数,当做一个整体进行序列化

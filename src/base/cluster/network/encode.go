@@ -227,6 +227,9 @@ func ReadString(data []byte, i int) (int, string) {
 func ReadBytes(data []byte, i int) (int, []byte) {
 	var l uint32
 	i, l = ReadUint32(data, i)
+	if l == 0 {
+		return i, nil
+	}
 	bytes := make([]byte, int(l))
 	copy(bytes, data[i:])
 	return i + int(l), bytes
@@ -238,7 +241,7 @@ func ReadEnum(data []byte, i int) (int, int32) {
 		int32(data[i+2])<<16 | int32(data[i+3])<<24
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////////////////////
 
 // MarshalBool 序列化一个布尔值
 func MarshalBool(v bool) []byte {
@@ -353,6 +356,9 @@ func MarshalString(v string) []byte {
 
 // MarshalBytes 序列化一个字节流
 func MarshalBytes(v []byte) []byte {
+	if v == nil {
+		return nil
+	}
 	data := make([]byte, len(v))
 	copy(data, v)
 	return data
