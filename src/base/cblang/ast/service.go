@@ -23,7 +23,7 @@ type Param struct {
 
 // GetName implement IField
 func (param *Param) GetName() string {
-	return fmt.Sprintf("arg%d", param.ID)
+	return fmt.Sprintf("param%d", param.ID)
 }
 
 // GetID implement IField
@@ -95,7 +95,7 @@ func (method *Method) NewReturn(paramType Expr) *Param {
 	// 设置类型节点的父节点为此参数节点
 	paramType.SetParent(param)
 	// 给参数命名 设定所属代码节点为此方法节点所属的代码节点
-	param.Init(fmt.Sprintf("return_param(%d)", param.ID), method.Script())
+	param.Init(fmt.Sprintf("ret%d", param.ID), method.Script())
 	// 参数节点的父节点为此方法节点
 	param.SetParent(method)
 	// 加入到此方法返回参数列表
@@ -113,7 +113,7 @@ func (method *Method) NewParam(paramType Expr) *Param {
 	// 设置类型节点的父节点为此参数节点
 	paramType.SetParent(param)
 	// 给参数命名 设定所属代码节点为此方法节点所属的代码节点
-	param.Init(fmt.Sprintf("param(%d)", param.ID), method.Script())
+	param.Init(fmt.Sprintf("arg%d", param.ID), method.Script())
 	// 参数节点的父节点为此方法节点
 	param.SetParent(method)
 	// 加入到此方法输入参数列表

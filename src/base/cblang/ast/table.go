@@ -27,7 +27,7 @@ type Field struct {
 
 // GetName implements IField
 func (field *Field) GetName() string {
-	return field.Name()
+	return "m." + field.Name()
 }
 
 // GetID implements IField

@@ -169,8 +169,8 @@ func (m *{{$Struct}})Size() int {
 	n := 1
 	var l int 
 	_ = l
-	{{range .Fields}} {{$VName := addReceiver .Name}} // {{.Name}} {{typeName .Type}}
-	{{calTypeSize .Type $VName}}
+	{{range .Fields}} // {{.Name}} {{typeName .Type}}
+	{{calTypeSize .}}
 	{{end}}return n
 }
 
@@ -443,17 +443,13 @@ func (service *{{$Service}}Service) Call(call *network.Call) (callReturn *networ
     }()
     switch call.MethodID { {{range .Methods}}
    		case {{.ID}}:  {{$Name := symbol .Name}}
-		// {{$Name}}
-        if len(call.Params) != {{.InputParams}} {
-            err = cberrors.New("{{$Service}}::{{$Name}} expect {{.InputParams}} params but got :%d", len(call.Params))
-            return
-        }
+		// {{$Name}} {{if .Params}}
 		{{range .Params}} var param{{.ID}} {{typeName .Type}}
-		param{{.ID}}, err = {{unmarshalType .Type}}(call.Params[{{.ID}}])
+		{{end}} {{outParamsOnlyName .Params}} = Read{{$Service}}{{$Name}}Params(call.Params)
 		if err != nil {
-			return 
-		}
-		{{end}} {{range .Return}} var ret{{.ID}} {{typeName .Type}}
+			return
+		} {{end}}
+		{{range .Return}} var ret{{.ID}} {{typeName .Type}}
 		{{end}} {{returnArgs .}} service.I{{$Service}}.{{$Name}}{{callParams .Params}}
         if err != nil {
             return
@@ -462,9 +458,8 @@ func (service *{{$Service}}Service) Call(call *network.Call) (callReturn *networ
             ID: call.ID,
             ServiceID: call.ServiceID,
         }
-        {{range .Return}} data{{.ID}} := {{marshalType .Type}}(ret{{.ID}})
-        callReturn.Params = append(callReturn.Params, data{{.ID}})
-        {{end}}{{end}}return{{end}}
+		callReturn.Params = Write{{$Service}}{{$Name}}Return{{inReturnOnlyName .Return}}
+       	{{end}}return{{end}}
 	}
     err = cberrors.New("unknown {{$Service}}Service#%d method", call.MethodID)
     return
@@ -477,9 +472,7 @@ func (service *{{$Service}}Service){{$Name}}{{params .Params}}{{returnParams .Re
         ServiceID: uint32(service.id),
         MethodID: {{.ID}},
     }
-{{range .Params}} param{{.ID}} := {{marshalType .Type}}(arg{{.ID}})
-    call.Params = append(call.Params, param{{.ID}})
-    {{end}}
+	{{if .Params}}call.Params = Write{{$Service}}{{$Name}}Params{{inParamsOnlyName .Params}}{{end}}	
 	{{if .Return}} future := make(chan *network.Return,1)
     go func(){
         callReturn, err1 := service.Call(call)
@@ -489,16 +482,8 @@ func (service *{{$Service}}Service){{$Name}}{{params .Params}}{{returnParams .Re
     }()
     select {
         case callReturn := <- future:
-            if len(callReturn.Params) != {{.ReturnParams}} {
-                err = cberrors.New("{{$Service}}Service#{{$Name}} expect {{.ReturnParams}} return params but got: %d", len(callReturn.Params))
-                return
-            }
-            {{range .Return}} ret{{.ID}}, err = {{unmarshalType .Type}}(callReturn.Params[{{.ID}}])
-            if err != nil {
-                err = cberrors.New("unmarshal {{$Service}}Service#{{$Name}} return{{.ID}} {{typeName .Type}} err: %s", err)
-                return
-            }
-            {{end}}case <- time.After(service.timeout):
+			{{returnArgs .}} Read{{$Service}}{{$Name}}Return(callReturn.Params)
+		case <- time.After(service.timeout):
             err = cluster.ErrTimeout
             return
     }
@@ -581,10 +566,6 @@ func (service *{{$Service}}RemoteService) Call(call *network.Call) (callReturn *
             return
         }
         callReturn = result.CallReturn
-        if len(callReturn.Params) != {{.ReturnParams}} {
-            err = cberrors.New("{{$Service}}RemoteService#{{$Name}} expect {{.ReturnParams}} return params but got: %d", len(callReturn.Params))
-            return
-        }
         return
         {{else}} err = service.agent.Post(service,call)
         if err != nil {
@@ -605,9 +586,7 @@ func (service *{{$Service}}RemoteService){{$Name}}{{params .Params}}{{returnPara
         ServiceID: uint32(service.rid),
         MethodID: {{.ID}},
     }
-    {{range .Params}} param{{.ID}} := {{marshalType .Type}}(arg{{.ID}})
-    call.Params = append(call.Params, param{{.ID}})
-    {{end}}
+	{{if .Params}}call.Params = Write{{$Service}}{{$Name}}Params{{inParamsOnlyName .Params}}{{end}}
     {{if .Return}} var future cluster.Future
     future,err = service.agent.Wait(service, call, service.timeout)
     if err != nil {
@@ -624,12 +603,12 @@ func (service *{{$Service}}RemoteService){{$Name}}{{params .Params}}{{returnPara
         err = cberrors.New("{{$Service}}RemoteService#{{$Name}} expect {{.ReturnParams}} return params but got :%d", len(callReturn.Params))
         return
     }
-    {{range .Return}} ret{{.ID}}, err = {{unmarshalType .Type}}(callReturn.Params[{{.ID}}])
+    {{returnArgs .}} Read{{$Service}}{{$Name}}Return(callReturn.Params)
     if err != nil {
-        err = cberrors.New("unmarshal {{$Service}}RemoteService#{{$Name}} return{{.ID}} {{typeName .Type}} err: %s", err)
+        err = cberrors.New("Read{{$Service}}{{$Name}}Return err: %s", err)
         return
     }
-	{{end}} {{else}} err = service.agent.Post(service, call)
+	{{else}} err = service.agent.Post(service, call)
     if err != nil {
         err = cberrors.New("post {{$Service}}RemoteService#{{$Name}} err: %s", err)
         return
@@ -639,23 +618,84 @@ func (service *{{$Service}}RemoteService){{$Name}}{{params .Params}}{{returnPara
 
 {{if .Params}}
 // Write{{$Service}}{{$Name}}Params is an autogenerated function, write the params of the method to a byte slice
-func Write{{$Service}}{{$Name}}Params{{params .Params}}[]byte {
+func Write{{$Service}}{{$Name}}Params{{inParams .Params}}[]byte {
     var data []byte
 	var n int
 	var l int 
 	_ = l
-	{{range .Params}} {{$VName := addArg .ID}} // {{.Name}} {{typeName .Type}}
-	{{calTypeSize .Type $VName}}
-	{{end}}
-	if l == 0 {
+	{{range .Params}} // {{.Name}} {{typeName .Type}}
+	{{calTypeSize .}}
+	{{end}}if n == 0 {
 		return nil
 	}
-	data = make([]byte, l)
+	data = make([]byte, n)
+	i := 0
 	{{range .Params}} {{$VName := addArg .ID}} // {{.Name}} {{typeName .Type}}
-	{{writeType .Type}}
-	{{end}}
-	return data
+	{{writeType .}}
+	{{end}}return data
 }
+
+// Read{{$Service}}{{$Name}}Params is an autogenerated function, read the params of the method from a byte slice
+func Read{{$Service}}{{$Name}}Params(data []byte){{outParams .Params}} {
+	defer func(){
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
+	i := 0
+	l := len(data)
+	for i < l {
+		var paramID uint16
+        i, paramID = network.ReadFieldID(data, i)
+		switch paramID {
+		{{range .Params}}case {{.ID}}:
+	    {{readType .}}
+	    {{end}} }
+	}
+	return
+}
+{{end}}
+
+
+{{if .Return}}
+// Write{{$Service}}{{$Name}}Return is an autogenerated function, write the return of the method to a byte slice
+func Write{{$Service}}{{$Name}}Return{{inParams .Return}}[]byte {
+    var data []byte
+	var n int
+	var l int 
+	_ = l
+	{{range .Return}} // {{.Name}} {{typeName .Type}}
+	{{calTypeSize .}}
+	{{end}}if n == 0 {
+		return nil
+	}
+	data = make([]byte, n)
+	i := 0
+	{{range .Return}} // {{.Name}} {{typeName .Type}}
+	{{writeType .}}
+	{{end}}return data
+}
+
+// Read{{$Service}}{{$Name}}Return is an autogenerated function, read the return of the method from a byte slice
+func Read{{$Service}}{{$Name}}Return(data []byte){{outParams .Return}} {
+	defer func(){
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
+	i := 0
+	l := len(data)
+	for i < l {
+		var paramID uint16
+        i, paramID = network.ReadFieldID(data, i)
+		switch paramID {
+		{{range .Return}}case {{.ID}}:
+	    {{readType .}}
+	    {{end}} }
+	}
+	return
+}
+
 {{end}}
 
 {{end}}

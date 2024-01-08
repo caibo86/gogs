@@ -125,20 +125,20 @@ var readMapping = map[string]string{
 
 // compareMapping 比较方法映射
 var compareMapping = map[string]string{
-	"Bool":    `m.%s`,
-	"Byte":    `m.%s != 0`,
-	"Bytes":   `len(m.%s) > 0`,
-	"Int8":    `m.%s != 0`,
-	"Uint8":   `m.%s != 0`,
-	"Int16":   `m.%s != 0`,
-	"Uint16":  `m.%s != 0`,
-	"Int32":   `m.%s != 0`,
-	"Uint32":  `m.%s != 0`,
-	"Float32": `m.%s != 0`,
-	"Int64":   `m.%s != 0`,
-	"Uint64":  `m.%s != 0`,
-	"Float64": `m.%s != 0`,
-	"String":  `len(m.%s) > 0`,
+	"Bool":    `%s`,
+	"Byte":    `%s != 0`,
+	"Bytes":   `len(%s) > 0`,
+	"Int8":    `%s != 0`,
+	"Uint8":   `%s != 0`,
+	"Int16":   `%s != 0`,
+	"Uint16":  `%s != 0`,
+	"Int32":   `%s != 0`,
+	"Uint32":  `%s != 0`,
+	"Float32": `%s != 0`,
+	"Int64":   `%s != 0`,
+	"Uint64":  `%s != 0`,
+	"Float64": `%s != 0`,
+	"String":  `len(%s) > 0`,
 }
 
 // marshalMapping 写入方法映射
@@ -194,7 +194,6 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"typeName":            gen.typeName,
 		"params":              gen.params,
 		"returnParams":        gen.returnParams,
-		"returnErr":           gen.returnErr,
 		"callParams":          gen.callParams,
 		"returnArgs":          gen.returnArgs,
 		"readType":            gen.readType,
@@ -210,6 +209,14 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"unmarshalType":       gen.unmarshalType,
 		"addReceiver":         gen.addReceiver,
 		"addArg":              gen.addArg,
+		"inParams":            gen.inParams,
+		"inParamsOnlyName":    gen.inParamsOnlyName,
+		"outParams":           gen.outParams,
+		"outParamsOnlyName":   gen.outParamsOnlyName,
+		"inReturn":            gen.inReturn,
+		"inReturnOnlyName":    gen.inReturnOnlyName,
+		"outReturn":           gen.outReturn,
+		"outReturnOnlyName":   gen.outReturnOnlyName,
 	}
 	gen.tpl, err = template.New("golang").Funcs(functions).Parse(tpl4go)
 	return
@@ -234,55 +241,55 @@ func (gen *Gen4Go) lowerFirst(name string) string {
 }
 
 // calTypeSize 根据类型获取计算大小的函数
-func (gen *Gen4Go) calTypeSize(t ast.Expr, name string) string {
-	switch t.(type) {
+func (gen *Gen4Go) calTypeSize(field ast.IField) string {
+	switch field.GetType().(type) {
 	case *ast.TypeRef:
-		ref := t.(*ast.TypeRef)
+		ref := field.GetType().(*ast.TypeRef)
 		switch ref.Ref.Name() {
 		case "Bool":
 			return fmt.Sprintf(
 				`if %s {
 					n += 3
-				}`,
-				name)
+				}`, field.GetName(),
+			)
 		case "Byte", "Int8", "Uint8":
 			return fmt.Sprintf(
 				`if %s != 0 {
 					n += 3
 				}`,
-				name)
+				field.GetName())
 		case "Int16", "Uint16":
 			return fmt.Sprintf(
 				`if %s != 0 {
 					n += 4
 				}`,
-				name)
+				field.GetName())
 		case "Int32", "Uint32", "Float32":
 			return fmt.Sprintf(
 				`if %s != 0 {
 					n += 6
 				}`,
-				name)
+				field.GetName())
 		case "Int64", "Uint64", "Float64":
 			return fmt.Sprintf(
 				`if %s != 0 {
 					n += 10
 				}`,
-				name)
+				field.GetName())
 		case "String":
 			return fmt.Sprintf(
 				`l = len(%s)
 					if l > 0 {
 					n += 6 + l 
 				}`,
-				name)
+				field.GetName())
 		case "Bytes":
 			return fmt.Sprintf(
 				`l = len(%s)
 					if l > 0 {
 					n += 6 + l 
 				}`,
-				name)
+				field.GetName())
 		default:
 			switch ref.Ref.(type) {
 			case *ast.Enum:
@@ -290,25 +297,25 @@ func (gen *Gen4Go) calTypeSize(t ast.Expr, name string) string {
 					`if %s != 0 {
 						n += 6
 					}`,
-					name)
+					field.GetName())
 			case *ast.Table:
 				return fmt.Sprintf(
 					`if %s != nil {
 						l = %s.Size()
 						n += 6 + l
 					}`,
-					name, name)
+					field.GetName(), field.GetName())
 			default:
-				cberrors.Panic("not here %s", t.Name())
+				cberrors.Panic("not here %s", field.GetType().Name())
 			}
 		}
 	case *ast.Slice, *ast.Array:
 		// 切片和数组
 		var ref *ast.TypeRef
-		if slice, ok := t.(*ast.Slice); ok {
+		if slice, ok := field.GetType().(*ast.Slice); ok {
 			ref = slice.Element.(*ast.TypeRef)
 		} else {
-			ref = t.(*ast.Array).Element.(*ast.TypeRef)
+			ref = field.GetType().(*ast.Array).Element.(*ast.TypeRef)
 		}
 		switch ref.Ref.Name() {
 		case "Byte", "Int8", "Uint8", "Bool":
@@ -317,28 +324,28 @@ func (gen *Gen4Go) calTypeSize(t ast.Expr, name string) string {
 				if l > 0 {
 					n += 6 + l
 				}`,
-				name)
+				field.GetName())
 		case "Uint16", "Int16":
 			return fmt.Sprintf(
 				`l = len(%s)
 				if l > 0 {
 					n += 6 + l * 2
 				}`,
-				name)
+				field.GetName())
 		case "Uint32", "Int32", "Float32":
 			return fmt.Sprintf(
 				`l = len(%s)
 				if l > 0 {
 					n += 6 + l * 4
 				}`,
-				name)
+				field.GetName())
 		case "Uint64", "Int64", "Float64":
 			return fmt.Sprintf(
 				`l = len(%s)
 				if l > 0 {
 					n += 6 + l * 8
 				}`,
-				name)
+				field.GetName())
 		case "String":
 			return fmt.Sprintf(
 				`if len(%s) > 0 {
@@ -348,17 +355,17 @@ func (gen *Gen4Go) calTypeSize(t ast.Expr, name string) string {
 						n += 4 + l
 					}
 				}`,
-				name, name)
+				field.GetName(), field.GetName())
 		case "Bytes":
 			return fmt.Sprintf(
 				`if len(%s) > 0 {
 					n += 6
-					for _, s := range m.%s {
+					for _, s := range %s {
 						l = len(s)
 						n += 4 + l
 					}
 				}`,
-				name, name)
+				field.GetName(), field.GetName())
 		default:
 			switch ref.Ref.(type) {
 			case *ast.Enum:
@@ -367,7 +374,7 @@ func (gen *Gen4Go) calTypeSize(t ast.Expr, name string) string {
 					if l > 0 {
 						n += 6 + l * 4
 					}`,
-					name)
+					field.GetName())
 			case *ast.Table:
 				return fmt.Sprintf(
 					`l = len(%s)
@@ -377,14 +384,14 @@ func (gen *Gen4Go) calTypeSize(t ast.Expr, name string) string {
 							n += 4 + e.Size()
 						}
 					}`,
-					name, name)
+					field.GetName(), field.GetName())
 			default:
-				cberrors.Panic("not here %s", t.Name())
+				cberrors.Panic("not here %s", field.GetType().Name())
 			}
 		}
 	case *ast.Map:
 		// 字典
-		hash := t.(*ast.Map)
+		hash := field.GetType().(*ast.Map)
 		var keyStr string
 		var valStr string
 		ref := hash.Key.(*ast.TypeRef)
@@ -439,8 +446,8 @@ func (gen *Gen4Go) calTypeSize(t ast.Expr, name string) string {
 							n += %s
 						}
 					}`,
-			name,
-			name,
+			field.GetName(),
+			field.GetName(),
 			keyStr,
 			valStr)
 	}
@@ -450,50 +457,50 @@ func (gen *Gen4Go) calTypeSize(t ast.Expr, name string) string {
 
 // writeType 根据字段类型生成写入函数 TODO
 func (gen *Gen4Go) writeType(field ast.IField) string {
-	switch field.Type.(type) {
+	switch field.GetType().(type) {
 	case *ast.TypeRef:
 		var str string
 		var ok bool
-		ref := field.Type.(*ast.TypeRef)
+		ref := field.GetType().(*ast.TypeRef)
 		if str, ok = writeMapping[ref.Ref.Name()]; ok {
 			return fmt.Sprintf(
 				`if `+compareMapping[ref.Ref.Name()]+` {
 					i = network.WriteFieldID(data, i, %d)
-					i = %s(data, i, m.%s)
+					i = %s(data, i, %s)
 				}`,
-				field.Name(), field.ID, str, field.Name())
+				field.GetName(), field.GetID(), str, field.GetName())
 		} else {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				return fmt.Sprintf(
-					`if m.%s != 0 {
+					`if %s != 0 {
 						i = network.WriteFieldID(data, i, %d)
-						i = network.WriteEnum(data, i, int32(m.%s))
+						i = network.WriteEnum(data, i, int32(%s))
 					}`,
-					field.Name(), field.ID, field.Name())
+					field.GetName(), field.GetID(), field.GetName())
 			case *ast.Table:
 				return fmt.Sprintf(
-					`if m.%s != nil {
+					`if %s != nil {
 						i = network.WriteFieldID(data, i, %d)
-						size := m.%s.Size()
+						size := %s.Size()
 						i = network.WriteUint32(data, i, uint32(size))
-						m.%s.MarshalToSizedBuffer(data[i:])
+						%s.MarshalToSizedBuffer(data[i:])
 						i += size
 					}`,
-					field.Name(), field.ID, field.Name(), field.Name())
+					field.GetName(), field.GetID(), field.GetName(), field.GetName())
 			default:
-				cberrors.Panic("not here %s", field.Type.Name())
+				cberrors.Panic("not here %s", field.GetType().Name())
 			}
 		}
 	case *ast.Slice, *ast.Array:
 		// 切片和数组
 		var ref *ast.TypeRef
 		isSlice := false
-		if slice, ok := field.Type.(*ast.Slice); ok {
+		if slice, ok := field.GetType().(*ast.Slice); ok {
 			ref = slice.Element.(*ast.TypeRef)
 			isSlice = true
 		} else {
-			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
+			ref = field.GetType().(*ast.Array).Element.(*ast.TypeRef)
 		}
 
 		var str string
@@ -501,13 +508,13 @@ func (gen *Gen4Go) writeType(field ast.IField) string {
 		if str, ok = writeMapping[ref.Ref.Name()]; ok {
 			if isSlice && ref.Ref.Name() == "Byte" {
 				return fmt.Sprintf(
-					`if len(m.%s) > 0 {
+					`if len(%s) > 0 {
 						i = network.WriteFieldID(data, i , %d)
-						i = network.WriteBytes(data, i, m.%s)
+						i = network.WriteBytes(data, i, %s)
 					}`,
-					field.Name(),
-					field.ID,
-					field.Name())
+					field.GetName(),
+					field.GetID(),
+					field.GetName())
 			} else {
 				str = fmt.Sprintf("i = %s(data, i, e)", str)
 			}
@@ -523,39 +530,39 @@ func (gen *Gen4Go) writeType(field ast.IField) string {
 						}
 						i += size`
 			default:
-				cberrors.Panic("not here %s", field.Type.Name())
+				cberrors.Panic("not here %s", field.GetType().Name())
 			}
 		}
 		if isSlice {
 			return fmt.Sprintf(
-				`if len(m.%s) > 0 {
+				`if len(%s) > 0 {
 					i = network.WriteFieldID(data, i , %d)
-					i = network.WriteUint32(data, i, uint32(len(m.%s)))
-					for _, e := range m.%s {
+					i = network.WriteUint32(data, i, uint32(len(%s)))
+					for _, e := range %s {
 						%s
 					}
 				}`,
-				field.Name(),
-				field.ID,
-				field.Name(),
-				field.Name(),
+				field.GetName(),
+				field.GetID(),
+				field.GetName(),
+				field.GetName(),
 				str)
 		} else {
 			return fmt.Sprintf(
 				`i = network.WriteFieldID(data, i , %d)
-					i = network.WriteUint32(data, i, uint32(len(m.%s)))
-					for _, e := range m.%s {
+					i = network.WriteUint32(data, i, uint32(len(%s)))
+					for _, e := range %s {
 						%s
 					}`,
-				field.ID,
-				field.Name(),
-				field.Name(),
+				field.GetID(),
+				field.GetName(),
+				field.GetName(),
 				str)
 		}
 
 	case *ast.Map:
 		// 字典
-		hash := field.Type.(*ast.Map)
+		hash := field.GetType().(*ast.Map)
 		var keyStr string
 		var valStr string
 		ref := hash.Key.(*ast.TypeRef)
@@ -589,18 +596,18 @@ func (gen *Gen4Go) writeType(field ast.IField) string {
 			}
 		}
 		return fmt.Sprintf(
-			`if len(m.%s) > 0 {
+			`if len(%s) > 0 {
 						i = network.WriteFieldID(data, i, %d)
-						i = network.WriteUint32(data, i, uint32(len(m.%s)))
-						for k, v := range m.%s {
+						i = network.WriteUint32(data, i, uint32(len(%s)))
+						for k, v := range %s {
 							%s
 							%s
 						}
 					}`,
-			field.Name(),
-			field.ID,
-			field.Name(),
-			field.Name(),
+			field.GetName(),
+			field.GetID(),
+			field.GetName(),
+			field.GetName(),
 			keyStr,
 			valStr)
 	}
@@ -609,85 +616,86 @@ func (gen *Gen4Go) writeType(field ast.IField) string {
 }
 
 // readType 根据字段类型生成读取函数
-func (gen *Gen4Go) readType(field *ast.Field) string {
-	switch field.Type.(type) {
+func (gen *Gen4Go) readType(field ast.IField) string {
+	switch field.GetType().(type) {
 	case *ast.TypeRef:
-		ref := field.Type.(*ast.TypeRef)
+		ref := field.GetType().(*ast.TypeRef)
 		var ok bool
 		var str string
 		if str, ok = readMapping[ref.Ref.Name()]; ok {
-			return fmt.Sprintf("i, m.%s = %s(data, i)", field.Name(), str)
+			return fmt.Sprintf("i, %s = %s(data, i)", field.GetName(), str)
 		} else {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				return fmt.Sprintf(`var v int32
 						i, v = network.ReadEnum(data, i)
-						m.%s = %s(v)`,
-					field.Name(), gen.typeName(ref))
+						%s = %s(v)`,
+					field.GetName(), gen.typeName(ref))
 			case *ast.Table:
 				return fmt.Sprintf(`var size uint32
 						i, size = network.ReadUint32(data, i)
-						if m.%s == nil {
-							m.%s = %s
+						if %s == nil {
+							%s = %s
 						}
-						if err = m.%s.Unmarshal(data[i:i+int(size)]); err != nil {
+						if err = %s.Unmarshal(data[i:i+int(size)]); err != nil {
 							return
 						} 
-						i += int(size)`, field.Name(), field.Name(), gen.defaultVal(ref), field.Name())
+						i += int(size)`,
+					field.GetName(), field.GetName(), gen.defaultVal(ref), field.GetName())
 			default:
-				cberrors.Panic("not here %s", field.Type.Name())
+				cberrors.Panic("not here %s", field.GetType().Name())
 			}
 		}
 	case *ast.Slice, *ast.Array:
 		// 切片和数组
 		var ref *ast.TypeRef
 		var isSlice bool
-		if slice, ok := field.Type.(*ast.Slice); ok {
+		if slice, ok := field.GetType().(*ast.Slice); ok {
 			isSlice = true
 			ref = slice.Element.(*ast.TypeRef)
 		} else {
-			ref = field.Type.(*ast.Array).Element.(*ast.TypeRef)
+			ref = field.GetType().(*ast.Array).Element.(*ast.TypeRef)
 		}
 		var str string
 		var ok bool
 		if str, ok = readMapping[ref.Ref.Name()]; ok {
 			if isSlice && ref.Ref.Name() == "Byte" {
-				return fmt.Sprintf(`i, m.%s = network.ReadBytes(data, i)`,
-					field.Name())
+				return fmt.Sprintf(`i, %s = network.ReadBytes(data, i)`,
+					field.GetName())
 			} else {
-				str = fmt.Sprintf("i, m.%s[j] = %s(data, i)", field.Name(), str)
+				str = fmt.Sprintf("i, %s[j] = %s(data, i)", field.GetName(), str)
 			}
 		} else {
 			switch ref.Ref.(type) {
 			case *ast.Enum:
 				str = fmt.Sprintf(`var v int32
 				i, v = network.ReadEnum(data, i)
-				m.%s[j] = %s(v)`,
-					field.Name(), gen.typeName(ref))
+				%s[j] = %s(v)`,
+					field.GetName(), gen.typeName(ref))
 			case *ast.Table:
 				str = fmt.Sprintf(
 					`var size uint32
 						i, size = network.ReadUint32(data, i)
 						if size > 0 {
-							m.%s[j] = %s
-							if err = m.%s[j].Unmarshal(data[i:i+int(size)]); err != nil {
+							%s[j] = %s
+							if err = %s[j].Unmarshal(data[i:i+int(size)]); err != nil {
 								return
 							}
 						}
-						i += int(size)`, field.Name(), gen.defaultVal(ref), field.Name())
+						i += int(size)`, field.GetName(), gen.defaultVal(ref), field.GetName())
 			default:
-				cberrors.Panic("not here %s", field.Type.Name())
+				cberrors.Panic("not here %s", field.GetType().Name())
 			}
 		}
 		if isSlice {
 			return fmt.Sprintf(
 				`var length uint32
 				i, length = network.ReadUint32(data, i)
-				m.%s = make([]%s, length)
+				%s = make([]%s, length)
 				for j := uint32(0); j < length; j++ {
 					%s
 				}`,
-				field.Name(), gen.typeName(ref), str)
+				field.GetName(), gen.typeName(ref), str)
 		} else {
 			return fmt.Sprintf(
 				`var length uint32
@@ -699,7 +707,7 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 		}
 	case *ast.Map:
 		// 字典
-		hash := field.Type.(*ast.Map)
+		hash := field.GetType().(*ast.Map)
 		var keyStr string
 		var valStr string
 		var ok bool
@@ -745,18 +753,18 @@ func (gen *Gen4Go) readType(field *ast.Field) string {
 		return fmt.Sprintf(
 			`var length uint32
 					i, length = network.ReadUint32(data, i)
-					if m.%s == nil{
-						m.%s = make(map[%s]%s)
+					if %s == nil{
+						%s = make(map[%s]%s)
 					}
 					for j := uint32(0); j < length; j++ {
 						%s
 						%s
-						m.%s[k] = v
+						%s[k] = v
 					}`,
-			field.Name(), field.Name(),
+			field.GetName(), field.GetName(),
 			gen.typeName(hash.Key),
 			gen.typeName(hash.Value),
-			keyStr, valStr, field.Name())
+			keyStr, valStr, field.GetName())
 	}
 	cberrors.Panic("not here")
 	return "unknown"
@@ -1162,6 +1170,117 @@ func (gen *Gen4Go) params(params []*ast.Param) string {
 	return buff.String()
 }
 
+// inParams 根据参数生成函数声明的入参列表
+func (gen *Gen4Go) inParams(params []*ast.Param) string {
+	if len(params) == 0 {
+		return "()"
+	}
+	var buff bytes.Buffer
+	buff.WriteString(fmt.Sprintf("(param0 %s", gen.typeName(params[0].Type)))
+	for i := 1; i < len(params); i++ {
+		buff.WriteString(fmt.Sprintf(",param%d %s", i, gen.typeName(params[i].Type)))
+	}
+	buff.WriteString(")")
+	return buff.String()
+}
+
+// inParamsOnlyName 根据参数生成函数声明的入参列表
+func (gen *Gen4Go) inParamsOnlyName(params []*ast.Param) string {
+	if len(params) == 0 {
+		return "()"
+	}
+	var buff bytes.Buffer
+	buff.WriteString(fmt.Sprintf("(arg0"))
+	for i := 1; i < len(params); i++ {
+		buff.WriteString(fmt.Sprintf(",arg%d", i))
+	}
+	buff.WriteString(")")
+	return buff.String()
+}
+
+// outParams 根据参数生成函数声明的入参列表
+func (gen *Gen4Go) outParams(params []*ast.Param) string {
+	if len(params) == 0 {
+		return "(err error)"
+	}
+	var buff bytes.Buffer
+	buff.WriteString(fmt.Sprintf("(param0 %s", gen.typeName(params[0].Type)))
+	for i := 1; i < len(params); i++ {
+		buff.WriteString(fmt.Sprintf(",param%d %s", i, gen.typeName(params[i].Type)))
+	}
+	buff.WriteString(", err error)")
+	return buff.String()
+}
+
+// outParamsOnlyName 根据参数生成函数声明的入参列表
+func (gen *Gen4Go) outParamsOnlyName(params []*ast.Param) string {
+	if len(params) == 0 {
+		return "err"
+	}
+	var buff bytes.Buffer
+	buff.WriteString(fmt.Sprintf("param0"))
+	for i := 1; i < len(params); i++ {
+		buff.WriteString(fmt.Sprintf(", param%d", i))
+	}
+	buff.WriteString(", err")
+	return buff.String()
+}
+
+// inReturn 根据参数生成函数声明的返回参数列表
+func (gen *Gen4Go) inReturn(params []*ast.Param) string {
+	if len(params) == 0 {
+		return "()"
+	}
+	var buff bytes.Buffer
+	buff.WriteString(fmt.Sprintf("(ret0 %s", gen.typeName(params[0].Type)))
+	for i := 1; i < len(params); i++ {
+		buff.WriteString(fmt.Sprintf(",ret%d %s", i, gen.typeName(params[i].Type)))
+	}
+	buff.WriteString(")")
+	return buff.String()
+}
+
+// inReturn 根据参数生成函数声明的返回参数列表
+func (gen *Gen4Go) inReturnOnlyName(params []*ast.Param) string {
+	if len(params) == 0 {
+		return "()"
+	}
+	var buff bytes.Buffer
+	buff.WriteString(fmt.Sprintf("(ret0"))
+	for i := 1; i < len(params); i++ {
+		buff.WriteString(fmt.Sprintf(",ret%d", i))
+	}
+	buff.WriteString(")")
+	return buff.String()
+}
+
+// outReturn 根据参数生成函数声明的返回参数列表
+func (gen *Gen4Go) outReturn(params []*ast.Param) string {
+	if len(params) == 0 {
+		return "(err error)"
+	}
+	var buff bytes.Buffer
+	buff.WriteString(fmt.Sprintf("(ret0 %s", gen.typeName(params[0].Type)))
+	for i := 1; i < len(params); i++ {
+		buff.WriteString(fmt.Sprintf(",ret%d %s", i, gen.typeName(params[i].Type)))
+	}
+	buff.WriteString(",err error)")
+	return buff.String()
+}
+
+// outReturn 根据参数生成函数声明的返回参数列表
+func (gen *Gen4Go) outReturnOnlyName(params []*ast.Param) string {
+	if len(params) == 0 {
+		return ""
+	}
+	var buff bytes.Buffer
+	buff.WriteString(fmt.Sprintf("ret0"))
+	for i := 1; i < len(params); i++ {
+		buff.WriteString(fmt.Sprintf(",ret%d", i))
+	}
+	return buff.String()
+}
+
 // returnParams 根据参数生成函数声明的返回参数列表
 func (gen *Gen4Go) returnParams(params []*ast.Param) string {
 	if len(params) == 0 {
@@ -1202,20 +1321,6 @@ func (gen *Gen4Go) returnArgs(method *ast.Method) string {
 		buff.WriteString(fmt.Sprintf(", ret%d", i))
 	}
 	buff.WriteString(", err = ")
-	return buff.String()
-}
-
-// returnErr .
-func (gen *Gen4Go) returnErr(params []*ast.Param) string {
-	if len(params) == 0 {
-		return "err"
-	}
-	var buff bytes.Buffer
-	buff.WriteString(gen.defaultVal(params[0].Type))
-	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(",%s", gen.defaultVal(params[0].Type)))
-	}
-	buff.WriteString(",err)")
 	return buff.String()
 }
 
