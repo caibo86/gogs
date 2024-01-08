@@ -2,5 +2,7 @@
 enum Code {
 	OK             = 1; // 正确
 	DuplicateLogin = 2; // 重复登录
+	SystemErr      = 3; // 系统错误
+	BadParam       = 4; // 参数错误
 }
 

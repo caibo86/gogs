@@ -24,10 +24,10 @@ func NewUser(clusterUser *cluster.ClientAgent) (*User, error) {
 	}, nil
 }
 
-func (user *User) GetServerTime() (int64, cb.Err, error) {
-	return 0, cb.ErrOK, nil
+func (user *User) GetServerTime() (int64, cb.Code, error) {
+	return 0, cb.CodeOK, nil
 }
 
-func (user *User) GetUserInfo() (*cb.UserInfo, cb.Err, error) {
-	return nil, cb.ErrOK, nil
+func (user *User) GetUserInfo() (*cb.UserInfo, cb.Code, error) {
+	return nil, cb.CodeOK, nil
 }

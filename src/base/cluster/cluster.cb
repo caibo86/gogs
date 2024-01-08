@@ -11,23 +11,25 @@ enum Err {
 	ActorNotFound  = 4; // Actor不存在
 	System         = 5; // 系统错误
 	Unmarshal      = 6; // 反序列化错误
-	RProxy         = 7; // RProxy错误
+	GateNotFound   = 7; // 找不到对应的gate
 	UnknownService = 8; // 未知服务
 	ActorName      = 9; 
 }
 
-// 用户登录信息
-struct UserLoginInfo {
+// 用户登录通知
+struct UserLoginNtf {
 	SessionID int64  = 1; 
 	UserID    int64  = 2; 
 	Gate      string = 3; 
+	ServerID  int64  = 4; 
+	AccountID int64  = 5; 
 }
 
 // 使用Gate双向 转发的消息
 struct TunnelMsg {
-	ActorName string              = 1; 
-	Type      network.MessageType = 2; 
-	Data      []byte              = 3; 
+	UserID int64               = 1; 
+	Type   network.MessageType = 2; 
+	Data   []byte              = 3; 
 }
 
 // 投递给角色系统的消息
@@ -36,11 +38,23 @@ struct ActorMsg {
 	Data      []byte = 2; 
 }
 
+// 客户端信息
+struct ClientInfo {
+	OpenUDID             string = 1; // 设备唯一标识
+	Language             string = 2; // 语言
+	OS                   string = 3; // 操作系统
+	ClientVersion        string = 4; // 客户端版本
+	ClientMemoryCapacity int32  = 5; // 客户端内存容量
+	ClientDeviceLevel    int32  = 6; // 客户端设备等级
+	ClientChannel        string = 7; // 客户端渠道
+	IsAndroidEmulator    bool   = 8; // 是否安卓模拟器
+}
+
 // Game上运行的服务
 service GameServer {
-	Login(UserLoginInfo)   -> (int64, Err); // 用户登录
-	Logout(UserLoginInfo);                  // 用户登出
-	Tunnel(TunnelMsg);                      // 用户发送给Game的消息,经过Gate转发
+	Login(UserLoginNtf, ClientInfo) -> (int64, Err); // 用户登录
+	Logout(UserLoginNtf);                            // 用户登出
+	Tunnel(TunnelMsg);                               // 用户发送给Game的消息,经过Gate转发
 }
 
 // Gate上运行的服务

@@ -11,19 +11,18 @@ import (
 	"gogs/base/cberrors"
 	"gogs/base/cluster/network"
 	log "gogs/base/logger"
-	"strings"
 	"sync"
 	"sync/atomic"
 )
 
 // Gate 网关服务器
 type Gate struct {
-	*RPC                               // RPC管理器
-	sync.RWMutex                       // 读写锁
-	name         string                // 网关名字
-	host         *Host                 // 集群服务器
-	gameServers  map[ID]IService       // Game以GameServer形式,保存在Gate
-	agents       map[string]*GateAgent // GateAgent列表,通过ActorName索引
+	*RPC                              // RPC管理器
+	sync.RWMutex                      // 读写锁
+	name         string               // 网关名字
+	host         *Host                // 集群服务器
+	gameServers  map[ID]IService      // Game以GameServer形式,保存在Gate
+	agents       map[int64]*GateAgent // GateAgent列表,通过UserID索引
 	builder      IServiceBuilder
 	idgen        int64 // session userID generator
 }
@@ -33,16 +32,16 @@ func NewGate(name, localAddr, hostAddr string, builder IServiceBuilder, protocol
 	gate := &Gate{
 		name:        name,
 		gameServers: make(map[ID]IService),
-		agents:      make(map[string]*GateAgent),
+		agents:      make(map[int64]*GateAgent),
 		builder:     builder,
 	}
 	// 为网关创建集群节点服务器
 	gate.host = NewHost(hostAddr)
 	// 注册GateDriver
-	sessionHandler := func(session network.ISession) (network.ISessionHandler, error) {
+	sessionHandlerBuilder := func(session network.ISession) (network.ISessionHandler, error) {
 		return newGateAgent(gate, session, gate.GenSessionID())
 	}
-	err := gate.host.Node.NewDriver(network.NewGateDriver(localAddr, sessionHandler, protocol))
+	err := gate.host.Node.NewDriver(network.NewGateDriver(localAddr, sessionHandlerBuilder, protocol))
 	if err != nil {
 		return nil, err
 	}
@@ -110,34 +109,40 @@ func (gate *Gate) sessionStatusChanged(agent *GateAgent, status network.SessionS
 	gate.Lock()
 	defer gate.Unlock()
 	if status == network.SessionStatusInConnected {
-		gate.agents[agent.UserID()] = agent
+		gate.agents[agent.userID] = agent
 	} else {
-		delete(gate.agents, agent.UserID())
+		delete(gate.agents, agent.userID)
 	}
 }
 
 // Login 用户登录
-func (gate *Gate) Login(agent *GateAgent, req *) (Err, error) {
+func (gate *Gate) Login(agent *GateAgent, ntf *UserLoginNtf, ci *ClientInfo) (Err, error) {
+	ntf.SessionID = agent.sessionID
+	ntf.Gate = gate.name
+
 	gate.Lock()
 	defer gate.Unlock()
 	// TODO 这里
-	for _, gameServer := range gate.gameServers {
-		if target == "" || strings.Split(gameServer.Name(), ":")[0] == target {
-			status, err := agent.rProxy(userID, gameServer)
-			if err != nil {
-				return status, err
+	for _, service := range gate.gameServers {
+		if ntf.ServerID == 0 || GetIDByName(service.Name()) == ntf.ServerID {
+			gameServer := service.(IGameServer)
+			userID, code, err := gameServer.Login(ntf, ci)
+			if err != nil || code != ErrOK {
+				return code, cberrors.New("call GameServer#Login(%s) code: %s err: %s", gameServer, code, err)
 			}
+			agent.gameServer = gameServer
+			agent.userID = userID
 			go gate.sessionStatusChanged(agent, network.SessionStatusInConnected)
 			return ErrOK, nil
 		}
 	}
-	return ErrOK, cberrors.New("unknown rProxy target: %s", target)
+	return ErrOK, cberrors.New("unable to find game server: %d", ntf.ServerID)
 }
 
 // Tunnel 转发从Game->Client的消息,通过UserID找到对应的Session
 func (gate *Gate) Tunnel(msg *TunnelMsg) error {
 	gate.RLock()
-	remote, ok := gate.agents[msg.ActorName]
+	remote, ok := gate.agents[msg.UserID]
 	gate.RUnlock()
 	if ok {
 		return remote.session.Write(&network.Message{

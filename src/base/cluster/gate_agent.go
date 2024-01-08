@@ -8,7 +8,6 @@
 package cluster
 
 import (
-	"gogs/base/cberrors"
 	"gogs/base/cluster/network"
 	log "gogs/base/logger"
 	"time"
@@ -46,31 +45,9 @@ func newGateAgent(gate *Gate, session network.ISession, sessionID int64) (*GateA
 	return remote, err
 }
 
-// rProxy 网关代理
-func (agent *GateAgent) rProxy(userID int64, service IService) (Err, error) {
-	gameServer := service.(IGameServer)
-	rProxyMsg := &UserLoginMsg{
-		UserID:    userID,
-		SessionID: agent.sessionID,
-		Gate:      agent.Gate.name,
-	}
-	id, status, err := gameServer.Login(rProxyMsg)
-	if err != nil || status != ErrOK {
-		return status, cberrors.New("call GameServer#Login(%s) status: %s err: %s", gameServer, status, err)
-	}
-	agent.gameServer = gameServer
-	agent.userID = id
-	return ErrOK, nil
-}
-
 // GameServer .
 func (agent *GateAgent) GameServer() IGameServer {
 	return agent.gameServer
-}
-
-// ActorName 绑定的角色唯一Name
-func (agent *GateAgent) ActorName() string {
-	return agent.actorName
 }
 
 // Close implements IAgent
@@ -101,7 +78,7 @@ func (agent *GateAgent) Write(msg *network.Message) error {
 func (agent *GateAgent) SessionStatusChanged(status network.SessionStatus) {
 	if status == network.SessionStatusClosed && agent.gameServer != nil {
 		agent.Gate.sessionStatusChanged(agent, status)
-		rProxyMsg := &RProxyMsg{
+		rProxyMsg := &UserLoginNtf{
 			UserID:    agent.userID,
 			SessionID: agent.sessionID,
 			Gate:      agent.Gate.name,

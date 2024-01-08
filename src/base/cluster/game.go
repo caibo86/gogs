@@ -105,39 +105,41 @@ func (game *Game) Name() string {
 }
 
 // Login 登录
-func (game *Game) Login(msg *UserLoginInfo) (string, Err, error) {
+func (game *Game) Login(ntf *UserLoginNtf, ci *ClientInfo) (int64, Err, error) {
 	game.Lock()
-	gateServer, ok := game.gateServers[msg.Gate]
+	gateServer, ok := game.gateServers[ntf.Gate]
 	game.Unlock()
 	if !ok {
-		return 0, ErrRProxy, nil
+		log.Errorf("unable to find gate server: %s", ntf.Gate)
+		return 0, ErrGateNotFound, nil
 	}
 	clientType := "client"
 	builder, ok := game.builders[clientType]
 	if !ok {
-		return 0, ErrUnknownService, cberrors.New("unable to find client type builder: %s", clientType)
+		log.Errorf("unable to find client type builder: %s", clientType)
+		return 0, ErrSystem, nil
 	}
 	// 角色名字
 	name := ActorName{
 		SystemName: game.ActorSystem.name,
 		Type:       game.UserServiceName,
-		ID:         msg.UserID,
+		ID:         ntf.UserID,
 	}
 	// 客户端代理
 	var clientAgent *ClientAgent
 	// 在角色系统查找是否已经存在角色
 	actor, ok := game.ActorSystem.GetActor(name.String())
 	if !ok {
-		clientAgent = NewClientAgent(msg.SessionID, msg.UserID)
+		clientAgent = NewClientAgent(ntf.SessionID, ntf.UserID)
 		var err error
 		actor, err = game.ActorSystem.NewActor(name, clientAgent)
 		if actor == nil {
 			log.Errorf("new actor: %s err: %s", name, err)
-			return 0, ErrActorName, err
+			return 0, ErrActorName, nil
 		}
 	} else {
 		clientAgent = actor.Context().(*ClientAgent)
-		clientAgent.sessionID = msg.SessionID
+		clientAgent.sessionID = ntf.SessionID
 	}
 	game.Lock()
 	defer game.Unlock()
@@ -151,12 +153,12 @@ func (game *Game) Login(msg *UserLoginInfo) (string, Err, error) {
 }
 
 // Logout 登出
-func (game *Game) Logout(msg *UserLoginInfo) error {
-	actorName := fmt.Sprintf("%s:%s@%d", game.ActorSystem.name, game.UserServiceName, msg.UserID)
+func (game *Game) Logout(ntf *UserLoginNtf) error {
+	actorName := fmt.Sprintf("%s:%s@%d", game.ActorSystem.name, game.UserServiceName, ntf.UserID)
 	if actor, ok := game.ActorSystem.GetActor(actorName); ok {
 		clientAgent := actor.Context().(*ClientAgent)
-		if clientAgent.sessionID != msg.SessionID {
-			log.Infof("%s logout %s %s", clientAgent, clientAgent.sessionID, msg.SessionID)
+		if clientAgent.sessionID != ntf.SessionID {
+			log.Infof("%s logout %s %s", clientAgent, clientAgent.sessionID, ntf.SessionID)
 			return nil
 		}
 		log.Infof("%s logout", clientAgent)
@@ -178,7 +180,8 @@ func (game *Game) Tunnel(msg *TunnelMsg) error {
 		return nil
 	}
 	// 如果是调用,查找用户角色
-	if actor, ok := game.ActorSystem.GetActor(msg.ActorName); ok {
+	actorName := fmt.Sprintf("%s:%s@%d", game.ActorSystem.name, game.UserServiceName, msg.UserID)
+	if actor, ok := game.ActorSystem.GetActor(actorName); ok {
 		// 获取角色上下文
 		clientAgent := actor.Context().(*ClientAgent)
 		call, err := network.UnmarshalCall(msg.Data)
@@ -206,5 +209,5 @@ func (game *Game) Tunnel(msg *TunnelMsg) error {
 			return nil
 		}
 	}
-	return cberrors.New("actor not found: %s", msg.ActorName)
+	return cberrors.New("actor not found: %s", actorName)
 }

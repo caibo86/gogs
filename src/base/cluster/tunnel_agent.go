@@ -12,9 +12,9 @@ import (
 	"time"
 )
 
-// TunnelAgent game和GateServerRemoteService的中间层
-// 用于game调用client的接口
-// 通过GateServer的Tunnel接口将消息发送给client
+// TunnelAgent Game 和 GateServerRemoteService 的中间层
+// 用于 Game 调用 client 的接口
+// 通过 GateServerRemoteService 的 Tunnel 接口将消息发送给 client
 type TunnelAgent struct {
 	game       *Game
 	userID     int64
