@@ -8,3 +8,6 @@
 8:消息的加密和压缩
 9:根据属性ReadWrite来判断是否输出Read和Write方法 DONE
 10.gen4go.go中多余的参数列表生成函数清除 DONE
+11.消除服务器关闭时的2秒等待,Session的心跳和SR线程看能否使用exit信号
+12.method的命名参数,格式化时不丢失别名 DONE
+13.cluster包生成的ServerTypeName不正确 DONE

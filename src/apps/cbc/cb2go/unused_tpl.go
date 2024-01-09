@@ -30,6 +30,8 @@ func Marshal{{$Struct}}(m *{{$Struct}}) []byte {
 
 
 
+// Service
+
 
 
 `

@@ -642,13 +642,15 @@ func (parser *Parser) parseService() {
 				// 分析类型
 				paramType := parser.parseType()
 				next = parser.Peek()
+				var alias string
 				if next.Type != ',' &&
 					next.Type != ')' &&
 					next.Type != TokenCOMMENT {
+					alias = paramType.OriginName()
 					paramType = parser.parseType()
 				}
 				// 添加类型到函数的输入参数列表
-				param := method.NewParam(paramType)
+				param := method.NewParam(paramType, alias)
 				// 附加位置信息 注释及属性
 				attachPos(param, Pos(param.Type))
 				parser.parseComments()
@@ -673,13 +675,15 @@ func (parser *Parser) parseService() {
 				parser.parseAttrs()
 				paramType := parser.parseType()
 				next = parser.Peek()
+				var alias string
 				if next.Type != ',' &&
 					next.Type != ')' &&
 					next.Type != TokenCOMMENT {
+					alias = paramType.OriginName()
 					paramType = parser.parseType()
 				}
 				// 将类型添加到返回参数列表
-				param := method.NewReturn(paramType)
+				param := method.NewReturn(paramType, alias)
 				attachPos(param, Pos(param.Type))
 				parser.parseComments()
 				// parser.attachComments(param)

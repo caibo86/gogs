@@ -19,7 +19,7 @@ type Param struct {
 	BaseExpr        // 内嵌基本表达式实现
 	ID       uint16 // 参数ID
 	Type     Expr   // 参数类型
-	IsReturn bool   //
+	Alias    string // 参数别名
 }
 
 // GetName implement IField
@@ -49,9 +49,17 @@ func (method *Method) OriginFirst() string {
 	var params string
 	for i, param := range method.Params {
 		if i == len(method.Params)-1 {
-			params += param.Type.OriginName()
+			if param.Alias == "" {
+				params += param.Type.OriginName()
+			} else {
+				params += param.Alias + " " + param.Type.OriginName()
+			}
 		} else {
-			params += param.Type.OriginName() + ", "
+			if param.Alias == "" {
+				params += param.Type.OriginName() + ", "
+			} else {
+				params += param.Alias + " " + param.Type.OriginName() + ", "
+			}
 		}
 	}
 	ret := fmt.Sprintf("%s(%s)", method.Name(), params)
@@ -68,9 +76,17 @@ func (method *Method) OriginSecond() string {
 	var params string
 	for i, param := range method.Return {
 		if i == len(method.Return)-1 {
-			params += param.Type.OriginName()
+			if param.Alias == "" {
+				params += param.Type.OriginName()
+			} else {
+				params += param.Alias + " " + param.Type.OriginName()
+			}
 		} else {
-			params += param.Type.OriginName() + ", "
+			if param.Alias == "" {
+				params += param.Type.OriginName() + ", "
+			} else {
+				params += param.Alias + " " + param.Type.OriginName() + ", "
+			}
 		}
 	}
 	return fmt.Sprintf("-> (%s); ", params)
@@ -87,11 +103,12 @@ func (method *Method) ReturnParams() uint16 {
 }
 
 // NewReturn 在方法节点上新建返回参数 并加入到此方法返回参数列表
-func (method *Method) NewReturn(paramType Expr) *Param {
+func (method *Method) NewReturn(paramType Expr, alias string) *Param {
 	// 用给定类型表达式做类型及当前方法返回参数列表长度做ID 进行初始化
 	param := &Param{
-		ID:   uint16(len(method.Return)),
-		Type: paramType,
+		ID:    uint16(len(method.Return)),
+		Type:  paramType,
+		Alias: alias,
 	}
 	// 设置类型节点的父节点为此参数节点
 	paramType.SetParent(param)
@@ -105,11 +122,12 @@ func (method *Method) NewReturn(paramType Expr) *Param {
 }
 
 // NewParam 在方法节点上新建输入参数 并加入到此方法输入参数列表
-func (method *Method) NewParam(paramType Expr) *Param {
+func (method *Method) NewParam(paramType Expr, alias string) *Param {
 	// 用给定类型表达式做类型及当前方法返回参数列表长度做ID 进行初始化
 	param := &Param{
-		ID:   uint16(len(method.Params)),
-		Type: paramType,
+		ID:    uint16(len(method.Params)),
+		Type:  paramType,
+		Alias: alias,
 	}
 	// 设置类型节点的父节点为此参数节点
 	paramType.SetParent(param)
@@ -251,7 +269,7 @@ func (service *Service) CopyMethod(src *Method) (*Method, error) {
 			}
 		}
 		ref := service.Script().NewTypeRef(namePath, "")
-		method.NewParam(ref)
+		method.NewParam(ref, param.Alias)
 	}
 	for _, param := range src.Return {
 		r := param.Type.(*TypeRef)
@@ -269,7 +287,7 @@ func (service *Service) CopyMethod(src *Method) (*Method, error) {
 			}
 		}
 		ref := service.Script().NewTypeRef(namePath, "")
-		method.NewReturn(ref)
+		method.NewReturn(ref, param.Alias)
 	}
 	return method, nil
 }

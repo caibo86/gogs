@@ -166,6 +166,7 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"printCommentsToLine": gen.printCommentsToLine,
 		"params":              gen.params,
 		"paramsName":          gen.paramsName,
+		"paramsW":             gen.paramsW,
 		"genReadWrite":        gen.genReadWrite,
 	}
 	gen.tpl, err = template.New("golang").Funcs(functions).Parse(tpl4go)
@@ -866,7 +867,7 @@ func (gen *Gen4Go) defaultVal(expr ast.Expr) string {
 	return "unknown"
 }
 
-// params 根据参数生成函数声明的入参列表
+// params 根据参数生成参数列表
 func (gen *Gen4Go) params(token string, params []*ast.Param, withErr bool) string {
 	if len(params) == 0 {
 		if withErr {
@@ -885,7 +886,7 @@ func (gen *Gen4Go) params(token string, params []*ast.Param, withErr bool) strin
 	return buff.String()
 }
 
-// paramsName 根据参数生成函数声明的入参列表
+// paramsName 根据参数生成名字列表
 func (gen *Gen4Go) paramsName(token string, params []*ast.Param, withErr bool) string {
 	if len(params) == 0 {
 		if withErr {
@@ -900,6 +901,19 @@ func (gen *Gen4Go) paramsName(token string, params []*ast.Param, withErr bool) s
 	}
 	if withErr {
 		buff.WriteString(", err")
+	}
+	return buff.String()
+}
+
+// paramsW 根据参数生成函数声明的入参列表
+func (gen *Gen4Go) paramsW(token string, params []*ast.Param) string {
+	if len(params) == 0 {
+		return ""
+	}
+	var buff bytes.Buffer
+	for i := 0; i < len(params); i++ {
+		buff.WriteString(fmt.Sprintf(",\"%s\",%s%d",
+			strings.TrimLeft(params[i].Type.Name(), "."), token, i))
 	}
 	return buff.String()
 }

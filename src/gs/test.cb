@@ -1,7 +1,7 @@
 import (
-	"gss"
 	abc "base/gss"
 	"gsss"
+	"gss"
 )
 
 // 前面的注释
@@ -117,9 +117,9 @@ struct Car {
 // 哈哈
 @ServiceAttr(ID:100, Name:"game")
 service GameServer(gss.MapServer) {
-	GetServerTime(int32)       -> (int64, ErrCode);            // 无聊 获取服务器时间 单位是毫秒
-	GetCarInfo(int32, Student) -> (Car, gss.Teacher, ErrCode); // 这个注释去哪里了 获取汽车信息
-	HeartBeat();                                               // 心跳第一个注释 心跳第二个注释
+	GetServerTime(serverID int32) -> (serverTime int64, code ErrCode); // 无聊 获取服务器时间 单位是毫秒
+	GetCarInfo(int32, Student)    -> (Car, gss.Teacher, ErrCode);      // 这个注释去哪里了 获取汽车信息
+	HeartBeat();                                                       // 心跳第一个注释 心跳第二个注释
 }
 
 service API {

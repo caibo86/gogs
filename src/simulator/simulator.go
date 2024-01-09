@@ -61,7 +61,13 @@ func Main() {
 		log.Errorf("connect err:%s", err)
 		return
 	}
-	ack, code, err := client.GateServer.(*cb.GateRemoteService).Login(&cb.LoginReq{}, &cb.ClientInfo{})
+	ack, code, err := client.GateServer.(*cb.GateRemoteService).Login(&cb.LoginReq{
+		AccountID:   100,
+		Token:       "abc",
+		UserID:      999,
+		ServerID:    1,
+		AccountType: cb.AccountTypeTest,
+	}, &cb.ClientInfo{})
 	if err != nil {
 		log.Errorf("login err:%s", err)
 		return

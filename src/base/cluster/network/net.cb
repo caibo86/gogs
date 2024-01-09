@@ -1,3 +1,5 @@
+// 这个文件是不能定义Service的!!!
+
 // 会话状态
 enum SessionStatus {
 	Closed       = 1; 

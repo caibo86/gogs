@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"fmt"
 	"gogs/base/cberrors"
+	log "gogs/base/logger"
 	"reflect"
 )
 
@@ -85,11 +86,18 @@ func (node *BaseNode) String() string {
 // Path 获取节点路径
 func (node *BaseNode) Path() string {
 	var writer bytes.Buffer
-	for _, n := range Path(node) {
+	pathNodes := Path(node)
+	for i, n := range pathNodes {
 		writer.WriteString(n.Name())
-		writer.WriteRune('.')
+		if i < len(pathNodes)-2 {
+			writer.WriteRune('/')
+		} else if i == len(pathNodes)-2 {
+			writer.WriteRune('#')
+		}
 	}
-	return writer.String()
+	ret := writer.String()
+	log.Debugf("我是%s,我的路径是:%s", node.Name(), ret)
+	return ret
 }
 
 // Package 获取包
