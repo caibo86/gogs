@@ -38,6 +38,7 @@ struct ServiceRegistryData {
 }
 
 // 消息
+@cblang.ReadWrite
 struct Message {
 	Type MessageType = 1; 
 	Data bytes       = 2; 

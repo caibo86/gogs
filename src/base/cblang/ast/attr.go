@@ -14,8 +14,9 @@ import (
 // Attr 属性节点
 type Attr struct {
 	BaseExpr
-	Type *TypeRef
-	Args Expr
+	Type   *TypeRef
+	Args   Expr
+	Values map[string]any // 求值后的属性
 }
 
 // NewAttr 为代码节点创建属性

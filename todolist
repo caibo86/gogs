@@ -3,5 +3,8 @@
 3.怎么由methodID索引到对应的函数名
 4.ActorSystem的Neighbor怎么调用
 5.检查session的关闭
-6.marshalType和unmarshalType没有完成
-7:Call和Return的参数,当做一个整体进行序列化
+6.marshalType和unmarshalType没有完成 DONE
+7:Call和Return的参数,当做一个整体进行序列化,对所有类型参数进行序列化测试 DONE
+8:消息的加密和压缩
+9:根据属性ReadWrite来判断是否输出Read和Write方法 DONE
+10.gen4go.go中多余的参数列表生成函数清除 DONE

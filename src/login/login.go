@@ -16,6 +16,7 @@ import (
 	"gogs/base/config"
 	"gogs/base/etcd"
 	log "gogs/base/logger"
+	"gogs/cb"
 	"gogs/game/model"
 	"runtime"
 )
@@ -59,7 +60,7 @@ func Main() {
 	RegisterBuilders()
 	name := fmt.Sprintf("%s:%d", config.ServerType, config.ServerID)
 	server = cluster.NewNormal(name, builders, "")
-	server.Host.NewService()
+	server.Host.NewService(cb.LoginTypeName, name, nil)
 	etcd.SetServiceCallback(EtcdNodeEventListener)
 	CheckGateConn()
 	// 处理系统信号

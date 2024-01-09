@@ -1,5 +1,5 @@
 // -------------------------------------------
-// @file      : test.gs_test.go
+// @file      : test.cb_test.go
 // @author    : 蔡波
 // @contact   : caibo923@gmail.com
 // @time      : 2023/12/27 下午2:04
@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/smartystreets/goconvey/convey"
+	"gogs/base/cluster"
+	"gogs/base/config"
 	"gogs/gss"
 	"gogs/pb"
 	"math"
@@ -30,7 +32,7 @@ var car = &Car{
 	VarUint32:  math.MaxUint32,
 	VarInt64:   math.MaxInt64,
 	VarUint64:  123456789,
-	VarFloat32: math.MaxFloat32,
+	VarFloat32: 6.66,
 	VarFloat64: math.MaxFloat64,
 	VarStruct:  &Student{ID: 904088, Name: "蔡波", Age: 18},
 	VarList:    []int32{1, 2, 3, 4, 5},
@@ -38,7 +40,7 @@ var car = &Car{
 		{ID: 999, Name: "超人", Age: 888}},
 	VarBools:    []bool{true, false, true, false},
 	VarStrings:  []string{"我是中文", "I am English"},
-	VarFloat32s: []float32{math.MaxFloat32, 3.14125},
+	VarFloat32s: []float32{6.66, 3.14125},
 	VarFloat64s: []float64{math.MaxFloat64, 9999.99, 33, 24.1287},
 	VarEnums:    []Color{ColorRed, ColorBlue, ColorGreen},
 	VarMap:      map[string]string{"key1": "我是中文", "键2": "I am English"},
@@ -130,7 +132,7 @@ var pbCar = &pb.Car{
 		int32(pb.Subject_Chinese):   {}},
 }
 
-func TestcblangMarshal(t *testing.T) {
+func TestCblangMarshal(t *testing.T) {
 	Convey("测试cblang的序列化和反序列化", t, func() {
 		data := car.Marshal()
 		newCar := &Car{}
@@ -148,7 +150,7 @@ func TestcblangMarshal(t *testing.T) {
 		So(newCar.VarUint32, ShouldEqual, math.MaxUint32)
 		So(newCar.VarInt64, ShouldEqual, math.MaxInt64)
 		So(newCar.VarUint64, ShouldEqual, 123456789)
-		So(newCar.VarFloat32, ShouldEqual, math.MaxFloat32)
+		So(newCar.VarFloat32, ShouldAlmostEqual, 6.66, 0.001)
 		So(newCar.VarFloat64, ShouldEqual, math.MaxFloat64)
 		So(newCar.VarStruct.ID, ShouldEqual, 904088)
 		So(newCar.VarStruct.Name, ShouldEqual, "蔡波")
@@ -162,7 +164,7 @@ func TestcblangMarshal(t *testing.T) {
 		So(newCar.VarStructs[1].Age, ShouldEqual, 888)
 		So(newCar.VarBools, ShouldResemble, []bool{true, false, true, false})
 		So(newCar.VarStrings, ShouldResemble, []string{"我是中文", "I am English"})
-		So(newCar.VarFloat32s, ShouldResemble, []float32{math.MaxFloat32, 3.14125})
+		So(newCar.VarFloat32s, ShouldResemble, []float32{6.66, 3.14125})
 		So(newCar.VarFloat64s, ShouldResemble, []float64{math.MaxFloat64, 9999.99, 33, 24.1287})
 		So(newCar.VarEnums, ShouldResemble, []Color{ColorRed, ColorBlue, ColorGreen})
 		So(newCar.VarMap["key1"], ShouldEqual, "我是中文")
@@ -375,5 +377,68 @@ func TestUse(t *testing.T) {
 		data[1] = 100
 		fmt.Println(data)
 		fmt.Println(s)
+	})
+}
+
+type testAPI struct {
+}
+
+func (api *testAPI) T(arg0 byte, arg1 bool, arg2 uint8, arg3 uint16, arg4 int32, arg5 int64, arg6 float32, arg7 float64, arg8 []byte, arg9 string, arg10 gss.Subject, arg11 *gss.Teacher, arg12 []int32, arg13 []string, arg14 []gss.Subject, arg15 []*gss.Teacher, arg16 map[gss.Subject]*gss.Teacher, arg17 map[string][]byte) (ret0 byte, ret1 bool, ret2 uint8, ret3 uint16, ret4 int32, ret5 int64, ret6 float32, ret7 float64, ret8 []byte, ret9 string, ret10 gss.Subject, ret11 *gss.Teacher, ret12 []int32, ret13 []string, ret14 []gss.Subject, ret15 []*gss.Teacher, ret16 map[gss.Subject]*gss.Teacher, ret17 map[string][]byte, err error) {
+	return arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, nil
+}
+
+func TestParam(t *testing.T) {
+	config.With(
+		config.KeyRPC,
+	)
+	Convey("测试参数", t, func() {
+		builder := NewAPIBuilder(func(service cluster.IService) (IAPI, error) {
+			return &testAPI{}, nil
+		})
+		service, err := builder.NewService("test", 1, nil)
+		So(err, ShouldBeNil)
+		api := service.(*APIService)
+		ret0, ret1, ret2, ret3, ret4, ret5, ret6, ret7, ret8, ret9, ret10, ret11, ret12, ret13, ret14, ret15, ret16, ret17, err := api.T(
+			1, true, 5, 255, -100, math.MinInt64, 6.66, 0.1314e-7, []byte("aaa"), "bbb", gss.SubjectBiology, &gss.Teacher{ID: 1, Name: "石老师", Age: 15},
+			[]int32{1, 2, 3, 4, 5}, []string{"aaa", "bbb", "ccc"}, []gss.Subject{gss.SubjectBiology, gss.SubjectChemistry, gss.SubjectChinese},
+			[]*gss.Teacher{{ID: 1, Name: "石老师", Age: 15}, {ID: 2, Name: "李老师", Age: 25}}, map[gss.Subject]*gss.Teacher{gss.SubjectBiology: {ID: 1, Name: "石老师", Age: 15}, gss.SubjectChemistry: {ID: 2, Name: "李老师", Age: 25}},
+			map[string][]byte{"aaa": []byte("aaa"), "bbb": []byte("bbb")})
+		So(err, ShouldBeNil)
+		So(ret0, ShouldEqual, 1)
+		So(ret1, ShouldEqual, true)
+		So(ret2, ShouldEqual, 5)
+		So(ret3, ShouldEqual, 255)
+		So(ret4, ShouldEqual, -100)
+		So(ret5, ShouldEqual, math.MinInt64)
+		fmt.Printf("这个浮点数是:%.10f\n", ret6)
+		fmt.Println(math.Float32bits(6.66))
+		fmt.Printf("这个浮点数是:%.10f\n", math.Float32frombits(uint32(1087708856)))
+		So(ret6, ShouldAlmostEqual, 6.66, 0.001)
+
+		So(ret7, ShouldEqual, 0.1314e-7)
+		So(ret8, ShouldResemble, []byte("aaa"))
+		So(ret9, ShouldEqual, "bbb")
+		So(ret10, ShouldEqual, gss.SubjectBiology)
+		So(ret11.ID, ShouldEqual, 1)
+		So(ret11.Name, ShouldEqual, "石老师")
+		So(ret11.Age, ShouldEqual, 15)
+		So(ret12, ShouldResemble, []int32{1, 2, 3, 4, 5})
+		So(ret13, ShouldResemble, []string{"aaa", "bbb", "ccc"})
+		So(ret14, ShouldResemble, []gss.Subject{gss.SubjectBiology, gss.SubjectChemistry, gss.SubjectChinese})
+		So(ret15[0].ID, ShouldEqual, 1)
+		So(ret15[0].Name, ShouldEqual, "石老师")
+		So(ret15[0].Age, ShouldEqual, 15)
+		So(ret15[1].ID, ShouldEqual, 2)
+		So(ret15[1].Name, ShouldEqual, "李老师")
+		So(ret15[1].Age, ShouldEqual, 25)
+		So(ret16[gss.SubjectBiology].ID, ShouldEqual, 1)
+		So(ret16[gss.SubjectBiology].Name, ShouldEqual, "石老师")
+		So(ret16[gss.SubjectBiology].Age, ShouldEqual, 15)
+		So(ret16[gss.SubjectChemistry].ID, ShouldEqual, 2)
+		So(ret16[gss.SubjectChemistry].Name, ShouldEqual, "李老师")
+		So(ret16[gss.SubjectChemistry].Age, ShouldEqual, 25)
+		So(ret17["aaa"], ShouldResemble, []byte("aaa"))
+		So(ret17["bbb"], ShouldResemble, []byte("bbb"))
+
 	})
 }

@@ -141,42 +141,6 @@ var compareMapping = map[string]string{
 	"String":  `len(%s) > 0`,
 }
 
-// marshalMapping 写入方法映射
-var marshalMapping = map[string]string{
-	"Bool":    "network.MarshalBool",
-	"Byte":    "network.MarshalByte",
-	"Bytes":   "network.MarshalBytes",
-	"Int8":    "network.MarshalInt8",
-	"Uint8":   "network.MarshalUint8",
-	"Int16":   "network.MarshalInt16",
-	"Uint16":  "network.MarshalUint16",
-	"Int32":   "network.MarshalInt32",
-	"Uint32":  "network.MarshalUint32",
-	"Float32": "network.MarshalFloat32",
-	"Int64":   "network.MarshalInt64",
-	"Uint64":  "network.MarshalUint64",
-	"Float64": "network.MarshalFloat64",
-	"String":  "network.MarshalString",
-}
-
-// unmarshalMapping 读方法映射
-var unmarshalMapping = map[string]string{
-	"Bool":    "network.UnmarshalBool",
-	"Byte":    "network.UnmarshalByte",
-	"Bytes":   "network.UnmarshalBytes",
-	"Int8":    "network.UnmarshalInt8",
-	"Uint8":   "network.UnmarshalUint8",
-	"Int16":   "network.UnmarshalInt16",
-	"Uint16":  "network.UnmarshalUint16",
-	"Int32":   "network.UnmarshalInt32",
-	"Uint32":  "network.UnmarshalUint32",
-	"Float32": "network.UnmarshalFloat32",
-	"Int64":   "network.UnmarshalInt64",
-	"Uint64":  "network.UnmarshalUint64",
-	"Float64": "network.UnmarshalFloat64",
-	"String":  "network.UnmarshalString",
-}
-
 // Gen4Go golang代码生成器
 type Gen4Go struct {
 	ast.EmptyVisitor                    // 内嵌空访问者
@@ -192,52 +156,30 @@ func NewGen4Go() (gen *Gen4Go, err error) {
 		"symbol":              strings.Title,
 		"pos":                 cblang.Pos,
 		"typeName":            gen.typeName,
-		"params":              gen.params,
-		"returnParams":        gen.returnParams,
-		"callParams":          gen.callParams,
-		"returnArgs":          gen.returnArgs,
 		"readType":            gen.readType,
 		"writeType":           gen.writeType,
 		"defaultVal":          gen.defaultVal,
-		"lowerFirst":          gen.lowerFirst,
 		"sovFunc":             gen.sovFunc,
 		"calTypeSize":         gen.calTypeSize,
 		"copyType":            gen.copyType,
 		"printComments":       gen.printComments,
 		"printCommentsToLine": gen.printCommentsToLine,
-		"marshalType":         gen.marshalType,
-		"unmarshalType":       gen.unmarshalType,
-		"addReceiver":         gen.addReceiver,
-		"addArg":              gen.addArg,
-		"inParams":            gen.inParams,
-		"inParamsOnlyName":    gen.inParamsOnlyName,
-		"outParams":           gen.outParams,
-		"outParamsOnlyName":   gen.outParamsOnlyName,
-		"inReturn":            gen.inReturn,
-		"inReturnOnlyName":    gen.inReturnOnlyName,
-		"outReturn":           gen.outReturn,
-		"outReturnOnlyName":   gen.outReturnOnlyName,
+		"params":              gen.params,
+		"paramsName":          gen.paramsName,
+		"genReadWrite":        gen.genReadWrite,
 	}
 	gen.tpl, err = template.New("golang").Funcs(functions).Parse(tpl4go)
 	return
 }
 
-// addReceiver 添加接收者
-func (gen *Gen4Go) addReceiver(name string) string {
-	return "m." + name
-}
-
-// addArg 参数名
-func (gen *Gen4Go) addArg(id uint16) string {
-	return fmt.Sprintf("arg%d", id)
-}
-
-// lowerFirst 首字母小写
-func (gen *Gen4Go) lowerFirst(name string) string {
-	if len(name) == 0 {
-		return name
+// genReadWrite 是否为Struct生成读写方法
+func (gen *Gen4Go) genReadWrite(table *ast.Table) bool {
+	ret := false
+	if cblang.IsStruct(table) && cblang.ReadWrite(table) {
+		ret = true
 	}
-	return strings.ToLower(name[:1]) + name[1:]
+	log.Debugf("struct: %s, gen Read/Write func? : %v", table.Name(), ret)
+	return ret
 }
 
 // calTypeSize 根据类型获取计算大小的函数
@@ -276,14 +218,7 @@ func (gen *Gen4Go) calTypeSize(field ast.IField) string {
 					n += 10
 				}`,
 				field.GetName())
-		case "String":
-			return fmt.Sprintf(
-				`l = len(%s)
-					if l > 0 {
-					n += 6 + l 
-				}`,
-				field.GetName())
-		case "Bytes":
+		case "String", "Bytes":
 			return fmt.Sprintf(
 				`l = len(%s)
 					if l > 0 {
@@ -346,17 +281,7 @@ func (gen *Gen4Go) calTypeSize(field ast.IField) string {
 					n += 6 + l * 8
 				}`,
 				field.GetName())
-		case "String":
-			return fmt.Sprintf(
-				`if len(%s) > 0 {
-					n += 6
-					for _, s := range %s {
-						l = len(s)
-						n += 4 + l
-					}
-				}`,
-				field.GetName(), field.GetName())
-		case "Bytes":
+		case "String", "Bytes":
 			return fmt.Sprintf(
 				`if len(%s) > 0 {
 					n += 6
@@ -424,7 +349,7 @@ func (gen *Gen4Go) calTypeSize(field ast.IField) string {
 			valStr = "4"
 		case "Uint64", "Int64", "float64":
 			valStr = "8"
-		case "String":
+		case "String", "Bytes":
 			valStr = "4 + len(v)"
 		default:
 			switch ref.Ref.(type) {
@@ -897,221 +822,6 @@ func (gen *Gen4Go) copyType(field *ast.Field) string {
 	return ""
 }
 
-// marshalType 根据类型取序列化函数
-func (gen *Gen4Go) marshalType(expr ast.Expr) string {
-	switch expr.(type) {
-	case *ast.TypeRef:
-		// 内置类型
-		ref := expr.(*ast.TypeRef)
-		name := ref.Ref.Name()
-		if f, ok := marshalMapping[name]; ok {
-			return f
-		}
-		// 自定义类型
-		if _, ok := expr.Script().Imports[ref.NamePath[0]]; ok {
-			return fmt.Sprintf(
-				"%s.Marshal%s",
-				ref.NamePath[0],
-				strings.Title(ref.NamePath[1]),
-			)
-		}
-		return fmt.Sprintf(
-			"Marshal%s",
-			strings.Title(ref.NamePath[0]),
-		)
-	case *ast.Array:
-		// // 数组
-		// array := expr.(*ast.Array)
-		// var str string
-		// ref := slice.Element.(*ast.TypeRef)
-		// if _, ok := keyMapping[ref.Ref.Name()]; ok {
-		// 	return fmt.Sprintf(`if m.%s != nil {
-		// 			in, out := &m.%s, &out.%s
-		// 			*out = make([]%s, len(*in))
-		// 			copy(*out,*in)
-		// 		}`,
-		// 		field.Name(), field.Name(), field.Name(), gen.typeName(ref))
-		// }
-		// switch ref.Ref.(type) {
-		// case *ast.Table:
-		// 	return fmt.Sprintf(`if m.%s != nil {
-		// 			in, out := &m.%s, &out.%s
-		// 			*out = make([]%s, len(*in))
-		// 			for i:= range *in {
-		// 				if (*in)[i] != nil {
-		// 					in, out := &(*in)[i], &(*out)[i]
-		// 					*out = %s
-		// 					(*in).CopyInto(*out)
-		// 				}
-		// 			}
-		// 		}`,
-		// 		field.Name(), field.Name(), field.Name(), gen.typeName(ref), gen.defaultVal(ref))
-		// default:
-		// 	return fmt.Sprintf(`if m.%s != nil {
-		// 			in, out := &m.%s, &out.%s
-		// 			*out = make([]%s, len(*in))
-		// 			copy(*out,*in)
-		// 		}`,
-		// 		field.Name(), field.Name(), field.Name(), gen.typeName(ref))
-		// }
-		//
-		// var buff bytes.Buffer
-		// if array.Element.Name() == ".cblang.Byte" {
-		// 	if err := gen.tpl.ExecuteTemplate(&buff, "marshalByteArray", array); err != nil {
-		// 		panic(err)
-		// 	}
-		// } else {
-		// 	if err := gen.tpl.ExecuteTemplate(&buff, "marshalArray", array); err != nil {
-		// 		panic(err)
-		// 	}
-		// }
-		// return buff.String()
-		return ""
-	case *ast.Slice:
-		// // 切片
-		// slice := expr.(*ast.Slice)
-		// ref := slice.Element.(*ast.TypeRef)
-		// if _, ok := writeMapping[ref.Ref.Name()]; ok {
-		// 	if ref.Ref.Name() == "Byte" {
-		// 		return fmt.Sprintf(
-		// 			`if len(m.%s) > 0 {
-		// 				i = network.WriteFieldID(data, i , %d)
-		// 				i = network.WriteBytes(data, i, m.%s)
-		// 			}`,
-		// 			field.Name(),
-		// 			field.ID,
-		// 			field.Name())
-		// 	} else {
-		// 		str = fmt.Sprintf("i = %s(data, i, e)", str)
-		// 	}
-		// 	return fmt.Sprintf(`if m.%s != nil {
-		// 			in, out := &m.%s, &out.%s
-		// 			*out = make([]%s, len(*in))
-		// 			copy(*out,*in)
-		// 		}`,
-		// 		field.Name(), field.Name(), field.Name(), gen.typeName(ref))
-		// }
-		// switch ref.Ref.(type) {
-		// case *ast.Table:
-		// 	return fmt.Sprintf(`if m.%s != nil {
-		// 			in, out := &m.%s, &out.%s
-		// 			*out = make([]%s, len(*in))
-		// 			for i:= range *in {
-		// 				if (*in)[i] != nil {
-		// 					in, out := &(*in)[i], &(*out)[i]
-		// 					*out = %s
-		// 					(*in).CopyInto(*out)
-		// 				}
-		// 			}
-		// 		}`,
-		// 		field.Name(), field.Name(), field.Name(), gen.typeName(ref), gen.defaultVal(ref))
-		// default:
-		// 	return fmt.Sprintf(`if m.%s != nil {
-		// 			in, out := &m.%s, &out.%s
-		// 			*out = make([]%s, len(*in))
-		// 			copy(*out,*in)
-		// 		}`,
-		// 		field.Name(), field.Name(), field.Name(), gen.typeName(ref))
-		// }
-		//
-		// var buff bytes.Buffer
-		// if slice.Element.Name() == ".cblang.Byte" {
-		// 	if err := gen.tpl.ExecuteTemplate(&buff, "marshalByteSlice", slice); err != nil {
-		// 		panic(err)
-		// 	}
-		// } else {
-		// 	if err := gen.tpl.ExecuteTemplate(&buff, "marshalSlice", slice); err != nil {
-		// 		panic(err)
-		// 	}
-		// }
-		// return buff.String()
-		return ""
-	case *ast.Map:
-		// 字典
-		hash := expr.(*ast.Map)
-		var buff bytes.Buffer
-		if err := gen.tpl.ExecuteTemplate(&buff, "marshalMap", hash); err != nil {
-			panic(err)
-		}
-		return buff.String()
-	}
-	cberrors.Panic("not here")
-	return ""
-}
-
-// unmarshalType 根据类型取反序列化函数
-func (gen *Gen4Go) unmarshalType(expr ast.Expr) string {
-	switch expr.(type) {
-	case *ast.TypeRef:
-		// 内置类型
-		ref := expr.(*ast.TypeRef)
-		name := ref.Ref.Name()
-		if f, ok := unmarshalMapping[name]; ok {
-			return f
-		}
-		// 自定义类型
-
-		if _, ok := expr.Script().Imports[ref.NamePath[0]]; ok {
-			return fmt.Sprintf(
-				"%s.Unmarshal%s",
-				ref.NamePath[0],
-				strings.Title(ref.NamePath[1]),
-			)
-		}
-		return fmt.Sprintf("Unmarshal%s", strings.Title(ref.NamePath[0]))
-	case *ast.Array:
-		// 数组
-		array := expr.(*ast.Array)
-		var buff bytes.Buffer
-		if array.Element.Name() == ".cblang.Byte" {
-			if err := gen.tpl.ExecuteTemplate(&buff, "unmarshalByteArray", array); err != nil {
-				panic(err)
-			}
-		} else {
-			if err := gen.tpl.ExecuteTemplate(&buff, "unmarshalArray", array); err != nil {
-				panic(err)
-			}
-		}
-		return buff.String()
-	case *ast.Slice:
-		// // 切片
-		// slice := expr.(*ast.Slice)
-		// ref := slice.Element.(*ast.TypeRef)
-		// var str string
-		// if _, ok := readMapping[ref.Ref.Name()]; ok {
-		// 	if ref.Ref.Name() == "Byte" {
-		// 		str = `network.ReadBytes(data, i)`
-		// 	} else {
-		// 		str = fmt.Sprintf(`network.Read%s(data, i)`, gen.typeName(ref))
-		// 	}
-		// }
-		//
-		// return fmt.Sprintf(`func(data []byte) (%s, error) {
-		// 	var i int
-		// 	var length uint32
-		// 	var ret %s
-		// 	i, length = network.ReadUint32(data)
-		// 	if length > 0 {
-		// 		ret = make(%s, length)
-		// 		for j := uint32(0); j < length; j++ {
-		// 			ret[j] =
-		// 		}
-		// 	}
-		// }`, gen.typeName(slice), gen.typeName(slice), gen.typeName(slice))
-		return ""
-	case *ast.Map:
-		// 字典
-		hash := expr.(*ast.Map)
-		var buff bytes.Buffer
-		if err := gen.tpl.ExecuteTemplate(&buff, "unmarshalMap", hash); err != nil {
-			panic(err)
-		}
-		return buff.String()
-	}
-	cberrors.Panic("not here")
-	return ""
-}
-
 // defaultVal 根据类型取其默认值表达式
 func (gen *Gen4Go) defaultVal(expr ast.Expr) string {
 	switch expr.(type) {
@@ -1157,170 +867,40 @@ func (gen *Gen4Go) defaultVal(expr ast.Expr) string {
 }
 
 // params 根据参数生成函数声明的入参列表
-func (gen *Gen4Go) params(params []*ast.Param) string {
+func (gen *Gen4Go) params(token string, params []*ast.Param, withErr bool) string {
 	if len(params) == 0 {
-		return "()"
-	}
-	var buff bytes.Buffer
-	buff.WriteString(fmt.Sprintf("(arg0 %s", gen.typeName(params[0].Type)))
-	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(",arg%d %s", i, gen.typeName(params[i].Type)))
-	}
-	buff.WriteString(")")
-	return buff.String()
-}
-
-// inParams 根据参数生成函数声明的入参列表
-func (gen *Gen4Go) inParams(params []*ast.Param) string {
-	if len(params) == 0 {
-		return "()"
-	}
-	var buff bytes.Buffer
-	buff.WriteString(fmt.Sprintf("(param0 %s", gen.typeName(params[0].Type)))
-	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(",param%d %s", i, gen.typeName(params[i].Type)))
-	}
-	buff.WriteString(")")
-	return buff.String()
-}
-
-// inParamsOnlyName 根据参数生成函数声明的入参列表
-func (gen *Gen4Go) inParamsOnlyName(params []*ast.Param) string {
-	if len(params) == 0 {
-		return "()"
-	}
-	var buff bytes.Buffer
-	buff.WriteString(fmt.Sprintf("(arg0"))
-	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(",arg%d", i))
-	}
-	buff.WriteString(")")
-	return buff.String()
-}
-
-// outParams 根据参数生成函数声明的入参列表
-func (gen *Gen4Go) outParams(params []*ast.Param) string {
-	if len(params) == 0 {
-		return "(err error)"
-	}
-	var buff bytes.Buffer
-	buff.WriteString(fmt.Sprintf("(param0 %s", gen.typeName(params[0].Type)))
-	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(",param%d %s", i, gen.typeName(params[i].Type)))
-	}
-	buff.WriteString(", err error)")
-	return buff.String()
-}
-
-// outParamsOnlyName 根据参数生成函数声明的入参列表
-func (gen *Gen4Go) outParamsOnlyName(params []*ast.Param) string {
-	if len(params) == 0 {
-		return "err"
-	}
-	var buff bytes.Buffer
-	buff.WriteString(fmt.Sprintf("param0"))
-	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(", param%d", i))
-	}
-	buff.WriteString(", err")
-	return buff.String()
-}
-
-// inReturn 根据参数生成函数声明的返回参数列表
-func (gen *Gen4Go) inReturn(params []*ast.Param) string {
-	if len(params) == 0 {
-		return "()"
-	}
-	var buff bytes.Buffer
-	buff.WriteString(fmt.Sprintf("(ret0 %s", gen.typeName(params[0].Type)))
-	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(",ret%d %s", i, gen.typeName(params[i].Type)))
-	}
-	buff.WriteString(")")
-	return buff.String()
-}
-
-// inReturn 根据参数生成函数声明的返回参数列表
-func (gen *Gen4Go) inReturnOnlyName(params []*ast.Param) string {
-	if len(params) == 0 {
-		return "()"
-	}
-	var buff bytes.Buffer
-	buff.WriteString(fmt.Sprintf("(ret0"))
-	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(",ret%d", i))
-	}
-	buff.WriteString(")")
-	return buff.String()
-}
-
-// outReturn 根据参数生成函数声明的返回参数列表
-func (gen *Gen4Go) outReturn(params []*ast.Param) string {
-	if len(params) == 0 {
-		return "(err error)"
-	}
-	var buff bytes.Buffer
-	buff.WriteString(fmt.Sprintf("(ret0 %s", gen.typeName(params[0].Type)))
-	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(",ret%d %s", i, gen.typeName(params[i].Type)))
-	}
-	buff.WriteString(",err error)")
-	return buff.String()
-}
-
-// outReturn 根据参数生成函数声明的返回参数列表
-func (gen *Gen4Go) outReturnOnlyName(params []*ast.Param) string {
-	if len(params) == 0 {
+		if withErr {
+			return "err error"
+		}
 		return ""
 	}
 	var buff bytes.Buffer
-	buff.WriteString(fmt.Sprintf("ret0"))
+	buff.WriteString(fmt.Sprintf("%s%d %s", token, 0, gen.typeName(params[0].Type)))
 	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(",ret%d", i))
+		buff.WriteString(fmt.Sprintf(", %s%d %s", token, i, gen.typeName(params[i].Type)))
+	}
+	if withErr {
+		buff.WriteString(", err error")
 	}
 	return buff.String()
 }
 
-// returnParams 根据参数生成函数声明的返回参数列表
-func (gen *Gen4Go) returnParams(params []*ast.Param) string {
+// paramsName 根据参数生成函数声明的入参列表
+func (gen *Gen4Go) paramsName(token string, params []*ast.Param, withErr bool) string {
 	if len(params) == 0 {
-		return "(err error)"
+		if withErr {
+			return "err"
+		}
+		return ""
 	}
 	var buff bytes.Buffer
-	buff.WriteString(fmt.Sprintf("(ret0 %s", gen.typeName(params[0].Type)))
+	buff.WriteString(fmt.Sprintf("%s0", token))
 	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(",ret%d %s", i, gen.typeName(params[i].Type)))
+		buff.WriteString(fmt.Sprintf(",%s%d", token, i))
 	}
-	buff.WriteString(",err error)")
-	return buff.String()
-}
-
-// callParams 根据参数生成函数的调用参数列表
-func (gen *Gen4Go) callParams(params []*ast.Param) string {
-	if len(params) == 0 {
-		return "()"
+	if withErr {
+		buff.WriteString(", err")
 	}
-	var buff bytes.Buffer
-	buff.WriteString("(param0")
-	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(",param%d", i))
-	}
-	buff.WriteString(")")
-	return buff.String()
-}
-
-// returnArgs 根据函数生成 接收 函数的调用值 的 声明列表
-func (gen *Gen4Go) returnArgs(method *ast.Method) string {
-	params := method.Return
-	if len(params) == 0 {
-		return "err = "
-	}
-	var buff bytes.Buffer
-	buff.WriteString("ret0")
-	for i := 1; i < len(params); i++ {
-		buff.WriteString(fmt.Sprintf(", ret%d", i))
-	}
-	buff.WriteString(", err = ")
 	return buff.String()
 }
 

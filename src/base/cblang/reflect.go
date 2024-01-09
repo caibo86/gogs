@@ -66,6 +66,17 @@ func IsError(enum *ast.Enum) bool {
 	return ok
 }
 
+// ReadWrite 检查枚举是不是表示错误声明
+func ReadWrite(table *ast.Table) bool {
+	_, ok := table.Extra("ReadWrite")
+	return ok
+}
+
+// MarkAsReadWrite 标记为需要输出Read/Write方法
+func MarkAsReadWrite(table *ast.Table) {
+	table.NewExtra("ReadWrite", true)
+}
+
 // markAsError 将枚举标记为错误枚举
 func markAsError(enum *ast.Enum) {
 	enum.NewExtra("isError", true)
@@ -88,7 +99,6 @@ func (compiler *Compiler) EvalAttrUsage(attr *ast.Attr) int32 {
 	if attr.Name() != ".cblang.Struct" && attr.Name() != ".cblang.Error" && attr.Name() != ".Struct" {
 		log.Debugf("evalAttr: %v for %s, result: %v", attr.Name(), attr.Parent(), ea.values)
 	}
-
 	// 只有Table才能被作为属性的类型引用
 	s, ok := attr.Type.Ref.(*ast.Table)
 	if !ok {

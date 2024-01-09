@@ -28,3 +28,7 @@ table Struct {}
 // 内置类型标注Enum是一个错误类型声明
 @AttrUsage(Target:AttrTarget.Enum)
 table Error {}
+
+// 标注Struct是否需要输出Read/Write方法
+@AttrUsage(Target:AttrTarget.Struct)
+table ReadWrite {}

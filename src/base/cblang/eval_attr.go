@@ -22,9 +22,7 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 	if visitor == nil {
 		cberrors.Panic("visitor(evalAttr) should not be nil")
 	}
-	if visitor.values == nil {
-		visitor.values = make(map[string]any)
-	}
+	visitor.values = make(map[string]any)
 	expr := node.Type.Ref
 	table, ok := expr.(*ast.Table)
 	if !ok {
@@ -197,6 +195,8 @@ func (visitor *evalAttr) VisitAttr(node *ast.Attr) ast.Node {
 	} else {
 		cberrors.Panic("attr args should be nil or ast.NamedArgs")
 	}
+	node.Values = visitor.values
+	visitor.values = nil
 	return nil
 }
 

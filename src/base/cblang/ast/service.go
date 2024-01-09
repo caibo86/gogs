@@ -19,11 +19,12 @@ type Param struct {
 	BaseExpr        // 内嵌基本表达式实现
 	ID       uint16 // 参数ID
 	Type     Expr   // 参数类型
+	IsReturn bool   //
 }
 
 // GetName implement IField
 func (param *Param) GetName() string {
-	return fmt.Sprintf("param%d", param.ID)
+	return param.Name()
 }
 
 // GetID implement IField

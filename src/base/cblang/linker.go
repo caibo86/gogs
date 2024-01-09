@@ -481,6 +481,12 @@ func (linker *attrLinker) VisitTable(table *ast.Table) ast.Node {
 		// 标记Struct额外信息
 		markAsStruct(table)
 	}
+	for _, attr := range table.Attrs() {
+		if attr.Name() == ".cblang.ReadWrite" {
+			MarkAsReadWrite(table)
+		}
+	}
+
 	// 轮询判断table的属性的目标是不是table的类型 不是则移动到对应的类型节点  代码节点或者包节点
 	for _, attr := range table.Attrs() {
 		target := linker.EvalAttrUsage(attr)

@@ -122,3 +122,7 @@ service GameServer(gss.MapServer) {
 	HeartBeat();                                               // 心跳第一个注释 心跳第二个注释
 }
 
+service API {
+	T(byte, bool, uint8, uint16, int32, int64, float32, float64, bytes, string, gss.Subject, gss.Teacher, []int32, []string, []gss.Subject, []gss.Teacher, map[gss.Subject]gss.Teacher, map[string]bytes) -> (byte, bool, uint8, uint16, int32, int64, float32, float64, bytes, string, gss.Subject, gss.Teacher, []int32, []string, []gss.Subject, []gss.Teacher, map[gss.Subject]gss.Teacher, map[string]bytes); // 测试用
+}
+

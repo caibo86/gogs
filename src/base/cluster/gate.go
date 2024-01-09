@@ -122,7 +122,6 @@ func (gate *Gate) Login(agent *GateAgent, ntf *UserLoginNtf, ci *ClientInfo) (Er
 
 	gate.Lock()
 	defer gate.Unlock()
-	// TODO 这里
 	for _, service := range gate.gameServers {
 		if ntf.ServerID == 0 || GetIDByName(service.Name()) == ntf.ServerID {
 			gameServer := service.(IGameServer)
